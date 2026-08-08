@@ -65,3 +65,15 @@ jobs:
           SUPABASE_ANON_KEY:    ${{ secrets.SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: npm run pruebas:aislamiento
+
+      # La vuelta completa: escribir en la base, leer de vuelta,
+      # armar el documento y comprobar que el núcleo saca los
+      # números correctos. Sin esto, el armador solo estaría
+      # comparado contra fixtures que escribí yo — y un nombre de
+      # columna mal puesto en los dos sitios pasaría en verde.
+      - name: Base, armador y núcleo de punta a punta
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY:    ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: npm run pruebas:integracion

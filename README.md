@@ -16,7 +16,7 @@ fundación: repositorio, publicación y vuelta atrás.
 
 | Carpeta | Qué contiene |
 |---|---|
-| `nucleo/` | El motor financiero en módulos puros. Corre igual en el navegador, en el servidor y en las pruebas. *(llega en la etapa 1)* |
+| `nucleo/` | El motor financiero en módulos puros. Corre igual en el navegador, en el servidor y en las pruebas |
 | `sitio/` | Todo lo que se sirve al navegador. El sitio público en la raíz, la aplicación bajo `/app` |
 | `pruebas/` | Las pruebas del núcleo y las de aislamiento entre hogares |
 | `supabase/` | Migraciones numeradas y Edge Functions |

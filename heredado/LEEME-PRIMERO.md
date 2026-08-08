@@ -11,11 +11,15 @@ comentario, ni para corregir una falta de ortografía.
 
 1. **Referencia.** Cuando haya duda de cómo se comportaba una función, la respuesta
    está aquí, no en la memoria de nadie.
-2. **Origen del núcleo.** `asesor.js` se muda a `nucleo/` en la etapa 1. La mudanza
-   se verifica corriendo los dos contra los mismos datos y comparando número por
-   número.
-3. **Origen de las pruebas.** `pruebas.html` trae 201 pruebas que pasan a
-   `node --test` sin perder ni una.
+2. **Origen del núcleo.** `asesor.js` e `importar.js` ya se mudaron a `nucleo/` en la
+   etapa 1, copiados línea por línea. `pruebas/equivalencia.prueba.js` carga este
+   `asesor.js` y compara su API contra la nueva, nombre por nombre.
+3. **Origen de las pruebas.** `pruebas.html` trae **200** pruebas. 175 se portaron a
+   `node --test`; las 25 restantes probaban la fusión entre teléfonos de `sync.js`,
+   que desaparece con el servidor autoritativo.
+
+   *(En mensajes anteriores dije 201: mi conteo incluía la línea que define
+   `probar`. Son 200.)*
 4. **Origen de la migración.** Los datos del hogar salen del formato que esta app
    entiende y entran al modelo nuevo. Sin esta copia no hay con qué verificar que
    los totales cuadran.

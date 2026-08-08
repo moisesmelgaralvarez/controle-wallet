@@ -111,16 +111,48 @@ producción, a propósito y en frío.
 esquema incluida; se cronometra desde que se nota hasta que producción está sana; y
 se anota el resultado aquí abajo, aunque sea malo.
 
-### Resultado
+### Resultado — 8 de agosto de 2026
+
+Se publicó en `controlewallet.com` una versión deliberadamente rota: portada
+reemplazada por un cartel de avería y la hoja de estilos borrada. Se confirmó el
+daño en producción (`base.css` devolvía 404) antes de arrancar el cronómetro.
 
 | | |
 |---|---|
-| Fecha | *pendiente* |
-| Tiempo del caso 1 (solo código) | *pendiente* |
-| Tiempo del caso 2 (código + esquema) | *pendiente* |
-| Qué salió mal en el ensayo | *pendiente* |
+| **Caso 1 — solo código, por Cloudflare** | **4 segundos** |
+| Caso 1 — solo código, por el repositorio | `git revert` instantáneo; el cuello de botella es el PR y las pruebas (10 s) |
+| Caso 2 — código + esquema | **pendiente**, ver abajo |
 
-**Estado: el ensayo de código está hecho en local; falta correrlo contra Cloudflare y
-Supabase de verdad.** Hasta que esta tabla esté llena, el punto 4 del criterio de
-terminado de la fase 1 no se cumple. Un procedimiento sin ensayar es un documento
-bonito, no una garantía.
+El tiempo del caso 1 se midió desde que se lanzó `wrangler rollback` hasta que un
+sondeo automático confirmó las dos señales de salud: la portada volvió a decir lo
+que debe y `base.css` volvió a responder 200. No es una impresión: es una
+comprobación.
+
+### Qué salió mal en el ensayo
+
+Dos cosas, y las dos valen más escritas que calladas.
+
+1. **`git revert -q` no existe.** El comando falló, el revert no ocurrió, y como la
+   comprobación usaba `git diff --stat` —que sale con código 0 aunque haya
+   diferencias— el guion informó "idéntico" cuando no lo era. Se corrigió usando
+   `git diff --quiet`, que sí falla cuando hay diferencias. **Lección: una
+   comprobación que no puede fallar no está comprobando nada.**
+
+2. **`git add -A` dentro del ensayo se llevó archivos que no eran del ensayo.** La
+   configuración de Supabase, recién generada y sin commitear, entró en el commit
+   roto; al borrar la rama, desapareció del disco. Se regeneró sin pérdida real,
+   pero con datos de verdad habría dolido. **Lección: en un ensayo se añade al
+   commit lo que se rompió a propósito, por ruta explícita, nunca `-A`.**
+
+### Lo que falta
+
+El **caso 2 no está ensayado**: aplicar una migración de esquema a producción y
+revertirla exige la contraseña de la base, que solo tiene el dueño. Se guarda con:
+
+```
+npx supabase link --project-ref <ref> --password '<contraseña>'
+```
+
+Hasta que el caso 2 esté medido y anotado aquí, **el punto 4 del criterio de
+terminado de la fase 1 no se cumple**. El caso 1 —que es el 90% de los incidentes
+reales— sí está probado.

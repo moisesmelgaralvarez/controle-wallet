@@ -1,0 +1,29 @@
+# Dependencias de herramientas (wrangler, supabase). Se reconstruyen con `npm ci`.
+node_modules/
+
+# Basura de macOS
+.DS_Store
+
+# Secretos. Ninguno debe llegar nunca al repositorio: la lista de cuáles
+# existen y dónde vive cada uno está en SECRETOS.md, sin sus valores.
+.env
+.env.*
+.dev.vars
+*.pem
+
+# Estado local de las herramientas
+.wrangler/
+supabase/.temp/
+supabase/.branches/
+
+# Datos del hogar. Un respaldo exportado o un estado de cuenta del banco
+# son datos financieros reales de una persona: no van a un repositorio,
+# menos a uno público.
+respaldos/
+*.respaldo.json
+estados-de-cuenta/
+*.xlsx
+*.pdf
+
+# Preferencias locales de Claude Code, propias de esta máquina.
+.claude/settings.local.json

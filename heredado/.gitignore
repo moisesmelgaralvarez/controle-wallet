@@ -1,0 +1,16 @@
+# Basura que macOS deja en cada carpeta al abrirla en Finder.
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Respaldos que exporta la app: son datos del hogar, no código.
+# Si alguno se cuela al repo, queda publicado el presupuesto entero.
+presupuesto-*.json
+analisis-presupuesto-*.html
+
+# Estados de cuenta que se dejen en la carpeta para probar el importador.
+*.pdf
+*.PDF
+*.csv
+*.CSV

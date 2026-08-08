@@ -1,0 +1,40 @@
+# ============================================================
+# Cabeceras de seguridad — las aplica Netlify a todo lo que sirve.
+# Este archivo debe ir en la raíz de la carpeta que arrastras.
+#
+# Netlify ya manda HSTS por su cuenta; lo de aquí es lo que faltaba.
+# ============================================================
+
+/*
+  # La línea que más importa. script-src 'self' sin excepciones significa
+  # que el navegador solo ejecuta los archivos .js de este mismo sitio:
+  # aunque alguien lograra inyectar un <script> en la página, no correría.
+  # Es la defensa de fondo para la sesión guardada en el teléfono.
+  #
+  # style-src lleva 'unsafe-inline' porque la app usa estilos en línea en
+  # 131 lugares. Es una concesión real, pero inyectar estilo no permite
+  # ejecutar código ni leer datos; inyectar script sí.
+  #
+  # img-src necesita data: y blob: para las fotos de facturas, que viven
+  # como data URL en el propio teléfono.
+  #
+  # connect-src limita a dónde puede hablar la app: solo a sí misma y a
+  # Supabase. Si algo intentara mandar sus datos a otro servidor, el
+  # navegador lo bloquea.
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co; worker-src 'self'; manifest-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+
+  # Que nadie pueda meter la app dentro de un iframe suyo para engañarlos
+  # con clics falsos. frame-ancestors ya lo cubre; esto es para navegadores
+  # viejos que no la entienden.
+  X-Frame-Options: DENY
+
+  # Impide que el navegador adivine el tipo de un archivo y lo trate como
+  # código cuando no lo es.
+  X-Content-Type-Options: nosniff
+
+  # No filtrar a dónde iban ni de dónde venían al navegar fuera.
+  Referrer-Policy: no-referrer
+
+  # Apagar capacidades del teléfono que la app no usa. La cámara queda
+  # permitida porque el escaneo de facturas la necesita.
+  Permissions-Policy: geolocation=(), microphone=(), payment=(), usb=(), magnetometer=()

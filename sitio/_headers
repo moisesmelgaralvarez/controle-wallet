@@ -1,0 +1,59 @@
+# ============================================================
+# Cabeceras de seguridad. Cloudflare Workers las aplica a todo lo
+# que sirve desde esta carpeta.
+#
+# (En la app heredada este archivo decía "las aplica Netlify". Era
+# un comentario viejo: aquella app se publicaba en Cloudflare Pages.
+# Corregido de una vez para que no siga confundiendo.)
+#
+# --- Por qué una sola política y no una por sección ---
+#
+# La tentación es poner una CSP estricta en /* y una más abierta en
+# /app/*. No se hace: /app/index.html casa con las DOS reglas, y dos
+# cabeceras Content-Security-Policy no se reemplazan — el navegador
+# exige cumplir ambas. La app quedaría sin poder hablar con Supabase
+# y el fallo sería silencioso, que es la peor clase.
+#
+# Así que va una sola política, la que la app necesita. Lo que el
+# sitio público pierde con eso es casi nada: `connect-src` de más no
+# sirve para atacar si `script-src 'self'` ya impide que corra
+# cualquier script inyectado.
+# ============================================================
+
+/*
+  # La línea que más importa. script-src 'self' sin excepciones: el
+  # navegador solo ejecuta los .js de este mismo sitio. Aunque
+  # alguien lograra inyectar un <script> en la página, no correría.
+  # Es la defensa de fondo para la sesión guardada en el dispositivo.
+  #
+  # style-src va SIN 'unsafe-inline', a diferencia de la app vieja.
+  # Aquella lo necesitaba por 131 estilos en línea heredados. La
+  # interfaz nueva se escribe sin ellos desde el primer día, porque
+  # volver atrás a quitarlos después sale carísimo.
+  #
+  # connect-src limita a dónde puede hablar la app: solo a sí misma
+  # y a Supabase. Si algo intentara mandar datos del hogar a otro
+  # servidor, el navegador lo bloquea.
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co; worker-src 'self'; manifest-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+
+  # Que nadie meta el sitio en un iframe suyo para engañar con clics
+  # falsos. frame-ancestors ya lo cubre; esto es para navegadores
+  # viejos que no la entienden.
+  X-Frame-Options: DENY
+
+  # Impide que el navegador adivine el tipo de un archivo y lo trate
+  # como código cuando no lo es.
+  X-Content-Type-Options: nosniff
+
+  # No filtrar a dónde iban ni de dónde venían al navegar fuera.
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # Apagar capacidades que no se usan. La cámara queda permitida
+  # porque el escaneo de facturas la necesita.
+  Permissions-Policy: geolocation=(), microphone=(), payment=(), usb=(), magnetometer=()
+
+  # Un año de HTTPS obligatorio. Cloudflare ya lo manda por su
+  # cuenta; declararlo aquí lo deja escrito en el repositorio, que
+  # es donde tiene que estar para que nadie lo apague sin que quede
+  # constancia.
+  Strict-Transport-Security: max-age=31536000; includeSubDomains

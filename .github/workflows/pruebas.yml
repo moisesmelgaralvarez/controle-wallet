@@ -1,0 +1,37 @@
+# ============================================================
+# Pruebas automáticas.
+#
+# Corren en cada Pull Request y en cada push a main. Si algo sale
+# rojo, el PR no se une: esa es toda la función de este archivo.
+#
+# No instala dependencias para probar. El corredor de pruebas viene
+# dentro de Node desde la versión 18, así que `npm ci` solo hace
+# falta cuando el trabajo necesite wrangler o la CLI de Supabase.
+# ============================================================
+
+name: Pruebas
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Un push nuevo sobre la misma rama cancela la corrida anterior:
+# no tiene sentido esperar el resultado de un commit ya superado.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  nucleo:
+    name: Núcleo financiero
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Correr las pruebas
+        run: npm run pruebas

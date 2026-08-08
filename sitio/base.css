@@ -1,0 +1,78 @@
+/* ============================================================
+   Estilos mínimos de la etapa 0.
+
+   Existen para una sola cosa: probar que la tubería de publicación
+   funciona y que la CSP no bloquea una hoja de estilos propia.
+
+   El sistema de diseño de verdad — tokens, cuatro escalones de
+   pantalla, tablas, diálogos anchos — llega en la etapa 4 y
+   reemplaza este archivo entero. No construyas sobre él.
+
+   Ni un estilo en línea, ni aquí ni en el HTML. Esa disciplina es
+   la que permite que la CSP lleve style-src 'self' sin excepciones.
+   ============================================================ */
+
+:root {
+  --fondo: #f9f9f7;
+  --tinta: #0b0b0b;
+  --tenue: #52514e;
+  --borde: #e2e1dc;
+  --acento: #1a6b4a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #0d0d0d;
+    --tinta: #ffffff;
+    --tenue: #c3c2b7;
+    --borde: #2a2a28;
+    --acento: #4ec48c;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: clamp(24px, 6vw, 72px);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.55;
+  color: var(--tinta);
+  background: var(--fondo);
+}
+
+/* Sin ancho máximo global: esa es justamente la queja que la fase 1
+   viene a resolver. Si un bloque necesita límite de lectura, se lo
+   pone ese bloque. */
+.lectura { max-width: 62ch; }
+
+h1 {
+  font-size: clamp(28px, 5vw, 44px);
+  letter-spacing: -0.03em;
+  margin: 0 0 8px;
+}
+
+.marca {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--acento);
+  margin: 0 0 24px;
+}
+
+p { color: var(--tenue); margin: 0 0 14px; }
+
+.nota {
+  margin-top: 32px;
+  padding: 16px 18px;
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.92em;
+}
+
+a { color: var(--acento); }

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Controle Wallet</title>
+<meta name="description" content="Presupuesto, proyectos y estado financiero del hogar.">
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#f9f9f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- iOS recorta el rótulo del ícono a unos 12 caracteres: "Controle Wallet"
+     saldría cortado, así que en la pantalla de inicio va solo la primera palabra. -->
+<meta name="apple-mobile-web-app-title" content="Controle">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192">
+
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- En escritorio es la barra lateral del sitio; en el teléfono, la barra de
+       pestañas de abajo. Es el MISMO elemento: un solo juego de botones, un
+       solo manejador de eventos, dos presentaciones. -->
+  <aside class="lateral">
+    <div class="marca">
+      <span class="marca__ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg></span>
+      <span class="marca__t">Controle Wallet</span>
+    </div>
+
+    <nav class="tabbar" role="tablist" aria-label="Secciones">
+      <button class="tab is-active" role="tab" data-goto="resumen" aria-selected="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg>
+        <span>Resumen</span>
+      </button>
+      <button class="tab" role="tab" data-goto="presupuesto" aria-selected="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.6" y="4.6" width="16.8" height="14.8" rx="2.4"/><path d="M3.6 9.4h16.8M8.6 4.6v14.8"/></svg>
+        <span>Presupuesto</span>
+      </button>
+      <button class="tab" role="tab" data-goto="proyectos" aria-selected="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="3.4"/></svg>
+        <span>Proyectos</span>
+      </button>
+      <button class="tab" role="tab" data-goto="movimientos" aria-selected="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13M4 8l3.4-3.4M4 8l3.4 3.4M20 16H7M20 16l-3.4-3.4M20 16l-3.4 3.4"/></svg>
+        <span>Movimientos</span>
+      </button>
+      <button class="tab" role="tab" data-goto="historia" aria-selected="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 15.6l5-5.4 3.6 3 4-4.8 3.8 3.4"/><path d="M3.8 19.8h16.4"/></svg>
+        <span>Historia</span>
+      </button>
+    </nav>
+
+    <div class="lateral__pie">
+      <button class="lateral__acc" id="syncBtn2" type="button">
+        <span class="syncdot" id="syncDot2" data-state="local"></span>
+        <span>Sincronización</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="cuerpo">
+  <header class="topbar">
+    <div class="topbar__lead">
+      <h1 class="topbar__title" id="viewTitle">Resumen</h1>
+      <button class="periodo" id="periodoBtn" type="button" aria-label="Cambiar mes">
+        <span id="periodoLabel">—</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg>
+      </button>
+    </div>
+    <div class="topbar__actions">
+      <button class="iconbtn" id="syncBtn" type="button" aria-label="Estado de sincronización">
+        <span class="syncdot" id="syncDot" data-state="local"></span>
+      </button>
+      <button class="iconbtn" id="themeBtn" type="button" aria-label="Cambiar tema">
+        <svg class="ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
+        <svg class="ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.2A8.2 8.2 0 019.8 4a8.2 8.2 0 1010.2 10.2z"/></svg>
+      </button>
+      <button class="cta" id="analisisBtn" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11M12 14.5l-4-4M12 14.5l4-4M4.5 16v3.5h15V16"/></svg>
+        Análisis
+      </button>
+    </div>
+  </header>
+
+  <main class="main" id="main">
+    <section class="view" id="view-resumen" data-view="resumen"></section>
+    <section class="view" id="view-presupuesto" data-view="presupuesto" hidden></section>
+    <section class="view" id="view-proyectos" data-view="proyectos" hidden></section>
+    <section class="view" id="view-movimientos" data-view="movimientos" hidden></section>
+    <section class="view" id="view-historia" data-view="historia" hidden></section>
+  </main>
+  </div>
+
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet__scrim" data-close></div>
+  <div class="sheet__panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet__grip"></div>
+    <header class="sheet__head">
+      <h2 id="sheetTitle">—</h2>
+      <button class="iconbtn" type="button" data-close aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>
+      </button>
+    </header>
+    <div class="sheet__body" id="sheetBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="sync.js"></script>
+<script src="asesor.js"></script>
+<script src="facturas.js"></script>
+<script src="reporte.js"></script>
+<script src="importar.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

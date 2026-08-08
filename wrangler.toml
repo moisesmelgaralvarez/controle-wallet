@@ -1,0 +1,60 @@
+# ============================================================
+# Cloudflare Workers — publicación de Controle Wallet.
+#
+# Por qué Workers y no Pages: para proyectos nuevos Cloudflare
+# recomienda Workers desde 2026. Pages sigue funcionando, pero lo
+# nuevo sale primero en Workers, y aquí vamos a necesitar código de
+# servidor en la etapa 4 (enrutado del sitio público contra la app).
+#
+# Hoy no hay campo `main`: es un Worker de solo archivos estáticos.
+# Eso basta y es lo más rápido que existe. Cuando haga falta lógica
+# de enrutado se agrega el script y esta configuración no cambia.
+#
+# REGLA: este archivo es la única fuente de cómo se publica. Nada de
+# tocar el panel de Cloudflare a mano — si se hace, el repositorio
+# deja de describir la realidad y la vuelta atrás deja de ser fiable.
+# ============================================================
+
+name = "controle-wallet"
+compatibility_date = "2026-08-08"
+
+# ------------------------------------------------------------
+# Producción — controlewallet.com
+#
+# El dominio está registrado en Cloudflare, así que estas dos rutas
+# se resuelven solas: no hay que crear registros DNS a mano.
+#
+# OJO con el orden: en TOML, todo lo que va después de una cabecera
+# como [assets] pertenece a esa sección. Si `routes` se escribe más
+# abajo, wrangler lo lee como un campo de `assets`, avisa con un
+# warning fácil de pasar por alto, y el Worker se publica sin
+# dominio. Las claves sueltas van ARRIBA de las cabeceras.
+# ------------------------------------------------------------
+routes = [
+  { pattern = "controlewallet.com", custom_domain = true },
+  { pattern = "www.controlewallet.com", custom_domain = true }
+]
+
+# Todo lo que se sirve al navegador sale de aquí. El sitio público en
+# la raíz y la aplicación bajo /app.
+[assets]
+directory = "./sitio"
+
+# Una ruta que no existe devuelve el 404 del sitio, no la portada.
+# Cuando la app tenga enrutador propio, /app/* pasará a resolverse
+# contra su index — eso es trabajo de la etapa 4.
+not_found_handling = "404-page"
+
+# ------------------------------------------------------------
+# Ambiente de pruebas.
+#
+# Worker aparte, base aparte (controle-pruebas). Nunca se prueba
+# contra los datos reales de nadie. Vive en su subdominio
+# .workers.dev porque no necesita dominio bonito.
+# ------------------------------------------------------------
+[env.pruebas]
+name = "controle-wallet-pruebas"
+
+[env.pruebas.assets]
+directory = "./sitio"
+not_found_handling = "404-page"

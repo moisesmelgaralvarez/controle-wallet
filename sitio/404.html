@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Página no encontrada · Controle Wallet</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="/base.css">
+</head>
+<body>
+
+<!-- La sirve el Worker cuando una ruta no existe, por la línea
+     `not_found_handling = "404-page"` de wrangler.toml. Sin este
+     archivo, una dirección mal escrita devolvería una página en
+     blanco de Cloudflare. -->
+
+<main class="lectura">
+  <p class="marca">Controle Wallet</p>
+  <h1>Esa página no existe</h1>
+  <p>
+    Puede que la dirección esté mal escrita, o que la página se haya
+    movido.
+  </p>
+  <p><a href="/">Volver al inicio</a></p>
+</main>
+
+</body>
+</html>

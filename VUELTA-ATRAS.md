@@ -63,15 +63,33 @@ Aquí hay que hacer las dos cosas, **y en este orden**:
 
 1. **Primero el código**, por cualquiera de los dos caminos de arriba. Deja de entrar
    escritura con la forma nueva.
-2. **Después el esquema**, aplicando el reverso de la migración:
+2. **Después el esquema**, aplicando el reverso:
 
 ```bash
-npx supabase db execute --file supabase/migrations/<NNNN>_<nombre>.reverso.sql \
-  --project-ref <ref-de-produccion>
+npx supabase db query --linked -f supabase/reversos/<NNNN>_<nombre>.reverso.sql
 ```
 
 Al revés no: si se revierte el esquema con la aplicación nueva todavía en línea,
 cada escritura que llegue en ese hueco falla o corrompe.
+
+> **Los reversos viven en `supabase/reversos/`, no junto a las migraciones.** La
+> CLI de Supabase ejecuta *todo* archivo `.sql` que encuentre en
+> `supabase/migrations/`: un reverso guardado ahí se aplicaría como si fuera una
+> migración más y borraría las tablas recién creadas.
+
+> **`--linked` no es opcional.** Sin esa bandera, `supabase db query` va contra una
+> base local que casi nunca existe, no dice nada útil, y uno se queda creyendo que
+> revirtió algo que sigue en pie.
+
+**Reconstruir después de revertir.** El reverso borra las tablas, pero el registro
+de migraciones seguiría diciendo que están aplicadas, y entonces `db push` no las
+vuelve a correr: el esquema queda irrecuperable por la vía normal. Por eso cada
+reverso termina borrando su propia fila de `supabase_migrations.schema_migrations`.
+Es una trampa que no se descubre leyendo — solo ensayando.
+
+```bash
+npx supabase db push --include-all
+```
 
 ---
 
@@ -121,7 +139,7 @@ daño en producción (`base.css` devolvía 404) antes de arrancar el cronómetro
 |---|---|
 | **Caso 1 — solo código, por Cloudflare** | **4 segundos** |
 | Caso 1 — solo código, por el repositorio | `git revert` instantáneo; el cuello de botella es el PR y las pruebas (10 s) |
-| Caso 2 — código + esquema | **pendiente**, ver abajo |
+| **Caso 2 — esquema completo, ida y vuelta** | **22 segundos** (4 s revertir, 16 s reconstruir) |
 
 El tiempo del caso 1 se midió desde que se lanzó `wrangler rollback` hasta que un
 sondeo automático confirmó las dos señales de salud: la portada volvió a decir lo
@@ -144,15 +162,30 @@ Dos cosas, y las dos valen más escritas que calladas.
    pero con datos de verdad habría dolido. **Lección: en un ensayo se añade al
    commit lo que se rompió a propósito, por ruta explícita, nunca `-A`.**
 
-### Lo que falta
+### El ensayo del caso 2 — 8 de agosto de 2026
 
-El **caso 2 no está ensayado**: aplicar una migración de esquema a producción y
-revertirla exige la contraseña de la base, que solo tiene el dueño. Se guarda con:
+Sobre `controle-pruebas`, con las veinte tablas del esquema real y datos dentro:
+se revirtieron las dos migraciones, se comprobó que la base quedó en cero tablas,
+se reconstruyó con `db push --include-all`, y se volvió a correr la suite de
+aislamiento completa contra el esquema reconstruido.
 
-```
-npx supabase link --project-ref <ref> --password '<contraseña>'
-```
+**22 segundos de ida y vuelta. 22 de 22 pruebas de aislamiento en verde después**
+— o sea que lo reconstruido no solo tiene la misma forma, se comporta igual.
 
-Hasta que el caso 2 esté medido y anotado aquí, **el punto 4 del criterio de
-terminado de la fase 1 no se cumple**. El caso 1 —que es el 90% de los incidentes
-reales— sí está probado.
+Resultó que la contraseña de la base **no hacía falta**: la CLI abre un rol
+temporal usando el token de acceso.
+
+### Lo que salió mal en este ensayo
+
+1. **`supabase db query` va contra la base local si no se le pasa `--linked`.** El
+   primer intento reportó "revertido en 1s" y no había revertido nada: el comando
+   fallaba contra un Docker inexistente. Un cronómetro que mide un comando que no
+   corrió da un número tranquilizador y falso.
+2. **`VUELTA-ATRAS.md` documentaba un comando que no existe** (`db execute
+   --file --project-ref`). Escrito de memoria y nunca ejecutado. Corregido.
+3. **Revertir el esquema no revertía el historial de migraciones.** Las tablas
+   desaparecían pero el registro seguía diciendo que estaban aplicadas, así que
+   `db push` no las volvía a correr y el esquema quedaba irrecuperable por la vía
+   normal. Ahora cada reverso borra su propia fila del historial.
+
+Las tres son la razón de ser del ensayo: ninguna se ve leyendo el procedimiento.

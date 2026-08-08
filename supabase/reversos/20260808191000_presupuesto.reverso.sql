@@ -60,3 +60,14 @@ drop table if exists public.cuentas;
 
 drop type if exists public.tipo_tarjeta;
 drop type if exists public.medio_pago;
+
+-- ------------------------------------------------------------
+-- Y el historial.
+--
+-- Sin esto, la base queda sin las tablas pero el registro de
+-- migraciones sigue diciendo que están aplicadas: `db push` no
+-- vuelve a correrlas y el esquema no se puede reconstruir. Es una
+-- trampa que solo se descubre ensayando — el reverso "funciona",
+-- y la reconstrucción es la que falla después.
+-- ------------------------------------------------------------
+delete from supabase_migrations.schema_migrations where version = '20260808191000';

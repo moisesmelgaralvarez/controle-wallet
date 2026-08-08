@@ -38,3 +38,6 @@ drop type if exists public.estado_suscripcion;
 drop type if exists public.estado_invitacion;
 drop type if exists public.rol_plataforma;
 drop type if exists public.rol_hogar;
+
+-- Ver la nota del reverso del presupuesto: el historial también se limpia.
+delete from supabase_migrations.schema_migrations where version = '20260808190000';

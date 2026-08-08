@@ -1,0 +1,168 @@
+/* ============================================================
+   Portada — profundidad y desplazamiento.
+
+   El efecto de parallax está hecho SOLO CON CSS, con animaciones
+   guiadas por el scroll (`animation-timeline`). No hay una línea de
+   JavaScript, y eso no es purismo: la política de seguridad del
+   sitio lleva `script-src 'self'` sin excepciones, y cada script que
+   se agrega es una superficie más que vigilar en un producto que va
+   a guardar los números de la casa de alguien.
+
+   Va todo dentro de `@supports`. En un navegador que no entienda
+   estas animaciones, el contenido se ve completo y quieto — que es
+   exactamente lo que tiene que pasar. El efecto es un adorno; el
+   texto es el producto.
+
+   Y si el sistema pide menos movimiento, no hay movimiento. Sin
+   discusión: para algunas personas estas animaciones producen
+   mareo real.
+   ============================================================ */
+
+/* ---------- escenario ---------- */
+
+.escena {
+  min-height: 100svh;
+  display: grid;
+  align-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Los halos de fondo. Se mueven más lento que el contenido, que es
+   todo el truco de la profundidad: el ojo lee esa diferencia de
+   velocidad como distancia. */
+.escena__halo {
+  position: absolute;
+  inset: -25% -10% auto -10%;
+  height: 130%;
+  background:
+    radial-gradient(45% 40% at 22% 28%, color-mix(in oklab, var(--acento) 26%, transparent), transparent 70%),
+    radial-gradient(38% 34% at 82% 12%, color-mix(in oklab, var(--acento) 16%, transparent), transparent 72%);
+  z-index: 0;
+  pointer-events: none;
+  filter: blur(8px);
+}
+
+.escena > *:not(.escena__halo) { position: relative; z-index: 1; }
+
+/* ---------- portada ---------- */
+
+.hero { padding-inline: clamp(1.25rem, 5vw, 5rem); }
+
+.hero h1 {
+  font-size: clamp(2.6rem, 1.2rem + 6vw, 6.5rem);
+  max-width: 16ch;
+  margin-bottom: var(--e2);
+}
+
+.hero__entrada {
+  font-size: clamp(1.05rem, 0.9rem + 0.6vw, 1.5rem);
+  color: var(--tenue);
+  max-width: 44ch;
+}
+
+.hero__pie {
+  margin-top: var(--e4);
+  font-size: var(--t-sm);
+  color: var(--tenue);
+  display: flex; align-items: center; gap: 0.6rem;
+}
+.hero__pie svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+/* ---------- panel fijo: el corte de la tarjeta ---------- */
+
+/* El visual se queda clavado mientras el texto pasa a su lado. Es el
+   recurso que usa Apple y funciona porque deja mirar UNA cosa
+   mientras se explica, en vez de mover todo a la vez. */
+.fijo { display: grid; gap: var(--e3); align-items: start; }
+
+@media (min-width: 1000px) {
+  .fijo { grid-template-columns: 1fr 1fr; gap: var(--e5); }
+  .fijo__visual { position: sticky; top: 18vh; }
+  .fijo__texto > * + * { margin-top: 60vh; }
+  .fijo__texto > *:first-child { margin-top: 6vh; }
+  .fijo__texto > *:last-child { margin-bottom: 30vh; }
+}
+
+.paso h3 { margin-bottom: var(--e1); }
+.paso p { color: var(--tenue); max-width: 40ch; margin-bottom: 0; }
+.paso__n {
+  display: block; font-size: var(--t-xs); font-weight: 700;
+  letter-spacing: 0.12em; color: var(--acento); margin-bottom: 0.5rem;
+}
+
+/* ---------- números grandes ---------- */
+
+.cifra { font-variant-numeric: tabular-nums; }
+.cifra__valor {
+  display: block;
+  font-size: clamp(2.2rem, 1rem + 4vw, 4rem);
+  font-weight: 700; letter-spacing: -0.04em; line-height: 1;
+}
+.cifra__pie { display: block; color: var(--tenue); font-size: var(--t-sm); margin-top: 0.6rem; }
+
+/* ---------- cierre ---------- */
+
+.cierre { text-align: center; }
+.cierre h2 { max-width: 18ch; margin-inline: auto; }
+.cierre p { color: var(--tenue); max-width: 46ch; margin-inline: auto; }
+.cierre .acciones { justify-content: center; }
+
+/* ============================================================
+   El movimiento. Todo lo de abajo es adorno: si nada de esto
+   corre, la página se ve completa igual.
+   ============================================================ */
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+
+    /* Aparecer al entrar en pantalla. */
+    .revelar {
+      animation: surgir linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 32%;
+    }
+    @keyframes surgir {
+      from { opacity: 0; transform: translateY(2.5rem); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* El halo del fondo se desplaza a otra velocidad que el contenido.
+       Ahí está la sensación de profundidad. */
+    .escena__halo {
+      animation: derivar linear both;
+      animation-timeline: view();
+      animation-range: cover;
+    }
+    @keyframes derivar {
+      from { transform: translate3d(0, -12%, 0) scale(1.12); }
+      to   { transform: translate3d(0, 12%, 0) scale(1);     }
+    }
+
+    /* La portada se va quedando atrás al bajar, en vez de simplemente
+       desaparecer del borde. */
+    .hero__contenido {
+      animation: alejar linear both;
+      animation-timeline: view();
+      animation-range: exit 0% exit 100%;
+    }
+    @keyframes alejar {
+      from { opacity: 1; transform: none; }
+      to   { opacity: 0; transform: translateY(-3rem) scale(0.97); }
+    }
+
+    /* Las tarjetas entran escalonadas, no todas de golpe. */
+    .tarjetas .tarjeta {
+      animation: surgir linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 38%;
+    }
+  }
+}
+
+/* Sin soporte o con movimiento reducido: todo visible y quieto. */
+@media (prefers-reduced-motion: reduce) {
+  .revelar, .escena__halo, .hero__contenido, .tarjetas .tarjeta {
+    animation: none !important; opacity: 1 !important; transform: none !important;
+  }
+}

@@ -4,6 +4,44 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.4.0 — Portada con profundidad, y las puertas de entrada
+
+**Qué se hizo**
+
+- La portada se rehízo con desplazamiento por capas: el fondo se mueve a otra
+  velocidad que el contenido, el ejemplo del corte de tarjeta queda clavado
+  mientras el texto pasa a su lado, y los bloques aparecen al entrar en pantalla.
+  **Todo con CSS, sin una línea de JavaScript** — la política de seguridad lleva
+  `script-src 'self'` sin excepciones y cada script es una superficie más que
+  vigilar.
+- `Entrar` y `Crear cuenta` en el encabezado de todo el sitio, más las páginas
+  `/entrar` y `/registro`.
+- Correo de entrada: se habilitó Cloudflare Email Routing sobre el dominio.
+
+**Un error que casi se publica**
+
+El botón «Crear cuenta» salía en **gris sobre verde, ilegible**. La causa era
+especificidad de CSS: `.menu a` vale (0,1,1) y `.boton--principal` vale (0,1,0),
+así que el color del menú le ganaba al del botón sin importar el orden del
+archivo. Se corrigió excluyendo los botones de la regla del menú —
+`.menu a:not(.boton)` — en vez de subirle la especificidad al botón, que habría
+tapado este caso y dejado la trampa para el siguiente. Medido después: contraste
+9.04, cuando la norma AA pide 4.5.
+
+**Lo que hay que saber**
+
+- **Los formularios de `/entrar` y `/registro` están deshabilitados a propósito.**
+  La sesión real llega en la etapa 3, sobre las tablas de la etapa 2. Un
+  formulario que parece funcionar y se traga la contraseña de alguien sin hacer
+  nada es peor que no tener formulario: enseña a la gente a escribir credenciales
+  en pantallas que no las piden de verdad. Mientras tanto, ambas páginas dicen en
+  la primera línea que el acceso todavía no abre.
+- **Falta verificar la dirección de destino del correo.** Cloudflare envió un
+  correo de confirmación; hasta que se haga clic en ese enlace, la regla de
+  `hola@controlewallet.com` no se puede crear.
+
+---
+
 ## v0.3.0 — El sitio público
 
 *Etapa 7 de la fase 1, adelantada a pedido del dueño para tener algo visible en

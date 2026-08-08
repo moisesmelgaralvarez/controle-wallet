@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es-HN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entrar — Controle Wallet</title>
+<meta name="description" content="Entrá a tu hogar en Controle Wallet.">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="/sitio.css">
+</head>
+<body>
+
+<a class="saltar" href="#principal">Saltar al contenido</a>
+
+<header class="cabecera">
+  <a class="marca" href="/">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg>
+    <span>Controle Wallet</span>
+  </a>
+  <nav class="menu" aria-label="Principal">
+    <a href="/">Inicio</a>
+    <a href="/precios">Precios</a>
+    <a href="/preguntas">Preguntas</a>
+    <a href="/contacto">Contacto</a>
+  </nav>
+</header>
+
+<!-- Los campos van deshabilitados A PROPÓSITO mientras la sesión no exista
+     (llega en la etapa 3, sobre las tablas de la etapa 2). Un formulario que
+     parece funcionar y se traga la contraseña de alguien sin hacer nada es
+     peor que no tener formulario: enseña a la gente a escribir credenciales
+     en pantallas que no las piden de verdad. Cuando la autenticación esté,
+     se quita el aviso y el `disabled`. -->
+
+<main id="principal" class="acceso">
+  <div class="acceso__caja">
+
+    <div class="aviso">
+      <strong>El acceso todavía no está abierto</strong>
+      <p>
+        Estamos terminando la aplicación. Dejanos tu correo y te avisamos el día
+        que abra — sin costo mientras dure la construcción.
+      </p>
+    </div>
+
+    <h1>Entrar</h1>
+
+    <label class="campo">
+      <span>Correo</span>
+      <input type="email" name="correo" autocomplete="email" placeholder="vos@ejemplo.com" disabled>
+    </label>
+
+    <label class="campo">
+      <span>Contraseña</span>
+      <input type="password" name="clave" autocomplete="current-password" placeholder="••••••••" disabled>
+    </label>
+
+    <a class="boton boton--principal" href="mailto:hola@controlewallet.com?subject=Avisame%20cuando%20abra%20el%20acceso">
+      Avisame cuando abra
+    </a>
+
+    <p class="acceso__pie">
+      ¿Todavía no tenés cuenta? <a href="/registro">Crear cuenta</a>
+    </p>
+
+  </div>
+</main>
+
+<footer class="pie">
+  <nav aria-label="Pie de página">
+    <a href="/precios">Precios</a>
+    <a href="/preguntas">Preguntas frecuentes</a>
+    <a href="/contacto">Contacto</a>
+    <a href="/terminos">Términos</a>
+    <a href="/privacidad">Privacidad</a>
+  </nav>
+  <p>© 2026 Controle Wallet · Honduras</p>
+</footer>
+
+</body>
+</html>

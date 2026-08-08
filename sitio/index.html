@@ -12,6 +12,7 @@
 <meta property="og:url" content="https://controlewallet.com/">
 <meta property="og:locale" content="es_HN">
 <link rel="stylesheet" href="/sitio.css">
+<link rel="stylesheet" href="/inicio.css">
 </head>
 <body>
 
@@ -27,65 +28,122 @@
     <a href="/precios">Precios</a>
     <a href="/preguntas">Preguntas</a>
     <a href="/contacto">Contacto</a>
+    <span class="sesion">
+      <a href="/entrar">Entrar</a>
+      <a class="boton boton--principal" href="/registro">Crear cuenta</a>
+    </span>
   </nav>
 </header>
 
 <main id="principal">
 
-  <section class="franja portada">
-    <p class="rotulo">Finanzas del hogar</p>
-    <h1 class="lectura">El presupuesto del hogar, sin engañarse</h1>
-    <p class="entrada">
-      La mayoría de las apps de presupuesto suponen que ganás lo mismo todos los
-      meses y que la tarjeta es una deuda aparte. En un hogar real, ninguna de
-      las dos cosas es cierta.
-    </p>
-    <div class="acciones">
-      <a class="boton boton--principal" href="/contacto">Pedir acceso anticipado</a>
-      <a class="boton boton--borde" href="/preguntas">Cómo funciona</a>
+  <!-- ── portada ───────────────────────────────────────────── -->
+  <section class="escena hero">
+    <div class="escena__halo" aria-hidden="true"></div>
+    <div class="hero__contenido">
+      <p class="rotulo">Finanzas del hogar</p>
+      <h1>El presupuesto del hogar, sin engañarse</h1>
+      <p class="hero__entrada">
+        La mayoría de las apps suponen que ganás lo mismo todos los meses y que
+        la tarjeta es una deuda aparte. En un hogar real, ninguna de las dos
+        cosas es cierta.
+      </p>
+      <div class="acciones">
+        <a class="boton boton--principal" href="/registro">Crear cuenta</a>
+        <a class="boton boton--borde" href="/entrar">Ya tengo cuenta</a>
+      </div>
+      <p class="hero__pie">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        Seguí bajando
+      </p>
     </div>
   </section>
 
+  <!-- ── el corte de la tarjeta, con el visual clavado ──────── -->
   <section class="franja franja--superficie">
-    <div class="dos">
-      <div>
-        <h2 class="lectura">La tarjeta no es una deuda: es por dónde pasa el gasto</h2>
-        <p class="lectura">
-          Si cargás el súper, la gasolina y la farmacia a la tarjeta, y después la
-          pagás con el sueldo, restar el gasto <em>y además</em> el pago de la
-          tarjeta cuenta el mismo dinero dos veces. Así es como una app te dice
-          que estás quebrado cuando no lo estás.
-        </p>
-        <p class="lectura">
-          Controle Wallet la vigila aparte, por ciclo de corte, que es la pregunta
-          que de verdad importa cada mes:
-          <strong>¿el ingreso que la paga alcanza a cubrirla?</strong>
-        </p>
+    <div class="fijo">
+
+      <div class="fijo__visual">
+        <div class="ejemplo revelar">
+          <h3>Ciclo del 7 de julio al 6 de agosto</h3>
+          <dl>
+            <dt>Se cargó a la tarjeta</dt>
+            <dd>L 19,101.00</dd>
+            <dt>Lo paga: Comisiones</dt>
+            <dd>L 14,840.00</dd>
+            <div class="total">
+              <dt>Faltan</dt>
+              <dd class="falta">L 4,261.00</dd>
+            </div>
+          </dl>
+          <p class="ejemplo__pie">
+            Esa diferencia sale de las quincenas o se queda revolviendo con
+            intereses.
+          </p>
+        </div>
       </div>
 
-      <div class="ejemplo">
-        <h3>Ciclo del 7 de julio al 6 de agosto</h3>
-        <dl>
-          <dt>Se cargó a la tarjeta</dt>
-          <dd>L 19,101.00</dd>
-          <dt>Lo paga: Comisiones</dt>
-          <dd>L 14,840.00</dd>
-          <div class="total">
-            <dt>Faltan</dt>
-            <dd class="falta">L 4,261.00</dd>
-          </div>
-        </dl>
-        <p class="ejemplo__pie">
-          Esa diferencia sale de las quincenas o se queda revolviendo con
-          intereses. Saberlo el día 20 no es lo mismo que enterarse el día 6.
+      <div class="fijo__texto">
+        <div class="paso revelar">
+          <span class="paso__n">01</span>
+          <h3>La tarjeta no es una deuda</h3>
+          <p>
+            Es por dónde pasa el gasto. Si cargás el súper y la gasolina a la
+            tarjeta y después la pagás con el sueldo, restar el gasto
+            <em>y además</em> el pago cuenta el mismo dinero dos veces.
+          </p>
+        </div>
+
+        <div class="paso revelar">
+          <span class="paso__n">02</span>
+          <h3>Se vigila por ciclo, no por mes</h3>
+          <p>
+            Del 7 de julio al 6 de agosto se cargaron diecinueve mil. El corte lo
+            paga un ingreso concreto. La pregunta no es cuánto debés: es si ese
+            ingreso alcanza.
+          </p>
+        </div>
+
+        <div class="paso revelar">
+          <span class="paso__n">03</span>
+          <h3>Saberlo el día 20 no es lo mismo</h3>
+          <p>
+            Que enterarse el día 6, cuando ya no hay nada que hacer. Con el
+            faltante a la vista todavía se puede mover algo.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── el pulso ──────────────────────────────────────────── -->
+  <section class="escena franja franja--suave">
+    <div class="escena__halo" aria-hidden="true"></div>
+    <div class="dos revelar">
+      <div>
+        <p class="rotulo">El pulso del mes</p>
+        <h2 class="lectura">Gastar el 26% es normal el día 20 y es alarma el día 4</h2>
+        <p class="lectura">
+          Esa comparación —cuánto mes ha corrido contra cuánto presupuesto se ha
+          ido— es toda la señal que hace falta para corregir a tiempo.
         </p>
+      </div>
+      <div class="cifra">
+        <span class="cifra__valor">L 1,340</span>
+        <span class="cifra__pie">
+          es lo que te queda por día para llegar justo a fin de mes. No un
+          semáforo de colores: la cifra con la que se decide si se sale a cenar
+          o no.
+        </span>
       </div>
     </div>
   </section>
 
-  <section class="franja">
-    <p class="rotulo">Lo que cambia</p>
-    <h2 class="lectura">Hecho para cómo se vive de verdad</h2>
+  <!-- ── lo que cambia ─────────────────────────────────────── -->
+  <section class="franja franja--alta">
+    <p class="rotulo revelar">Lo que cambia</p>
+    <h2 class="lectura revelar">Hecho para cómo se vive de verdad</h2>
 
     <div class="tarjetas tarjetas--densa">
       <article class="tarjeta">
@@ -94,8 +152,7 @@
         <p>
           Si trabajás por comisión, el mes bueno paga más retención y el neto no
           es el de siempre. Cada pago se confirma con lo que de verdad entró, y
-          lo que todavía no se confirmó aparece marcado como estimado en toda la
-          app. Nunca vas a confundir una proyección con un hecho.
+          lo que falta confirmar queda marcado como estimado en toda la app.
         </p>
       </article>
 
@@ -104,8 +161,8 @@
         <h3>Las cuotas se terminan</h3>
         <p>
           La refri a doce cuotas no es un gasto eterno. La app sabe cuántas
-          faltan, así que también sabe en qué mes se libera ese dinero — y te
-          avisa que a partir de ahí tus metas avanzan más rápido.
+          faltan, así que sabe en qué mes se libera ese dinero — y te avisa que
+          desde ahí tus metas avanzan más rápido.
         </p>
       </article>
 
@@ -114,8 +171,7 @@
         <h3>El mes no siempre empieza el 1</h3>
         <p>
           Muchos hogares viven en el ciclo de su tarjeta: «agosto» va del 7 de
-          agosto al 6 de septiembre. Vos decidís qué día arranca tu mes y todo
-          lo demás se acomoda.
+          agosto al 6 de septiembre. Vos decidís qué día arranca tu mes.
         </p>
       </article>
 
@@ -124,26 +180,24 @@
         <h3>El hogar son dos</h3>
         <p>
           Invitás a tu pareja o a quien administre con vos. Los dos ven lo mismo
-          al mismo tiempo, cada quien registra lo suyo, y queda constancia de
-          quién anotó qué.
+          al mismo tiempo, y queda constancia de quién anotó qué.
         </p>
       </article>
     </div>
   </section>
 
-  <section class="franja franja--suave">
-    <p class="rotulo">El pulso</p>
+  <!-- ── lo demás ──────────────────────────────────────────── -->
+  <section class="franja franja--superficie">
     <div class="dos">
-      <div>
-        <h2 class="lectura">Gastar el 26% es normal el día 20 y es alarma el día 4</h2>
+      <div class="revelar">
+        <p class="rotulo">Y además</p>
+        <h2 class="lectura">Lo que ya está resuelto</h2>
         <p class="lectura">
-          Esa comparación —cuánto mes ha corrido contra cuánto presupuesto se ha
-          ido— es toda la señal que hace falta para corregir a tiempo. Debajo, la
-          cifra accionable: a este ritmo cerrás en tanto, y para llegar justo te
-          quedan tanto al día.
+          Nada de esto es promesa: es lógica que una familia usó con dinero real
+          durante meses antes de que existiera el producto.
         </p>
       </div>
-      <div>
+      <div class="revelar">
         <ul class="lista">
           <li><strong>Cierre de mes</strong> con el presupuesto congelado, para que bajar el gasto de septiembre no reescriba agosto hacia atrás.</li>
           <li><strong>Estados de cuenta</strong> de BAC y Ficohsa, o cualquier CSV, importados y conciliados sin duplicar nada.</li>
@@ -155,23 +209,19 @@
     </div>
   </section>
 
-  <section class="franja franja--superficie">
-    <div class="lectura">
-      <p class="rotulo">Dónde va</p>
-      <h2>En construcción, y a la vista</h2>
+  <!-- ── cierre ────────────────────────────────────────────── -->
+  <section class="escena franja cierre">
+    <div class="escena__halo" aria-hidden="true"></div>
+    <div class="revelar">
+      <p class="rotulo">Empezá</p>
+      <h2>Tu presupuesto, armado a tu manera</h2>
       <p>
-        Controle Wallet nació como una herramienta privada que una familia usó
-        durante meses antes de convertirse en producto. Ese motor de cálculo —el
-        que decide si el corte alcanza y si una meta es viable— ya está probado
-        con dinero real.
-      </p>
-      <p>
-        Lo que estamos construyendo ahora es todo lo demás: las cuentas, la
-        interfaz nueva y la seguridad que hace falta para guardar los números de
-        alguien más.
+        Sin costo mientras dure la construcción. Un asistente te guía en pocos
+        pasos y todo se puede cambiar después.
       </p>
       <div class="acciones">
-        <a class="boton boton--principal" href="/contacto">Avisame cuando abra</a>
+        <a class="boton boton--principal" href="/registro">Crear cuenta</a>
+        <a class="boton boton--borde" href="/entrar">Entrar</a>
       </div>
     </div>
   </section>

@@ -158,14 +158,29 @@ h3.lectura { max-width: 32ch; }
 .marca svg { width: 22px; height: 22px; stroke: var(--acento); fill: none; stroke-width: 2.1; stroke-linecap: round; }
 
 .menu { margin-left: auto; display: flex; align-items: center; gap: var(--e2); flex-wrap: wrap; }
-.menu a { color: var(--tenue); text-decoration: none; font-size: var(--t-sm); }
-.menu a:hover, .menu a[aria-current="page"] { color: var(--tinta); }
+
+/* El `:not(.boton)` no es adorno. `.menu a` vale (0,1,1) de especificidad y
+   `.boton--principal` vale (0,1,0), así que el gris del menú le ganaba al
+   color del botón sin importar el orden en el archivo: el botón principal
+   salía en gris sobre verde, ilegible. Excluir los botones aquí es la
+   corrección de fondo — subirle la especificidad al botón habría arreglado
+   este caso y dejado la trampa puesta para el siguiente. */
+.menu a:not(.boton) { color: var(--tenue); text-decoration: none; font-size: var(--t-sm); }
+.menu a:not(.boton):hover,
+.menu a:not(.boton)[aria-current="page"] { color: var(--tinta); }
+
+/* Entrar y crear cuenta van separados de la navegación: no son
+   secciones que se visitan, son las dos acciones del sitio. */
+.sesion { display: flex; align-items: center; gap: 0.6rem; padding-left: var(--e2); border-left: 1px solid var(--borde); }
+.sesion a { white-space: nowrap; }
+.sesion .boton { padding: 0.45rem 1rem; font-size: var(--t-xs); }
 
 /* En teléfono el menú pasa abajo del logo y se puede desplazar. */
 @media (max-width: 640px) {
   .cabecera { flex-wrap: wrap; gap: var(--e1); position: static; }
   .menu { margin-left: 0; width: 100%; overflow-x: auto; padding-bottom: 2px; }
   .menu a { white-space: nowrap; }
+  .sesion { margin-left: auto; padding-left: 0; border-left: 0; }
 }
 
 /* ---------- botones ---------- */
@@ -280,6 +295,47 @@ h3.lectura { max-width: 32ch; }
 .plan__precio { font-size: var(--t-xl); font-weight: 700; letter-spacing: -0.03em; margin: var(--e1) 0; }
 .plan__nota { font-size: var(--t-sm); color: var(--tenue); }
 .plan .acciones { margin-top: auto; padding-top: var(--e3); }
+
+/* ---------- entrar y crear cuenta ---------- */
+
+/* Aquí sí hay una columna centrada, y es correcto: un formulario de
+   seis campos en 2560 px de ancho sería ilegible. La regla de "sin
+   ancho máximo" es para el contenido de la aplicación, no para una
+   tarjeta de acceso. */
+.acceso {
+  min-height: 72svh;
+  display: grid; align-content: center; justify-items: center;
+  padding-inline: clamp(1.25rem, 5vw, 5rem);
+  padding-block: var(--e4);
+}
+.acceso__caja {
+  width: 100%; max-width: 26rem;
+  background: var(--superficie); border: 1px solid var(--borde);
+  border-radius: var(--radio); padding: var(--e3);
+}
+.acceso h1 { font-size: var(--t-lg); margin-bottom: var(--e1); }
+.acceso__pie { margin: var(--e2) 0 0; font-size: var(--t-sm); color: var(--tenue); text-align: center; }
+
+/* El aviso de que todavía no abre. Va arriba y sin adornos: quien
+   llega aquí viene a entrar, y merece enterarse en la primera línea
+   en vez de después de llenar un formulario que no hace nada. */
+.aviso {
+  background: var(--suave); border: 1px solid color-mix(in oklab, var(--acento) 35%, transparent);
+  border-radius: 10px; padding: var(--e2); margin-bottom: var(--e3);
+  font-size: var(--t-sm);
+}
+.aviso strong { display: block; margin-bottom: 0.3rem; color: var(--tinta); }
+.aviso p { margin: 0; color: var(--tenue); }
+
+.campo { display: block; margin-bottom: var(--e2); }
+.campo span { display: block; font-size: var(--t-sm); font-weight: 600; margin-bottom: 0.35rem; }
+.campo input {
+  width: 100%; padding: 0.7rem 0.9rem; font: inherit; font-size: var(--t-sm);
+  color: var(--tinta); background: var(--fondo);
+  border: 1px solid var(--borde); border-radius: 10px;
+}
+.campo input:disabled { opacity: 0.55; cursor: not-allowed; }
+.acceso .boton { width: 100%; }
 
 /* ---------- documentos legales ---------- */
 

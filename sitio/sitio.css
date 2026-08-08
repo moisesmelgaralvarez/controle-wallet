@@ -1,0 +1,313 @@
+/* ============================================================
+   Sistema visual de Controle Wallet — sitio público.
+
+   Esto no es solo la hoja de estilos del sitio: es el primer
+   borrador del lenguaje visual que después usará la aplicación.
+   Los tokens de color, la escala tipográfica y los cuatro escalones
+   de pantalla que se fijan aquí son los mismos que hereda la
+   etapa 4.
+
+   Dos reglas que vienen de la especificación y que valen más que
+   cualquier decisión estética:
+
+   1. NADA DE ANCHO MÁXIMO GLOBAL. El defecto más visible de la app
+      anterior era encerrarse en 720 px centrados con espacio muerto
+      a los lados en un monitor de 27". Aquí el límite de lectura se
+      lo pone el bloque que lo necesita (`.lectura`), nunca la
+      página entera.
+
+   2. NI UN ESTILO EN LÍNEA. Ni aquí ni en el HTML. Es lo que
+      permite que la política de seguridad lleve `style-src 'self'`
+      sin excepciones: aunque alguien lograra inyectar contenido en
+      la página, no podría darle forma ni ejecutar nada.
+   ============================================================ */
+
+/* ---------- tokens ---------- */
+
+:root {
+  /* Claro por omisión. El oscuro se define abajo y respeta la
+     preferencia del sistema operativo. */
+  --fondo:      #f9f9f7;
+  --superficie: #ffffff;
+  --elevado:    #f2f1ec;
+  --tinta:      #14140f;
+  --tenue:      #57564f;
+  --borde:      #e3e1d9;
+  --acento:     #146b45;
+  --acento-ct:  #ffffff;   /* texto sobre el acento */
+  --suave:      #e8f2ec;
+  --alerta:     #9a3412;
+
+  /* Escala fluida: crece con la pantalla sin saltos bruscos. */
+  --t-xs:   0.8125rem;
+  --t-sm:   0.9375rem;
+  --t-md:   1.0625rem;
+  --t-lg:   clamp(1.25rem, 0.9rem + 1.1vw, 1.65rem);
+  --t-xl:   clamp(1.75rem, 1.1rem + 2.4vw, 2.9rem);
+  --t-2xl:  clamp(2.3rem,  1.3rem + 4vw,   4.4rem);
+
+  --e1: 0.5rem;
+  --e2: 1rem;
+  --e3: 1.75rem;
+  --e4: 3rem;
+  --e5: 5rem;
+
+  --radio: 14px;
+  --linea: 1.6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo:      #0d0d0c;
+    --superficie: #171715;
+    --elevado:    #1f1f1c;
+    --tinta:      #f4f3ee;
+    --tenue:      #a8a79d;
+    --borde:      #2b2b27;
+    --acento:     #5cc491;
+    --acento-ct:  #0d0d0c;
+    --suave:      #14251d;
+    --alerta:     #f0a882;
+  }
+}
+
+/* ---------- base ---------- */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: var(--t-md);
+  line-height: var(--linea);
+  color: var(--tinta);
+  background: var(--fondo);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { line-height: 1.15; letter-spacing: -0.025em; margin: 0 0 var(--e2); text-wrap: balance; }
+h1 { font-size: var(--t-2xl); }
+h2 { font-size: var(--t-xl); }
+h3 { font-size: var(--t-lg); }
+p  { margin: 0 0 var(--e2); }
+
+a { color: var(--acento); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+
+/* Foco visible siempre. Quitarlo es la forma más rápida de dejar un
+   sitio inservible para quien navega con teclado. */
+:focus-visible {
+  outline: 3px solid var(--acento);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Para lectores de pantalla: visible solo al enfocarse con teclado. */
+.saltar {
+  position: absolute; left: var(--e2); top: -100px;
+  background: var(--acento); color: var(--acento-ct);
+  padding: var(--e1) var(--e2); border-radius: 8px; z-index: 10;
+  transition: top .15s;
+}
+.saltar:focus { top: var(--e2); }
+
+/* Límite de lectura: se lo pone el BLOQUE, no la página. */
+.lectura { max-width: 68ch; }
+.lectura-ancha { max-width: 90ch; }
+
+/* OJO con `ch` en los titulares. La unidad se mide contra la fuente DEL PROPIO
+   elemento, así que `68ch` en un h1 de 70 px son más de 3,000 px: la clase
+   parece aplicada y no limita nada. En un monitor grande el titular salía en
+   una sola línea larguísima — exactamente el defecto que veníamos a corregir.
+   Los titulares llevan su propia medida, en ch pero con el número que
+   corresponde a su tamaño. */
+h1.lectura { max-width: 20ch; }
+h2.lectura { max-width: 26ch; }
+h3.lectura { max-width: 32ch; }
+
+/* ---------- rejilla de página ---------- */
+
+/* El margen lateral crece con la pantalla en vez de dejar la
+   columna clavada en el centro con vacío a los lados. */
+.franja {
+  padding-inline: clamp(1.25rem, 5vw, 5rem);
+  padding-block: var(--e4);
+}
+.franja--alta { padding-block: var(--e5); }
+.franja--suave { background: var(--suave); }
+.franja--superficie { background: var(--superficie); border-block: 1px solid var(--borde); }
+
+/* ---------- encabezado ---------- */
+
+.cabecera {
+  display: flex; align-items: center; gap: var(--e3);
+  padding-inline: clamp(1.25rem, 5vw, 5rem);
+  padding-block: var(--e2);
+  border-bottom: 1px solid var(--borde);
+  background: var(--fondo);
+  position: sticky; top: 0; z-index: 5;
+}
+
+.marca {
+  display: inline-flex; align-items: center; gap: 0.6rem;
+  font-weight: 650; letter-spacing: -0.02em;
+  color: var(--tinta); text-decoration: none; font-size: var(--t-md);
+}
+.marca svg { width: 22px; height: 22px; stroke: var(--acento); fill: none; stroke-width: 2.1; stroke-linecap: round; }
+
+.menu { margin-left: auto; display: flex; align-items: center; gap: var(--e2); flex-wrap: wrap; }
+.menu a { color: var(--tenue); text-decoration: none; font-size: var(--t-sm); }
+.menu a:hover, .menu a[aria-current="page"] { color: var(--tinta); }
+
+/* En teléfono el menú pasa abajo del logo y se puede desplazar. */
+@media (max-width: 640px) {
+  .cabecera { flex-wrap: wrap; gap: var(--e1); position: static; }
+  .menu { margin-left: 0; width: 100%; overflow-x: auto; padding-bottom: 2px; }
+  .menu a { white-space: nowrap; }
+}
+
+/* ---------- botones ---------- */
+
+.boton {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.7rem 1.3rem; border-radius: 999px;
+  font-size: var(--t-sm); font-weight: 600; text-decoration: none;
+  border: 1px solid transparent; cursor: pointer;
+}
+.boton--principal { background: var(--acento); color: var(--acento-ct); }
+.boton--principal:hover { filter: brightness(1.08); }
+.boton--borde { border-color: var(--borde); color: var(--tinta); background: var(--superficie); }
+.boton--borde:hover { border-color: var(--acento); }
+
+.acciones { display: flex; flex-wrap: wrap; gap: var(--e1); margin-top: var(--e3); }
+
+/* ---------- portada ---------- */
+
+.portada { padding-block: clamp(3rem, 9vw, 7rem); }
+.portada h1 { margin-bottom: var(--e2); }
+.portada .entrada { font-size: var(--t-lg); color: var(--tenue); max-width: 46ch; }
+
+.rotulo {
+  display: inline-block; font-size: var(--t-xs); font-weight: 650;
+  letter-spacing: 0.09em; text-transform: uppercase; color: var(--acento);
+  margin-bottom: var(--e2);
+}
+
+/* ---------- rejillas que cambian de densidad, no solo de acomodo ---------- */
+
+.tarjetas {
+  display: grid; gap: var(--e2);
+  grid-template-columns: 1fr;
+  margin-top: var(--e3);
+}
+.tarjeta {
+  background: var(--superficie); border: 1px solid var(--borde);
+  border-radius: var(--radio); padding: var(--e3);
+}
+.tarjeta h3 { margin-bottom: var(--e1); }
+.tarjeta p:last-child { margin-bottom: 0; }
+.tarjeta__num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2rem; height: 2rem; border-radius: 999px;
+  background: var(--suave); color: var(--acento);
+  font-size: var(--t-sm); font-weight: 700; margin-bottom: var(--e2);
+}
+
+/* Los cuatro escalones. En cada uno se muestra MÁS, no lo mismo estirado. */
+@media (min-width: 700px)  { .tarjetas { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1100px) { .tarjetas { grid-template-columns: repeat(3, 1fr); gap: var(--e3); } }
+@media (min-width: 1700px) { .tarjetas--densa { grid-template-columns: repeat(4, 1fr); } }
+
+/* Bloque de dos columnas para texto + apoyo visual. */
+.dos { display: grid; gap: var(--e3); align-items: start; }
+@media (min-width: 900px) { .dos { grid-template-columns: 1fr 1fr; gap: var(--e4); } }
+@media (min-width: 1500px) { .dos { gap: var(--e5); } }
+
+/* ---------- el ejemplo del corte ---------- */
+
+.ejemplo {
+  background: var(--elevado); border: 1px solid var(--borde);
+  border-radius: var(--radio); padding: var(--e3);
+  font-variant-numeric: tabular-nums;
+}
+.ejemplo dl { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 0.65rem var(--e2); }
+.ejemplo dt { color: var(--tenue); font-size: var(--t-sm); }
+.ejemplo dd { margin: 0; text-align: right; font-size: var(--t-sm); }
+.ejemplo .total { border-top: 1px solid var(--borde); padding-top: 0.7rem; font-weight: 700; }
+.ejemplo .total dd, .ejemplo .total dt { font-size: var(--t-md); }
+.ejemplo .falta { color: var(--alerta); font-weight: 700; }
+.ejemplo__pie { margin: var(--e2) 0 0; font-size: var(--t-xs); color: var(--tenue); }
+
+/* ---------- listas ---------- */
+
+.lista { list-style: none; padding: 0; margin: var(--e2) 0 0; display: grid; gap: 0.6rem; }
+.lista li { padding-left: 1.7rem; position: relative; color: var(--tenue); }
+.lista li::before {
+  content: ""; position: absolute; left: 0; top: 0.62em;
+  width: 0.6rem; height: 0.6rem; border-radius: 999px;
+  background: var(--acento); opacity: 0.85;
+}
+.lista strong { color: var(--tinta); font-weight: 620; }
+
+/* ---------- preguntas ---------- */
+
+.pregunta {
+  border-bottom: 1px solid var(--borde);
+  padding-block: var(--e2);
+}
+.pregunta summary {
+  cursor: pointer; font-weight: 620; font-size: var(--t-md);
+  list-style: none; display: flex; justify-content: space-between; gap: var(--e2);
+}
+.pregunta summary::-webkit-details-marker { display: none; }
+.pregunta summary::after { content: "+"; color: var(--acento); font-weight: 400; font-size: 1.4em; line-height: 1; }
+.pregunta[open] summary::after { content: "–"; }
+.pregunta p { margin: var(--e2) 0 0; color: var(--tenue); max-width: 70ch; }
+
+/* ---------- planes ---------- */
+
+.planes { display: grid; gap: var(--e2); margin-top: var(--e3); }
+@media (min-width: 800px) { .planes { grid-template-columns: repeat(2, 1fr); gap: var(--e3); } }
+
+.plan {
+  border: 1px solid var(--borde); border-radius: var(--radio);
+  padding: var(--e3); background: var(--superficie);
+  display: flex; flex-direction: column;
+}
+.plan--destacado { border-color: var(--acento); border-width: 2px; }
+.plan__precio { font-size: var(--t-xl); font-weight: 700; letter-spacing: -0.03em; margin: var(--e1) 0; }
+.plan__nota { font-size: var(--t-sm); color: var(--tenue); }
+.plan .acciones { margin-top: auto; padding-top: var(--e3); }
+
+/* ---------- documentos legales ---------- */
+
+.legal h2 { font-size: var(--t-lg); margin-top: var(--e4); }
+.legal h2:first-of-type { margin-top: var(--e3); }
+.legal p, .legal li { color: var(--tenue); }
+.legal ul { padding-left: 1.2rem; }
+.legal li { margin-bottom: 0.4rem; }
+.legal .fecha { font-size: var(--t-sm); color: var(--tenue); }
+
+/* ---------- pie ---------- */
+
+.pie {
+  border-top: 1px solid var(--borde);
+  padding-inline: clamp(1.25rem, 5vw, 5rem);
+  padding-block: var(--e3);
+  display: grid; gap: var(--e2);
+  font-size: var(--t-sm); color: var(--tenue);
+}
+.pie nav { display: flex; flex-wrap: wrap; gap: var(--e2); }
+.pie a { color: var(--tenue); text-decoration: none; }
+.pie a:hover { color: var(--tinta); text-decoration: underline; }
+@media (min-width: 800px) {
+  .pie { grid-template-columns: 1fr auto; align-items: center; }
+}
+
+/* ---------- respeto por quien pide menos movimiento ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}

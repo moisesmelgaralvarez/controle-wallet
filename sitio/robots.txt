@@ -1,0 +1,10 @@
+# Controle Wallet
+#
+# El sitio público se indexa. La aplicación no: una ruta que exige sesión
+# iniciada no tiene nada que hacer en un buscador.
+
+User-agent: *
+Allow: /
+Disallow: /app/
+
+Sitemap: https://controlewallet.com/sitemap.xml

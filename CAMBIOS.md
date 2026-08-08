@@ -4,6 +4,42 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.7.0 — El armador: de las filas al documento
+
+*Primera mitad de la etapa 3.*
+
+**Qué se hizo**
+
+- `datos/armador.js`: convierte las filas de la base en el documento con la forma
+  que el núcleo espera desde siempre. Es el puente que permite tener la base
+  normalizada —para que dos personas editen a la vez sin pisarse— sin reescribir
+  1,700 líneas de aritmética probada.
+- Migración aditiva con las **anclas de conciliación** que faltaban: `saldoBanco`
+  en cuentas y tarjetas, y `retenido` en tarjetas. No son cosméticas: son contra
+  lo que se concilia. Sin ellas, el cierre de mes se quedaba sin una de sus tres
+  conciliaciones.
+- **24 comparaciones por ambos caminos**: el mismo hogar escrito como documento a
+  mano y como filas de base, y el núcleo tiene que dar el mismo número por los
+  dos. Si el armador se come un campo o pierde un decimal, alguno se separa.
+- **12 pruebas de integración contra la base real**: se escriben filas, se leen de
+  vuelta por la API, se arma el documento y se verifica que salen los números
+  correctos. Sin esto el armador solo estaría comparado contra fixtures que
+  escribí yo, y un nombre de columna mal puesto en los dos sitios pasaría en verde.
+
+**Lo que se descubrió al escribirlo**
+
+- Faltaban tres campos en el esquema. Aparecieron comparando campo por campo lo
+  que el núcleo *lee* contra lo que las tablas *ofrecen* — un hueco que no se ve
+  mirando el esquema, solo mirando quién lo consume.
+- PostgREST devuelve las columnas `numeric` como **texto**. Un `"8000.00"` que se
+  cuele sin convertir no revienta: se concatena, y el número absurdo aparece tres
+  pantallas después. Hay una prueba dedicada a que no quede ni uno.
+- Un pago cuenta como confirmado solo cuando **todas** sus líneas lo están.
+  Confirmar es un acto sobre el pago completo; con «alguna» bastaría para dar por
+  hecho un mes a medias.
+
+---
+
 ## v0.6.0 — El esquema multi-inquilino y su aislamiento
 
 *Etapa 2 de la fase 1.*

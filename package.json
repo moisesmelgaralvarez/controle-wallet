@@ -8,6 +8,7 @@
     "pruebas": "node --test \"pruebas/**/*.prueba.js\"",
     "pruebas:ver": "node --test --watch \"pruebas/**/*.prueba.js\"",
     "pruebas:aislamiento": "node --test pruebas/aislamiento.js",
+    "pruebas:integracion": "node --test pruebas/integracion.js",
     "migrar:pruebas": "supabase db push",
     "publicar": "wrangler deploy --env=\"\"",
     "publicar:pruebas": "wrangler deploy --env pruebas",

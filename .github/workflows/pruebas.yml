@@ -35,3 +35,33 @@ jobs:
 
       - name: Correr las pruebas
         run: npm run pruebas
+
+  # ------------------------------------------------------------
+  # Que un hogar no pueda ver el de otro no se comprueba leyendo
+  # las políticas: se comprueba intentando violarlas. Esta suite
+  # crea dos usuarios de verdad en el proyecto de PRUEBAS y hace
+  # unos cincuenta intentos de leer y escribir datos ajenos. Todos
+  # tienen que fallar.
+  #
+  # Corre contra `controle-pruebas`, nunca contra producción — la
+  # propia suite aborta si detecta el ref de producción.
+  # ------------------------------------------------------------
+  aislamiento:
+    name: Aislamiento entre hogares
+    runs-on: ubuntu-latest
+    # No se ejecuta en PRs venidos de un fork: los secretos no
+    # viajan ahí, y correrla sin credenciales solo daría ruido rojo.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Intentar romper el aislamiento
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY:    ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: npm run pruebas:aislamiento

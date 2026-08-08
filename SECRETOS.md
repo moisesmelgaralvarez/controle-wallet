@@ -26,6 +26,11 @@ acuerda de por qué existe una llave y a nadie le da confianza tocarla.
 | Contraseña de la base | Conexión directa a Postgres y migraciones | Gestor de contraseñas del dueño | Las migraciones desde la CLI |
 | `service_role` de Supabase | Borrado real de cuentas y tareas de administración | Secretos de Edge Functions. **Nunca en el navegador** | El borrado de cuenta y el panel de plataforma |
 | Token de API de Cloudflare | Publicar desde CI | Secretos del repositorio en GitHub | La publicación automática |
+| `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY` | Correr la suite de aislamiento en CI | Secretos del repositorio en GitHub | Las pruebas de aislamiento entre hogares |
+
+> Los tres últimos son **del proyecto de pruebas**, nunca de producción. La suite
+> de aislamiento crea y borra usuarios: apuntarla a producción sería destructivo,
+> y por eso el propio archivo aborta si detecta el ref de producción.
 
 La clave `anon` de Supabase **no es un secreto**: va dentro de la aplicación y eso
 es correcto. Por sí sola no abre nada, porque cada tabla exige sesión iniciada y

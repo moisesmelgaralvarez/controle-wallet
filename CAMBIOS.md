@@ -4,6 +4,41 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.5.0 — La vitrina de dispositivos
+
+**Qué se hizo**
+
+- Tres pantallas en la portada —computadora, tableta y teléfono— con la interfaz
+  de la aplicación dibujada por dentro: tablero con fichas de cifras, gráfica de
+  historia, tabla de plan contra real, el corte de la tarjeta y las barras del
+  pulso.
+- **Están dibujadas en HTML y CSS, no son capturas.** Pesan casi nada, se ven
+  nítidas en cualquier resolución y siguen el modo claro u oscuro de quien mira.
+  Una imagen no hace ninguna de las tres cosas.
+- Cada aparato se desplaza a distinta velocidad al bajar. Esa diferencia es lo
+  que el ojo lee como profundidad — antes las tres capas iban casi al mismo
+  ritmo y por eso el efecto se sentía pobre.
+- Proporciones reales: 16:10 la computadora, 3:4 la tableta, 1:2.05 el teléfono.
+  Sin eso eran rectángulos redondeados cuyo alto decidía el contenido.
+
+**Correcciones sobre la primera versión**
+
+- La tableta tapaba la tabla de la computadora. Se recompuso para que el traslape
+  sea de bordes, no de contenido.
+- Las barras de la gráfica usaban `--suave` sobre `--superficie`, que en modo
+  oscuro son casi el mismo color: desaparecían. Ahora se mezclan con el acento.
+- Un ancho de barra se me fue como atributo en el HTML. Los anchos y alturas van
+  como clase: un solo estilo en línea obligaría a abrirle la mano a la CSP con
+  `unsafe-inline`, y esa concesión no se hace por dibujar dos barras.
+
+**Lo que hay que saber**
+
+- **Las pantallas muestran la interfaz que se va a construir, no una terminada.**
+  La aplicación es la etapa 4. Este trabajo es también el diseño de esa etapa,
+  adelantado.
+
+---
+
 ## v0.4.0 — Portada con profundidad, y las puertas de entrada
 
 **Qué se hizo**

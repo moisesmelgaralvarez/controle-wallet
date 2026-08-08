@@ -13,6 +13,7 @@
 <meta property="og:locale" content="es_HN">
 <link rel="stylesheet" href="/sitio.css">
 <link rel="stylesheet" href="/inicio.css">
+<link rel="stylesheet" href="/dispositivos.css">
 </head>
 <body>
 
@@ -112,6 +113,138 @@
             faltante a la vista todavía se puede mover algo.
           </p>
         </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── vitrina de dispositivos ───────────────────────────── -->
+  <!-- Las pantallas están DIBUJADAS en HTML y CSS, no son capturas. Pesan
+       casi nada, se ven nítidas en cualquier resolución y siguen el modo
+       claro u oscuro de quien mira. Una imagen no hace ninguna de las tres. -->
+  <section class="franja franja--alta escena vitrina">
+    <div class="escena__halo" aria-hidden="true"></div>
+
+    <div class="vitrina__intro revelar">
+      <p class="rotulo">Una cuenta, todas las pantallas</p>
+      <h2 class="lectura">El mismo hogar, se abra donde se abra</h2>
+      <p class="lectura">
+        En el teléfono, lo que se necesita de pie en la fila del súper. En la
+        computadora, el tablero completo con la historia al lado. No es la misma
+        pantalla estirada: cada tamaño muestra lo que cabe bien.
+      </p>
+    </div>
+
+    <div class="aparatos">
+
+      <!-- Escritorio -->
+      <div class="disp disp--escritorio">
+        <div class="pantalla">
+          <div class="barra" aria-hidden="true">
+            <i></i><i></i><i></i>
+            <span>controlewallet.com/app</span>
+          </div>
+          <div class="ui ui--con-riel" aria-hidden="true">
+            <nav class="riel">
+              <b>Controle</b>
+              <u class="on">Resumen</u>
+              <u>Presupuesto</u>
+              <u>Proyectos</u>
+              <u>Movimientos</u>
+              <u>Historia</u>
+            </nav>
+            <div class="ui">
+              <div class="ui__cabeza">
+                <span class="ui__titulo">Resumen</span>
+                <span class="ui__mes">Agosto 2026 · 7 ago – 6 sep</span>
+              </div>
+
+              <div class="fichas fichas--4">
+                <div class="ficha"><em>Disponible real</em><b class="bien">L 12,480</b></div>
+                <div class="ficha"><em>Ingreso neto</em><b>L 42,300</b></div>
+                <div class="ficha"><em>Gastos del mes</em><b>L 28,600</b></div>
+                <div class="ficha"><em>Cuotas</em><b>L 1,220</b></div>
+              </div>
+
+              <div class="grafica">
+                <i></i><i></i><i></i><i></i><i></i><i></i>
+                <i></i><i></i><i></i><i></i><i></i><i class="act"></i>
+              </div>
+
+              <table class="tabla">
+                <thead>
+                  <tr><th>Categoría</th><th>Plan</th><th>Real</th><th>Diferencia</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Alimentación</td><td class="num">L 12,000</td><td class="num">L 12,840</td><td class="num">+840</td></tr>
+                  <tr><td>Servicios</td><td class="num">L 6,400</td><td class="num">L 6,180</td><td class="num baja">−220</td></tr>
+                  <tr><td>Transporte</td><td class="num">L 4,200</td><td class="num">L 4,910</td><td class="num">+710</td></tr>
+                  <tr><td>Salud</td><td class="num">L 3,000</td><td class="num">L 2,470</td><td class="num baja">−530</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <p class="pie-disp">Computadora · tablero completo</p>
+      </div>
+
+      <!-- Tableta -->
+      <div class="disp disp--tableta">
+        <div class="pantalla">
+          <div class="ui" aria-hidden="true">
+            <div class="ui__cabeza">
+              <span class="ui__titulo">Tarjeta</span>
+            </div>
+            <div class="corte">
+              <span class="corte__t">Ciclo 7 jul – 6 ago</span>
+              <span class="corte__f"><em>Consumido</em><span>L 19,101</span></span>
+              <span class="corte__f"><em>Abonado</em><span>L 14,840</span></span>
+              <span class="corte__f total"><em>Adeudado</em><span>L 4,261</span></span>
+            </div>
+            <div class="movs">
+              <div class="mov"><i></i><em><b>Supermercado</b><u>Alimentación</u></em><span>L 2,410</span></div>
+              <div class="mov"><i></i><em><b>Combustible</b><u>Transporte</u></em><span>L 1,180</span></div>
+              <div class="mov"><i></i><em><b>Farmacia</b><u>Salud</u></em><span>L 640</span></div>
+              <div class="mov"><i></i><em><b>Colegio</b><u>Hogar</u></em><span>L 3,900</span></div>
+            </div>
+          </div>
+        </div>
+        <p class="pie-disp">Tableta</p>
+      </div>
+
+      <!-- Teléfono -->
+      <div class="disp disp--telefono">
+        <div class="pantalla">
+          <div class="muesca" aria-hidden="true"></div>
+          <div class="ui" aria-hidden="true">
+            <div class="ui__cabeza">
+              <span class="ui__titulo">Resumen</span>
+            </div>
+            <div class="ficha"><em>Disponible real</em><b class="bien">L 12,480</b></div>
+
+            <div class="pulso">
+              <div class="pulso__fila">
+                <em><span>Mes corrido</span><span>63%</span></em>
+                <div class="pulso__via"><div class="pulso__va va-63"></div></div>
+              </div>
+              <div class="pulso__fila">
+                <em><span>Presupuesto ido</span><span>71%</span></em>
+                <div class="pulso__via"><div class="pulso__va pulso__va--alerta va-71"></div></div>
+              </div>
+            </div>
+
+            <div class="corte">
+              <span class="corte__t">Corta en 4 días</span>
+              <span class="corte__f total"><em>Faltan</em><span>L 4,261</span></span>
+            </div>
+
+            <div class="movs">
+              <div class="mov"><i></i><em><b>Supermercado</b><u>Hoy</u></em><span>L 2,410</span></div>
+              <div class="mov"><i></i><em><b>Combustible</b><u>Ayer</u></em><span>L 1,180</span></div>
+            </div>
+          </div>
+        </div>
+        <p class="pie-disp">Teléfono</p>
       </div>
 
     </div>

@@ -25,45 +25,38 @@
   </nav>
 </header>
 
-<!-- Los campos van deshabilitados A PROPÓSITO mientras la sesión no exista
-     (llega en la etapa 3, sobre las tablas de la etapa 2). Un formulario que
-     parece funcionar y se traga la contraseña de alguien sin hacer nada es
-     peor que no tener formulario: enseña a la gente a escribir credenciales
-     en pantallas que no las piden de verdad. Cuando la autenticación esté,
-     se quita el aviso y el `disabled`. -->
-
 <main id="principal" class="acceso">
-  <div class="acceso__caja">
-
-    <div class="aviso">
-      <strong>El acceso todavía no está abierto</strong>
-      <p>
-        Estamos terminando la aplicación. Dejanos tu correo y te avisamos el día
-        que abra — sin costo mientras dure la construcción.
-      </p>
-    </div>
+  <form class="acceso__caja" id="forma" novalidate>
 
     <h1>Entrar</h1>
+    <p class="acceso__intro">Tus datos viven en el servidor: entrás desde donde sea y está todo.</p>
+
+    <!-- Los mensajes van en una región `live` para que un lector de
+         pantalla los anuncie sin que el foco tenga que moverse. -->
+    <p class="aviso aviso--error" id="error" role="alert" hidden></p>
 
     <label class="campo">
       <span>Correo</span>
-      <input type="email" name="correo" autocomplete="email" placeholder="vos@ejemplo.com" disabled>
+      <input type="email" id="correo" name="correo" autocomplete="username"
+             placeholder="vos@ejemplo.com" required autofocus>
     </label>
 
     <label class="campo">
       <span>Contraseña</span>
-      <input type="password" name="clave" autocomplete="current-password" placeholder="••••••••" disabled>
+      <input type="password" id="clave" name="clave" autocomplete="current-password"
+             placeholder="Tu contraseña" required>
     </label>
 
-    <a class="boton boton--principal" href="mailto:hola@controlewallet.com?subject=Avisame%20cuando%20abra%20el%20acceso">
-      Avisame cuando abra
-    </a>
+    <button class="boton boton--principal" type="submit" id="enviar">Entrar</button>
 
+    <p class="acceso__pie">
+      <a href="#" id="olvide">Olvidé mi contraseña</a>
+    </p>
     <p class="acceso__pie">
       ¿Todavía no tenés cuenta? <a href="/registro">Crear cuenta</a>
     </p>
 
-  </div>
+  </form>
 </main>
 
 <footer class="pie">
@@ -77,5 +70,6 @@
   <p>© 2026 Controle Wallet · Honduras</p>
 </footer>
 
+<script type="module" src="/entrar.js"></script>
 </body>
 </html>

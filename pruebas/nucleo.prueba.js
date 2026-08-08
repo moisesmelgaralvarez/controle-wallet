@@ -18,8 +18,8 @@
    ============================================================ */
 
 import { grupo, probar, cerca } from './ayuda.js';
-import * as A from '../nucleo/index.js';
-import * as I from '../nucleo/importar.js';
+import * as A from '../sitio/app/nucleo/index.js';
+import * as I from '../sitio/app/nucleo/importar.js';
 
 /* ============ el hogar de prueba ============ */
 

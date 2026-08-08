@@ -4,6 +4,50 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.8.0 — Sesión real y la primera pantalla
+
+*Segunda mitad de la etapa 3, y el arranque de la etapa 4.*
+
+**Qué se hizo**
+
+- **El registro y el inicio de sesión funcionan.** Se acabaron los formularios
+  deshabilitados: se crea la cuenta, se confirma por correo, se entra, y hay
+  recuperación de contraseña.
+- Cliente de datos propio (`datos/api.js`), unas doscientas líneas de `fetch`
+  contra PostgREST y GoTrue. **Sin SDK**: el oficial pesa más de cien kilobytes,
+  trae su propio árbol de dependencias y obligaría a abrirle la mano a la política
+  de seguridad.
+- `datos/hogar.js` decide qué se baja: la configuración una vez, y lo que pasó
+  **por mes**. Un hogar con tres años de historia no le baja tres años al teléfono
+  para enseñarle agosto. Todo en memoria — al cerrar la pestaña no queda nada.
+- **La primera pantalla de la aplicación**, en `/app`: disponible real, ingreso,
+  gastos, cuotas, el pulso del mes y el ciclo de cada tarjeta. Con riel lateral en
+  pantalla grande y barra de pestañas en teléfono.
+- El esquema se aplicó también a **producción**.
+- El núcleo y el armador se mudaron dentro de `sitio/`, que es lo que se publica.
+  Ahora lo que las pruebas ejercitan es exactamente lo que corre en el navegador.
+
+**Comprobado de punta a punta**
+
+Registro → sesión → hogar traído del servidor → números en pantalla. Y lo que más
+importa: **en el dispositivo queda una sola cosa, `controle.sesion`.** Ni un gasto,
+ni un saldo, ni un movimiento.
+
+**Un error que se veía pero no avisaba**
+
+Las barras del pulso salían llenas y marcando 0%. Le pedía al núcleo unos campos
+que no existen; el `undefined` se volvía `NaN%`, el navegador descartaba el ancho y
+la barra quedaba al 100%. Los campos de verdad son `avanceMes` y `avanceGasto`.
+
+**Lo que hay que saber**
+
+- **Los correos de confirmación todavía salen por el remitente compartido de
+  Supabase**, que está limitado a unos pocos por hora. Para que un desconocido
+  pueda registrarse de verdad hay que configurar Resend como SMTP en el panel de
+  Supabase — hace falta la clave de API de Resend, que solo tiene el dueño.
+
+---
+
 ## v0.7.0 — El armador: de las filas al documento
 
 *Primera mitad de la etapa 3.*

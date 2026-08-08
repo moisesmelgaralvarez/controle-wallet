@@ -327,6 +327,23 @@ h3.lectura { max-width: 32ch; }
 .aviso strong { display: block; margin-bottom: 0.3rem; color: var(--tinta); }
 .aviso p { margin: 0; color: var(--tenue); }
 
+/* Un fallo de acceso se anuncia en rojo y con `role="alert"`, para
+   que un lector de pantalla lo diga sin que el foco tenga que
+   moverse hasta él. */
+.aviso--error {
+  background: color-mix(in oklab, var(--alerta) 12%, transparent);
+  border-color: color-mix(in oklab, var(--alerta) 45%, transparent);
+  color: var(--tinta);
+}
+.aviso--ok {
+  background: var(--suave);
+  border-color: color-mix(in oklab, var(--acento) 45%, transparent);
+  color: var(--tinta);
+}
+
+.acceso__intro { font-size: var(--t-sm); color: var(--tenue); margin-bottom: var(--e3); }
+.campo__ayuda { display: block; margin-top: 0.3rem; font-size: var(--t-xs); color: var(--tenue); }
+
 .campo { display: block; margin-bottom: var(--e2); }
 .campo span { display: block; font-size: var(--t-sm); font-weight: 600; margin-bottom: 0.35rem; }
 .campo input {

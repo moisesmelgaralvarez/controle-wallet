@@ -25,51 +25,50 @@
   </nav>
 </header>
 
-<!-- Mismo criterio que en /entrar: los campos están deshabilitados hasta que
-     el registro exista de verdad (etapa 3). Ver el comentario de aquel archivo. -->
-
 <main id="principal" class="acceso">
-  <div class="acceso__caja">
-
-    <div class="aviso">
-      <strong>El registro todavía no está abierto</strong>
-      <p>
-        Estamos terminando la aplicación. Dejanos tu correo y sos de los
-        primeros en entrar — sin costo mientras dure la construcción.
-      </p>
-    </div>
+  <form class="acceso__caja" id="forma" novalidate>
 
     <h1>Crear cuenta</h1>
+    <p class="acceso__intro">Sin costo mientras dure la construcción.</p>
+
+    <p class="aviso aviso--error" id="error" role="alert" hidden></p>
 
     <label class="campo">
       <span>Cómo te llamás</span>
-      <input type="text" name="nombre" autocomplete="name" placeholder="Tu nombre" disabled>
+      <input type="text" id="nombre" name="nombre" autocomplete="name"
+             placeholder="Tu nombre" required autofocus>
+    </label>
+
+    <label class="campo">
+      <span>Nombre del hogar</span>
+      <input type="text" id="hogar" name="hogar" autocomplete="off" placeholder="Mi hogar">
+      <small class="campo__ayuda">Podés cambiarlo después.</small>
     </label>
 
     <label class="campo">
       <span>Correo</span>
-      <input type="email" name="correo" autocomplete="email" placeholder="vos@ejemplo.com" disabled>
+      <input type="email" id="correo" name="correo" autocomplete="username"
+             placeholder="vos@ejemplo.com" required>
     </label>
 
     <label class="campo">
       <span>Contraseña</span>
-      <input type="password" name="clave" autocomplete="new-password" placeholder="Mínimo 8 caracteres" disabled>
+      <input type="password" id="clave" name="clave" autocomplete="new-password"
+             placeholder="Mínimo 8 caracteres" minlength="8" required>
+      <small class="campo__ayuda">Ocho caracteres o más.</small>
     </label>
 
-    <a class="boton boton--principal" href="mailto:hola@controlewallet.com?subject=Quiero%20acceso%20anticipado">
-      Avisame cuando abra
-    </a>
+    <button class="boton boton--principal" type="submit" id="enviar">Crear cuenta</button>
 
     <p class="acceso__pie">
       Al crear tu cuenta aceptás los <a href="/terminos">términos</a> y la
       <a href="/privacidad">política de privacidad</a>.
     </p>
-
     <p class="acceso__pie">
       ¿Ya tenés cuenta? <a href="/entrar">Entrar</a>
     </p>
 
-  </div>
+  </form>
 </main>
 
 <footer class="pie">
@@ -83,5 +82,6 @@
   <p>© 2026 Controle Wallet · Honduras</p>
 </footer>
 
+<script type="module" src="/registro.js"></script>
 </body>
 </html>

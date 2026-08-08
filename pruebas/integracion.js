@@ -20,8 +20,8 @@
 
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import * as A from '../nucleo/index.js';
-import { armar, CONFIGURACION, POR_MES } from '../datos/armador.js';
+import * as A from '../sitio/app/nucleo/index.js';
+import { armar, CONFIGURACION, POR_MES } from '../sitio/app/datos/armador.js';
 
 const URL     = process.env.SUPABASE_URL;
 const ANON    = process.env.SUPABASE_ANON_KEY;

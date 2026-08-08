@@ -18,7 +18,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import * as nuevo from '../nucleo/index.js';
+import * as nuevo from '../sitio/app/nucleo/index.js';
 
 /* El núcleo viejo es un IIFE que cuelga su API de `window`. Se le da
    un `window` de mentira y se ejecuta: no toca red, DOM ni reloj más
@@ -63,7 +63,7 @@ test('el núcleo no arrastró dependencias del navegador', () => {
   // podría correr en el servidor — y la regla 2 dice que tiene que
   // correr igual en los tres sitios. Se revisa el texto de los
   // módulos, que es la única forma de verlo sin ejecutarlos todos.
-  const dir = new URL('../nucleo/', import.meta.url);
+  const dir = new URL('../sitio/app/nucleo/', import.meta.url);
   const archivos = ['base.js', 'fechas.js', 'ingresos.js', 'financiamientos.js',
                     'saldos.js', 'sugerido.js', 'proyeccion.js', 'pulso.js',
                     'patrimonio.js', 'prioridad.js', 'carta.js', 'importar.js', 'index.js'];

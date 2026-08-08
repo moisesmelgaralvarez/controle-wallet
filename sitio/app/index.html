@@ -3,33 +3,69 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Controle Wallet · Aplicación</title>
+<title>Controle Wallet</title>
 <meta name="robots" content="noindex">
 <link rel="stylesheet" href="/sitio.css">
+<link rel="stylesheet" href="/app/app.css">
 </head>
 <body>
 
-<!-- Marcador de posición de la aplicación.
+<div class="app">
 
-     La app real llega en la etapa 4 (interfaz) sobre la capa de datos de la
-     etapa 3. Esta página existe para fijar la ruta /app desde ya y comprobar
-     que se sirve con las mismas cabeceras que el resto del sitio.
+  <!-- El MISMO juego de destinos en los dos sitios: riel en pantalla
+       grande, barra de pestañas en teléfono. Un solo lugar donde
+       cambiar cuando se agregue una vista. -->
+  <aside class="riel-app app__riel">
+    <a class="riel-app__marca" href="/app/">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg>
+      <span>Controle Wallet</span>
+    </a>
+    <a class="nav" href="/app/" aria-current="page">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg>
+      Resumen
+    </a>
+    <div class="riel-app__pie">
+      <span class="estado" id="estado" data-estado="cargando">
+        <span class="estado__punto" aria-hidden="true"></span>
+        <span id="estadoTexto">Cargando…</span>
+      </span>
+      <button class="boton boton--borde" type="button" id="salir">Cerrar sesión</button>
+    </div>
+  </aside>
 
-     Va con noindex: una ruta de aplicación no tiene nada que hacer en un
-     buscador. -->
+  <div>
+    <p class="solo-lectura" id="soloLectura" hidden>
+      Sin conexión. Podés ver lo último cargado, pero no registrar nada — los
+      datos viven en el servidor.
+    </p>
 
-<main class="franja portada">
-  <p class="rotulo">Controle Wallet</p>
-  <h1 class="lectura">La aplicación todavía no vive aquí</h1>
-  <p class="entrada">
-    Esta dirección está reservada. Cuando abra el acceso anticipado, se entra
-    por aquí.
-  </p>
-  <div class="acciones">
-    <a class="boton boton--principal" href="/contacto">Pedir acceso anticipado</a>
-    <a class="boton boton--borde" href="/">Ir al sitio</a>
+    <header class="tope">
+      <h1 id="titulo">Resumen</h1>
+      <span class="tope__mes" id="mes"></span>
+      <div class="tope__der">
+        <span class="estado" id="estado2" data-estado="cargando">
+          <span class="estado__punto" aria-hidden="true"></span>
+          <span id="estadoTexto2">Cargando…</span>
+        </span>
+      </div>
+    </header>
+
+    <main class="contenido" id="vista">
+      <div class="cargando" id="cargando">
+        <p>Trayendo tu hogar del servidor…</p>
+      </div>
+    </main>
   </div>
-</main>
 
+  <nav class="barra-app app__barra" aria-label="Secciones">
+    <a href="/app/" aria-current="page">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg>
+      Resumen
+    </a>
+  </nav>
+
+</div>
+
+<script type="module" src="/app/app.js"></script>
 </body>
 </html>

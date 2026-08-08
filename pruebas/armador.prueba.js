@@ -17,8 +17,8 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import * as A from '../nucleo/index.js';
-import { armar } from '../datos/armador.js';
+import * as A from '../sitio/app/nucleo/index.js';
+import { armar } from '../sitio/app/datos/armador.js';
 
 /* ------------------------------------------------------------
    El hogar, a mano. Ejercita lo que de verdad cuesta: ingreso con

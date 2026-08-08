@@ -4,6 +4,43 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.6.0 — El esquema multi-inquilino y su aislamiento
+
+*Etapa 2 de la fase 1.*
+
+**Qué se hizo**
+
+- Veinte tablas en dos migraciones numeradas, cada una con su reverso escrito.
+  Se acabó el documento único `jsonb`: ahora cada gasto, cada movimiento y cada
+  ingreso es una fila. Con dos personas editando a la vez, un solo bloque por
+  hogar significa que el último que guarda le borra el trabajo al otro.
+- Montos en `numeric(14,2)`, no en flotante. En la base los montos se suman y se
+  concilian contra lo que dice el banco, y un flotante binario no representa 0.10
+  exacto.
+- RLS en todas, con funciones `SECURITY DEFINER` (`es_miembro`, `puede_escribir`,
+  `es_propietario`). **No se guardó la lista de hogares en el token de sesión**:
+  es más rápido, pero un token ya emitido no cambia hasta renovarse, y quitarle el
+  acceso a alguien tardaría hasta una hora en surtir efecto. En un producto donde
+  dos personas comparten las finanzas de su casa, eso es inaceptable.
+- Al registrarse, un disparador crea el perfil, el hogar y la membresía de
+  propietario. Va en la base y no en el navegador para que ocurra siempre: si
+  dependiera de una llamada posterior, una pestaña cerrada a destiempo dejaría
+  usuarios sin hogar.
+- **Un mes cerrado es inmutable, impuesto por la base.** Y se tapó la escapatoria:
+  tampoco se puede sacar un registro de un mes cerrado cambiándole el período.
+- **Suite de aislamiento: 22 pruebas, unos 55 intentos de violación, todas
+  rechazadas.** Corre en CI en cada Pull Request contra el proyecto de pruebas.
+
+**Detalles que costaron un intento**
+
+- Los archivos `.reverso.sql` estaban en `supabase/migrations/`. La CLI toma todo
+  `.sql` de esa carpeta como migración: se habrían ejecutado y habrían borrado las
+  tablas recién creadas. Viven ahora en `supabase/reversos/`.
+- `gen_random_bytes` vive en la extensión `pgcrypto`, que en Supabase está en el
+  esquema `extensions`. Se referencia con nombre completo.
+
+---
+
 ## v0.5.0 — La vitrina de dispositivos
 
 **Qué se hizo**

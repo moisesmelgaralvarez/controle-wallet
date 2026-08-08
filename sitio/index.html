@@ -1,41 +1,193 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-HN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Controle Wallet</title>
-<meta name="description" content="Finanzas personales del hogar.">
-<meta name="robots" content="noindex">
-<link rel="stylesheet" href="/base.css">
+<title>Controle Wallet — El presupuesto del hogar, sin engañarse</title>
+<meta name="description" content="Presupuesto familiar que entiende cómo se vive de verdad: tarjeta por ciclo de corte, ingresos que cambian cada mes y cuotas que se terminan. Para el hogar, no para una persona sola.">
+<link rel="canonical" href="https://controlewallet.com/">
+<meta property="og:title" content="Controle Wallet">
+<meta property="og:description" content="El presupuesto del hogar, sin engañarse.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://controlewallet.com/">
+<meta property="og:locale" content="es_HN">
+<link rel="stylesheet" href="/sitio.css">
 </head>
 <body>
 
-<!-- Marcador de posición de la etapa 0.
+<a class="saltar" href="#principal">Saltar al contenido</a>
 
-     Está aquí para demostrar que el Worker publica, que el dominio
-     resuelve y que las cabeceras de _headers llegan al navegador.
-     El sitio público de verdad se escribe en la etapa 7.
+<header class="cabecera">
+  <a class="marca" href="/">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg>
+    <span>Controle Wallet</span>
+  </a>
+  <nav class="menu" aria-label="Principal">
+    <a href="/" aria-current="page">Inicio</a>
+    <a href="/precios">Precios</a>
+    <a href="/preguntas">Preguntas</a>
+    <a href="/contacto">Contacto</a>
+  </nav>
+</header>
 
-     Lleva noindex a propósito: mientras no haya producto que
-     ofrecer, no queremos que Google indexe una página en obras. -->
+<main id="principal">
 
-<main class="lectura">
-  <p class="marca">Controle Wallet</p>
-  <h1>En construcción</h1>
-  <p>
-    Estamos armando el servicio. Todavía no hay nada que ver aquí.
-  </p>
-
-  <div class="nota">
-    <p>
-      Si llegaste buscando la aplicación del hogar, sigue funcionando
-      donde siempre. Esta dirección es la casa nueva y aún está vacía.
+  <section class="franja portada">
+    <p class="rotulo">Finanzas del hogar</p>
+    <h1 class="lectura">El presupuesto del hogar, sin engañarse</h1>
+    <p class="entrada">
+      La mayoría de las apps de presupuesto suponen que ganás lo mismo todos los
+      meses y que la tarjeta es una deuda aparte. En un hogar real, ninguna de
+      las dos cosas es cierta.
     </p>
-    <p>
-      Etapa 0 · fundación del repositorio y la publicación.
-    </p>
-  </div>
+    <div class="acciones">
+      <a class="boton boton--principal" href="/contacto">Pedir acceso anticipado</a>
+      <a class="boton boton--borde" href="/preguntas">Cómo funciona</a>
+    </div>
+  </section>
+
+  <section class="franja franja--superficie">
+    <div class="dos">
+      <div>
+        <h2 class="lectura">La tarjeta no es una deuda: es por dónde pasa el gasto</h2>
+        <p class="lectura">
+          Si cargás el súper, la gasolina y la farmacia a la tarjeta, y después la
+          pagás con el sueldo, restar el gasto <em>y además</em> el pago de la
+          tarjeta cuenta el mismo dinero dos veces. Así es como una app te dice
+          que estás quebrado cuando no lo estás.
+        </p>
+        <p class="lectura">
+          Controle Wallet la vigila aparte, por ciclo de corte, que es la pregunta
+          que de verdad importa cada mes:
+          <strong>¿el ingreso que la paga alcanza a cubrirla?</strong>
+        </p>
+      </div>
+
+      <div class="ejemplo">
+        <h3>Ciclo del 7 de julio al 6 de agosto</h3>
+        <dl>
+          <dt>Se cargó a la tarjeta</dt>
+          <dd>L 19,101.00</dd>
+          <dt>Lo paga: Comisiones</dt>
+          <dd>L 14,840.00</dd>
+          <div class="total">
+            <dt>Faltan</dt>
+            <dd class="falta">L 4,261.00</dd>
+          </div>
+        </dl>
+        <p class="ejemplo__pie">
+          Esa diferencia sale de las quincenas o se queda revolviendo con
+          intereses. Saberlo el día 20 no es lo mismo que enterarse el día 6.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="franja">
+    <p class="rotulo">Lo que cambia</p>
+    <h2 class="lectura">Hecho para cómo se vive de verdad</h2>
+
+    <div class="tarjetas tarjetas--densa">
+      <article class="tarjeta">
+        <span class="tarjeta__num" aria-hidden="true">1</span>
+        <h3>Los ingresos cambian</h3>
+        <p>
+          Si trabajás por comisión, el mes bueno paga más retención y el neto no
+          es el de siempre. Cada pago se confirma con lo que de verdad entró, y
+          lo que todavía no se confirmó aparece marcado como estimado en toda la
+          app. Nunca vas a confundir una proyección con un hecho.
+        </p>
+      </article>
+
+      <article class="tarjeta">
+        <span class="tarjeta__num" aria-hidden="true">2</span>
+        <h3>Las cuotas se terminan</h3>
+        <p>
+          La refri a doce cuotas no es un gasto eterno. La app sabe cuántas
+          faltan, así que también sabe en qué mes se libera ese dinero — y te
+          avisa que a partir de ahí tus metas avanzan más rápido.
+        </p>
+      </article>
+
+      <article class="tarjeta">
+        <span class="tarjeta__num" aria-hidden="true">3</span>
+        <h3>El mes no siempre empieza el 1</h3>
+        <p>
+          Muchos hogares viven en el ciclo de su tarjeta: «agosto» va del 7 de
+          agosto al 6 de septiembre. Vos decidís qué día arranca tu mes y todo
+          lo demás se acomoda.
+        </p>
+      </article>
+
+      <article class="tarjeta">
+        <span class="tarjeta__num" aria-hidden="true">4</span>
+        <h3>El hogar son dos</h3>
+        <p>
+          Invitás a tu pareja o a quien administre con vos. Los dos ven lo mismo
+          al mismo tiempo, cada quien registra lo suyo, y queda constancia de
+          quién anotó qué.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <section class="franja franja--suave">
+    <p class="rotulo">El pulso</p>
+    <div class="dos">
+      <div>
+        <h2 class="lectura">Gastar el 26% es normal el día 20 y es alarma el día 4</h2>
+        <p class="lectura">
+          Esa comparación —cuánto mes ha corrido contra cuánto presupuesto se ha
+          ido— es toda la señal que hace falta para corregir a tiempo. Debajo, la
+          cifra accionable: a este ritmo cerrás en tanto, y para llegar justo te
+          quedan tanto al día.
+        </p>
+      </div>
+      <div>
+        <ul class="lista">
+          <li><strong>Cierre de mes</strong> con el presupuesto congelado, para que bajar el gasto de septiembre no reescriba agosto hacia atrás.</li>
+          <li><strong>Estados de cuenta</strong> de BAC y Ficohsa, o cualquier CSV, importados y conciliados sin duplicar nada.</li>
+          <li><strong>Facturas por foto</strong>: comercio, fecha, total y categoría leídos solos. Vos confirmás antes de que entre.</li>
+          <li><strong>Proyectos con veredicto</strong>: viable, ajustado o no viable, con cuánto apartar al mes y en cuántos meses llegás.</li>
+          <li><strong>Efectivo y retiros</strong> como lo que son: sacar plata del cajero no es un gasto, es un traslado.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="franja franja--superficie">
+    <div class="lectura">
+      <p class="rotulo">Dónde va</p>
+      <h2>En construcción, y a la vista</h2>
+      <p>
+        Controle Wallet nació como una herramienta privada que una familia usó
+        durante meses antes de convertirse en producto. Ese motor de cálculo —el
+        que decide si el corte alcanza y si una meta es viable— ya está probado
+        con dinero real.
+      </p>
+      <p>
+        Lo que estamos construyendo ahora es todo lo demás: las cuentas, la
+        interfaz nueva y la seguridad que hace falta para guardar los números de
+        alguien más.
+      </p>
+      <div class="acciones">
+        <a class="boton boton--principal" href="/contacto">Avisame cuando abra</a>
+      </div>
+    </div>
+  </section>
+
 </main>
+
+<footer class="pie">
+  <nav aria-label="Pie de página">
+    <a href="/precios">Precios</a>
+    <a href="/preguntas">Preguntas frecuentes</a>
+    <a href="/contacto">Contacto</a>
+    <a href="/terminos">Términos</a>
+    <a href="/privacidad">Privacidad</a>
+  </nav>
+  <p>© 2026 Controle Wallet · Honduras</p>
+</footer>
 
 </body>
 </html>

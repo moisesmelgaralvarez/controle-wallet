@@ -4,6 +4,49 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.3.0 — El sitio público
+
+*Etapa 7 de la fase 1, adelantada a pedido del dueño para tener algo visible en
+`controlewallet.com` mientras se construye la aplicación por dentro.*
+
+**Qué se hizo**
+
+- Seis páginas: inicio, precios, preguntas frecuentes, contacto, términos y
+  condiciones, y privacidad. Más el 404 y el marcador de `/app`.
+- Sistema visual propio (`sitio.css`) que es también el primer borrador del
+  lenguaje que hereda la aplicación en la etapa 4: tokens de color, escala
+  tipográfica fluida, modo claro y oscuro, y los cuatro escalones de pantalla.
+- Direcciones limpias, sin `.html`. Antes cada enlace interno provocaba una
+  redirección de más.
+- `robots.txt` y `sitemap.xml`. El sitio se indexa; `/app` no.
+- Verificado a 360 px y a 2560 px: sin scroll horizontal, sin nada que se
+  desborde y sin espacio muerto a los lados.
+
+**Decisiones de contenido**
+
+- **No se inventaron precios.** La página de precios dice la verdad — que todavía
+  no se cobra — y se compromete a anunciar el precio antes de aplicarlo. Poner un
+  número falso obliga después a cambiarlo o a inflarlo por si acaso.
+- Los términos incluyen un aviso explícito de que **esto no es asesoría
+  financiera**. La app da veredictos sobre proyectos, y esa distinción tiene que
+  quedar por escrito.
+- La política de privacidad **nombra a los cuatro proveedores** que tocan datos
+  del usuario, incluido que las fotos de facturas se envían a Anthropic para ser
+  leídas. Es información del hogar saliendo del país y quien la usa merece
+  saberlo.
+
+**Lo que hay que saber**
+
+- **`hola@controlewallet.com` todavía no recibe correo.** El dominio está
+  verificado para *enviar* (Resend), pero falta configurar el reenvío de entrada
+  en Cloudflare Email Routing. Hasta entonces, los enlaces de contacto del sitio
+  llevan a un buzón que no existe.
+- Los documentos legales están escritos con cuidado pero **no los ha revisado un
+  abogado**. Antes de que entre el primer usuario real conviene que alguien
+  licenciado en Honduras los mire.
+
+---
+
 ## v0.2.0 — El núcleo financiero, en módulos
 
 *Etapa 1 de la fase 1.*

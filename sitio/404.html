@@ -1,28 +1,55 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-HN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Página no encontrada · Controle Wallet</title>
+<title>Página no encontrada — Controle Wallet</title>
 <meta name="robots" content="noindex">
-<link rel="stylesheet" href="/base.css">
+<link rel="stylesheet" href="/sitio.css">
 </head>
 <body>
 
 <!-- La sirve el Worker cuando una ruta no existe, por la línea
-     `not_found_handling = "404-page"` de wrangler.toml. Sin este
-     archivo, una dirección mal escrita devolvería una página en
-     blanco de Cloudflare. -->
+     `not_found_handling = "404-page"` de wrangler.toml. Sin este archivo, una
+     dirección mal escrita devolvería una página en blanco de Cloudflare. -->
 
-<main class="lectura">
-  <p class="marca">Controle Wallet</p>
-  <h1>Esa página no existe</h1>
-  <p>
-    Puede que la dirección esté mal escrita, o que la página se haya
-    movido.
+<a class="saltar" href="#principal">Saltar al contenido</a>
+
+<header class="cabecera">
+  <a class="marca" href="/">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg>
+    <span>Controle Wallet</span>
+  </a>
+  <nav class="menu" aria-label="Principal">
+    <a href="/">Inicio</a>
+    <a href="/precios">Precios</a>
+    <a href="/preguntas">Preguntas</a>
+    <a href="/contacto">Contacto</a>
+  </nav>
+</header>
+
+<main id="principal" class="franja portada">
+  <p class="rotulo">Error 404</p>
+  <h1 class="lectura">Esa página no existe</h1>
+  <p class="entrada">
+    Puede que la dirección esté mal escrita, o que la página se haya movido.
   </p>
-  <p><a href="/">Volver al inicio</a></p>
+  <div class="acciones">
+    <a class="boton boton--principal" href="/">Volver al inicio</a>
+    <a class="boton boton--borde" href="/contacto">Avisarnos del enlace roto</a>
+  </div>
 </main>
+
+<footer class="pie">
+  <nav aria-label="Pie de página">
+    <a href="/precios">Precios</a>
+    <a href="/preguntas">Preguntas frecuentes</a>
+    <a href="/contacto">Contacto</a>
+    <a href="/terminos">Términos</a>
+    <a href="/privacidad">Privacidad</a>
+  </nav>
+  <p>© 2026 Controle Wallet · Honduras</p>
+</footer>
 
 </body>
 </html>

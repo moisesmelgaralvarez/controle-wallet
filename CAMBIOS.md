@@ -24,8 +24,12 @@ que se construye todo lo demás.
 - Pruebas automáticas en cada Pull Request.
 - Dos ambientes separados con su propia base: `controle-pruebas` y
   `controle-produccion`.
-- Procedimiento de vuelta atrás escrito y **ensayado de verdad**, con el tiempo
-  medido. Ver [VUELTA-ATRAS.md](VUELTA-ATRAS.md).
+- Procedimiento de vuelta atrás escrito y **ensayado sobre producción**, con el
+  tiempo medido: se publicó una versión rota a propósito y volver a la buena tomó
+  **4 segundos**. Ver [VUELTA-ATRAS.md](VUELTA-ATRAS.md), incluido lo que salió mal
+  durante el ensayo.
+- Los dos proyectos de Supabase enlazados, con `controle-pruebas` como destino por
+  omisión para que nadie migre producción por descuido.
 
 **Lo que hay que saber**
 

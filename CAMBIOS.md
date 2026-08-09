@@ -4,6 +4,107 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.11.0 — El presupuesto se edita
+
+*Sigue la etapa 4.*
+
+**Qué se hizo**
+
+- **La pantalla de Presupuesto.** Hasta ahora el asistente armaba el hogar una
+  vez y ahí quedaba: para corregir un monto había que volver a pasar por él.
+  Ahora se editan los pagos con lo que le toca a cada persona y sus retenciones,
+  los gastos, las tarjetas, las cuentas de banco, las personas, los
+  financiamientos y los datos del hogar — nombre, moneda y día en que arranca el
+  mes.
+- Cada panel cierra con su total, y la pantalla cierra con la resta completa:
+  ingreso neto − gastos corrientes − fondo de salud − cuotas = disponible real.
+  Es la fórmula del núcleo, a la vista, para que se entienda de dónde sale la
+  cifra que manda.
+- **Lo que falta se señala en rojo, no en gris:** una tarjeta sin ingreso
+  asignado o una cuenta donde no cobra nadie son huecos que dejan un cálculo a
+  medias, no detalles.
+
+**Lo que NO se muestra, a propósito**
+
+- **El saldo de las cuentas.** Calcularlo exige recorrer todo el histórico y en
+  el navegador solo vive el mes en curso: un saldo hecho con un mes de datos
+  sería un número creíble y falso, que en una app de dinero es de lo peor que
+  puede pasar. Lo que se muestra es lo declarado —con cuánto arranca la cuenta y
+  desde qué mes—, y el saldo llega cuando el servidor calcule la historia.
+- Al gasto solo se le ofrecen tarjetas **de crédito**. Asignarle una de débito lo
+  sacaría del corte de todas sin avisar, porque el ciclo solo mira las de
+  crédito.
+
+**Una prueba nueva que vale por varias**
+
+De formulario a fila hay una frontera: la pantalla habla como la gente y la base
+habla `snake_case`. Un nombre de columna mal escrito no falla al programarlo:
+falla con un 400 en la cara de quien acaba de darle a Guardar. Así que los
+armadores de fila viven aparte y sin pantalla, y una prueba **lee las
+migraciones** —la única autoridad sobre qué columnas existen— y comprueba que
+cada una de las que el editor escribe está de verdad ahí. La misma prueba
+verifica que cada `check` del esquema tenga su recorte en el navegador: un día
+99 se guarda como 31, no como un error del servidor.
+
+**Medido en el navegador, no visto a ojo**
+
+Sin desbordes ni scroll horizontal a 360, 768, 1440, 1600 y 2560 px. Contraste
+mínimo 5.7 en modo claro y 7.4 en oscuro, cuando la norma AA pide 4.5. Los
+números cuadran con el núcleo: 66,500 − 19,300 − 3,200 − 1,250 = 42,750.
+
+**Dos arreglos encontrados midiendo**
+
+- Los botones de «Agregar» medían **29 px de alto**. Se ven bien en una captura
+  y se fallan con el pulgar; con `pointer: coarse` pasan a 44, que es la
+  referencia. Alcanza también a los botones de icono del asistente.
+- El diálogo ancho tenía sus catorce campos en **una sola columna dentro de un
+  cuadro de 1,200 px**: la mitad quedaba fuera de la vista. Ahora usa dos
+  columnas, y en un pago las dos personas quedan lado a lado, que es además como
+  se comparan.
+
+---
+
+## v0.10.0 — Movimientos: el gasto del día
+
+*Sigue la etapa 4.*
+
+- Registrar, editar y borrar gastos, con buscador que ignora tildes y mayúsculas
+  y filtros por medio de pago y por persona.
+- Las dos cosas que **no** son gastos, con su propia forma y su explicación en
+  pantalla: un retiro solo mueve dinero de la cuenta a la cartera, y pagar la
+  tarjeta no es un gasto nuevo porque los consumos ya se contaron.
+- El período de cada registro sale del día de arranque del hogar, no del mes del
+  calendario: con arranque el 7, un gasto del 2 de agosto pertenece a julio.
+- **Un error que se veía en pantalla:** la barra de pestañas del teléfono
+  aparecía también en escritorio. La regla que la oculta vivía en un `@media`
+  situado antes de la definición de `.barra-app`, y con la misma especificidad
+  gana la última del archivo. Un `@media` acota cuándo aplica una regla; no le
+  sube la prioridad.
+
+---
+
+## v0.9.0 — El asistente de arranque
+
+*Arranca la etapa 4.*
+
+- Cinco pasos de una base vacía a un hogar que calcula.
+- **Cada paso se guarda al terminarlo**, no todo al final: quien cierra la
+  pestaña en el paso 3 conserva los dos primeros. Guardar al final sería más
+  simple de programar y castigaría a quien se interrumpe, que en un teléfono es
+  cualquiera.
+- **Nada de estructura heredada.** Las categorías y los rubros sugeridos son
+  ejemplos que se botan de un toque. La app anterior traía metido dentro el
+  presupuesto de un hogar concreto; esta no supone nada sobre cómo vive quien la
+  usa.
+- Entran las piezas compartidas que faltaban: formato de dinero y fechas en un
+  solo lugar, la hoja de formularios que crece con la pantalla, y la capa de
+  escritura donde invalidar lo que se tiene en memoria va **pegado** a guardar y
+  no se puede separar.
+- Accesibilidad: durante el asistente había dos `<h1>` en la misma página, que
+  para un lector de pantalla es una estructura rota.
+
+---
+
 ## v0.8.0 — Sesión real y la primera pantalla
 
 *Segunda mitad de la etapa 3, y el arranque de la etapa 4.*

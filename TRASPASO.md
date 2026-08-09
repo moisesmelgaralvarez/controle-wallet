@@ -42,7 +42,7 @@ aplicar una migración donde no toca.
 
 ## 3. Qué ya está hecho
 
-`main` va en **v0.10.0**. Todo pasa por Pull Request; `main` está protegido y ni
+`main` va en **v0.11.0**. Todo pasa por Pull Request; `main` está protegido y ni
 el dueño puede escribirle directo (comprobado). Dos verificaciones obligatorias en
 CI.
 
@@ -66,7 +66,8 @@ sin reescribir la aritmética. Registro, confirmación por correo, sesión y
 recuperación funcionando en producción.
 
 **Etapa 4 · Interfaz.** Listos: el armazón con riel y barra de pestañas, el
-**asistente de arranque** (5 pasos), **Resumen** y **Movimientos**.
+**asistente de arranque** (5 pasos), **Resumen**, **Movimientos** y
+**Presupuesto** — que es donde se edita todo lo que el asistente creó.
 
 **Etapa 7 · Sitio público.** Seis páginas en `controlewallet.com`, con vitrina de
 dispositivos dibujada en HTML y CSS, y parallax solo con CSS.
@@ -74,10 +75,15 @@ dispositivos dibujada en HTML y CSS, y parallax solo con CSS.
 ### Las pruebas
 
 ```
-npm run pruebas               213 · núcleo, armador y equivalencia
+npm run pruebas               229 · núcleo, armador, equivalencia y filas
 npm run pruebas:aislamiento    24 · ~55 intentos de violar el aislamiento
 npm run pruebas:integracion    12 · base → armador → núcleo, contra la base real
 ```
+
+Las de «filas» leen las **migraciones** y comprueban que cada columna que los
+formularios escriben existe de verdad, y que cada `check` del esquema tenga su
+recorte en el navegador. Cuando agregués una tabla o una columna, ahí es donde se
+amarra.
 
 Las dos últimas necesitan `SUPABASE_URL`, `SUPABASE_ANON_KEY` y
 `SUPABASE_SERVICE_KEY` del proyecto de **pruebas**; en CI vienen de los secretos
@@ -204,12 +210,15 @@ gh pr create
 ## 8. Lo que falta, en orden
 
 **Etapa 4 — completar la interfaz**
-- **Presupuesto** ← lo siguiente. Editar lo que creó el asistente: personas,
-  pagos, gastos, tarjetas, cuentas de banco y financiamientos. Hoy lo único que
-  se puede cambiar es pasando otra vez por el asistente.
-- **Proyectos** — metas con aportes, veredicto y prioridad por mérito.
+- **Proyectos** ← lo siguiente. Metas con aportes, veredicto y prioridad por
+  mérito.
 - **Historia** — mes a mes, con el mes en curso fuera del promedio.
-- Confirmar ingresos mes a mes (la distinción estimado / confirmado).
+- Confirmar ingresos mes a mes (la distinción estimado / confirmado). El editor
+  del Presupuesto ya deja la plantilla —el mes típico— en su sitio; falta la
+  pantalla que convierte esa estimación en hecho.
+- **El saldo de las cuentas**, que hoy no se enseña en ninguna parte a propósito:
+  recorre todo el histórico y en el navegador solo vive el mes en curso. Se
+  calcula en el servidor, con el mismo núcleo, junto con historia y patrimonio.
 
 **Etapa 5 — funciones pesadas**
 - Importar estados de cuenta (BAC, Ficohsa, CSV, PDF) con conciliación. El
@@ -243,10 +252,11 @@ gh pr create
 ## 10. Cómo empezar la sesión nueva
 
 1. Leé `README.md`, `CAMBIOS.md`, `VUELTA-ATRAS.md` y `SECRETOS.md`.
-2. Corré `npm run pruebas` — deben salir 213 en verde.
-3. Mirá `sitio/app/vistas/movimientos.js` como referencia del estilo: es la vista
-   más completa y muestra cómo se usan `ui.js`, `escribir.js` y el núcleo.
-4. Arrancá con **Presupuesto**, salvo que el dueño diga otra cosa.
+2. Corré `npm run pruebas` — deben salir 229 en verde.
+3. Mirá `sitio/app/vistas/movimientos.js` como referencia del estilo, y
+   `vistas/presupuesto.js` con `datos/filas.js` para lo que se edita: ahí está
+   cómo se arma una fila, cómo se valida y por qué eso vive fuera de la pantalla.
+4. Arrancá con **Proyectos**, salvo que el dueño diga otra cosa.
 
 No adelantés trabajo de la fase 2 (cobro de suscripciones, apps de tienda). Si
 algo depende de una decisión de esa fase, dejalo señalado y seguí.

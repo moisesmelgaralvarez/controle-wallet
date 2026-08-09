@@ -70,3 +70,17 @@ export async function crearVarias(tabla, filas) {
   olvidar(tabla, filas[0]);
   return hechas;
 }
+
+/**
+ * Varias filas de un tirón, reemplazando las que ya existan.
+ *
+ * `unicas` son las columnas que la base ya declaró únicas. Lo usa el
+ * editor de pagos: guarda de una vez lo que le toca a cada persona,
+ * sin tener que saber cuáles de esas líneas ya estaban.
+ */
+export async function fusionar(tabla, filas, unicas) {
+  if (!filas.length) return [];
+  const r = await api.insertarOReemplazar(tabla, filas, unicas);
+  olvidar(tabla, filas[0]);
+  return r;
+}

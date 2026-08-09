@@ -235,6 +235,14 @@ body[data-asistente="si"] .app { grid-template-columns: 1fr; }
 }
 .iconbtn:hover { color: var(--tinta); border-color: var(--acento); }
 
+/* Con el dedo, un botón de 29 px se ve bien en una captura y se falla
+   al tocarlo. La referencia son 44. `pointer: coarse` es la pregunta
+   correcta —¿con qué se está señalando?— y no el ancho de la pantalla:
+   una tableta grande también se toca. */
+@media (pointer: coarse) {
+  .iconbtn, .boton--chico { min-height: 2.75rem; }
+}
+
 /* ============================================================
    La hoja de formularios
    ============================================================ */
@@ -270,6 +278,18 @@ body[data-hoja="abierta"] { overflow: hidden; }
 }
 .hoja__tope h2 { margin: 0; font-size: var(--t-md); }
 .hoja__cuerpo { padding: var(--e3); overflow-y: auto; display: grid; gap: var(--e2); }
+
+/* La hoja ancha usa el ancho que pidió. Una tarjeta son catorce
+   campos: en una sola columna dentro de un cuadro de 1,200 px, la
+   mitad queda fuera de la vista y hay que rodar para nada. En dos
+   columnas caben las dos personas de un pago lado a lado, que es
+   además como se comparan. */
+@media (min-width: 800px) {
+  .hoja[data-ancha="si"] .hoja__cuerpo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hoja[data-ancha="si"] .hoja__cuerpo > .hoja__nota,
+  .hoja[data-ancha="si"] .hoja__cuerpo > .hoja__pie,
+  .hoja[data-ancha="si"] .hoja__cuerpo > [data-error] { grid-column: 1 / -1; }
+}
 .hoja__pie { display: flex; flex-wrap: wrap; gap: var(--e1); margin-top: var(--e2); }
 .hoja__pie .boton { flex: 1; justify-content: center; }
 
@@ -369,3 +389,85 @@ body[data-asistente="si"] .tope { display: none; }
   background: var(--suave); border-radius: 10px;
   font-size: var(--t-sm); color: var(--tenue);
 }
+
+/* ============================================================
+   Presupuesto
+   ============================================================ */
+
+/* Una columna de paneles dentro de cada zona. Sin esto los paneles
+   entrarían uno a uno en la rejilla de `.zonas` y se acomodarían en
+   filas, no en dos columnas. */
+.pila { display: grid; gap: var(--e3); align-content: start; }
+
+.panel__tope {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--e2); margin-bottom: var(--e2);
+}
+.panel__tope h2 { margin: 0; }
+.panel__nota { margin-top: var(--e2); }
+
+/* Un botón que acompaña a un título no puede tener el mismo peso que
+   la acción principal de la pantalla. */
+.boton--chico { padding: 0.35rem 0.85rem; font-size: var(--t-xs); }
+
+/* ---------- listas de configuración ---------- */
+
+.lista-cfg { list-style: none; padding: 0; margin: 0; display: grid; }
+.lista-cfg li + li { border-top: 1px solid var(--borde); }
+
+.fila-cfg {
+  width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--e2); align-items: center; text-align: left;
+  background: transparent; border: 0; cursor: pointer;
+  padding: 0.7rem 0.2rem; font-family: inherit; color: var(--tinta);
+  font-variant-numeric: tabular-nums;
+}
+.fila-cfg:hover { background: var(--elevado); }
+.fila-cfg__t { display: grid; gap: 0.15rem; min-width: 0; }
+.fila-cfg__t strong { font-weight: 600; font-size: var(--t-sm); }
+.fila-cfg__t small { font-size: var(--t-xs); color: var(--tenue); }
+/* La cifra NO se parte. En teléfono, «L 66,500.00» partido en dos
+   renglones se lee un instante como dos números distintos, y en una
+   app de dinero ese instante es todo el problema. */
+.fila-cfg__v { text-align: right; font-weight: 650; font-size: var(--t-sm); white-space: nowrap; }
+.fila-cfg__v small { display: block; font-weight: 400; color: var(--tenue); font-size: var(--t-xs); }
+
+.total-cfg {
+  display: flex; justify-content: space-between; gap: var(--e2);
+  border-top: 1px solid var(--borde); margin-top: 0.5rem; padding-top: 0.6rem;
+  font-weight: 700; font-size: var(--t-sm); font-variant-numeric: tabular-nums;
+}
+.total-cfg span:last-child { white-space: nowrap; }
+
+/* Un dato de un vistazo, pegado al nombre: el día del pago, el
+   crecimiento de un rubro, un financiamiento ya liquidado. */
+.etiqueta {
+  display: inline-block; margin-left: 0.35rem; padding: 0.05rem 0.45rem;
+  border-radius: 999px; background: var(--suave); color: var(--acento);
+  font-size: var(--t-xs); font-weight: 650; vertical-align: middle;
+}
+
+/* Lo que falta por decidir se dice en el color de lo que urge, no en
+   gris junto a lo demás: una tarjeta sin ingreso asignado o una
+   cuenta sin dueño son huecos que rompen un cálculo. */
+.ojo { font-style: normal; color: var(--alerta); }
+
+/* ---------- el editor de pagos ---------- */
+
+.perbloque {
+  border: 1px solid var(--borde); border-radius: var(--radio);
+  padding: var(--e2); background: var(--fondo);
+}
+.perbloque__t { font-weight: 650; font-size: var(--t-sm); margin-bottom: var(--e1); }
+.perbloque .campo:last-child { margin-bottom: 0; }
+
+/* Concepto y monto lado a lado: una retención es un par, y en dos
+   renglones separados deja de leerse como par. */
+.ded {
+  display: grid; grid-template-columns: minmax(0, 1fr) 8rem auto;
+  gap: 0.4rem; align-items: center; margin-bottom: 0.4rem;
+}
+.ded input { width: 100%; }
+
+[data-neto] { font-variant-numeric: tabular-nums; }
+[data-neto][data-tono="mal"] { color: var(--alerta); font-weight: 650; }

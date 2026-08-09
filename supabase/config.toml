@@ -1,30 +1,28 @@
 # ============================================================
-# ANTES DE CORRER `supabase config push`, LEER ESTO.
+# NO CORRAS `supabase config push` SOBRE PRODUCCIÓN.
 #
-# El comando manda este archivo ENTERO al proyecto enlazado. No
-# empuja «los cambios»: empuja todo, incluidos los valores de
-# fábrica que nadie tocó nunca y que están pensados para una base
-# local de desarrollo.
+# Este archivo se conserva como REFERENCIA de cómo está configurado
+# el proyecto, y para el desarrollo local. Empujarlo rompió
+# producción tres veces, siempre en silencio:
 #
-# Ya rompió cosas tres veces, y las tres eran fallos silenciosos:
+#   1. `site_url = "http://127.0.0.1:3000"` — habría mandado a cada
+#      usuario confirmado a una dirección que no existe.
+#   2. `email_sent = 2` — dos correos por hora para todo el
+#      servicio; el registro quedó bloqueado.
+#   3. `pass = "env(RESEND_API_KEY)"` con la variable sin poner —
+#      la contraseña de SMTP quedó siendo un texto de ejemplo y el
+#      envío de correos murió sin avisar.
 #
-#   · `enable_confirmations = false` habría apagado la confirmación
-#     por correo — cualquiera podría registrarse con la dirección de
-#     otra persona.
-#   · `site_url = "http://127.0.0.1:3000"` habría mandado a cada
-#     usuario confirmado a una dirección que no existe.
-#   · `email_sent = 2` SÍ llegó a producción: dos correos por hora
-#     para todo el servicio, y el registro quedó bloqueado.
+# La raíz del problema: `config push` manda el archivo ENTERO, no
+# los cambios. Cada valor de fábrica que nadie tocó viaja también,
+# y los de este archivo están pensados para una base local.
 #
-# La lista mínima a revisar antes de empujar:
+# LA CONFIGURACIÓN DE AUTENTICACIÓN SE ADMINISTRA EN EL PANEL.
+# Los valores vigentes están anotados en SECRETOS.md para que el
+# repositorio siga describiendo la realidad aunque no la imponga.
 #
-#   1. `site_url` y `additional_redirect_urls`
-#   2. `enable_confirmations`
-#   3. `[auth.rate_limit]` completa
-#   4. `[auth.email.smtp]` y que RESEND_API_KEY esté en el ambiente
-#   5. `npx supabase projects list` — ¿el enlace apunta a donde creés?
-#
-# Este archivo describe PRODUCCIÓN.
+# Si algún día hace falta empujar: revisar el archivo ENTERO, no
+# tres campos, y volver a comprobar el envío de correos después.
 # ============================================================
 
 # For detailed configuration reference documentation, visit:
@@ -319,13 +317,12 @@ otp_expiry = 3600
 # Si la variable no está puesta, NO se empuja: se rompería el envío
 # de correos en producción. Ver SECRETOS.md.
 # ------------------------------------------------------------
-[auth.email.smtp]
-enabled = true
-host = "smtp.resend.com"
-port = 465
-# El usuario es literalmente "resend", no una dirección de correo.
-user = "resend"
-pass = "env(RESEND_API_KEY)"
+# [auth.email.smtp]  ← A PROPÓSITO COMENTADO. Ver la nota de arriba.
+# enabled = true
+# host = "smtp.resend.com"
+# port = 465
+# user = "resend"
+# pass = "env(RESEND_API_KEY)"
 # Remitente. Va `hola@` y no un `no-reply@` a propósito: el reenvío
 # de entrada está configurado, así que si alguien responde un correo
 # de confirmación, esa respuesta llega a una persona en vez de

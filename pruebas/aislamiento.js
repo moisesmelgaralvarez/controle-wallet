@@ -415,3 +415,49 @@ test('un mes abierto sí admite cambios', async () => {
   });
   assert.ok(r.ok, 'un mes abierto está rechazando escrituras');
 });
+
+/* ============================================================
+   6. Borrar la cuenta borra de verdad
+   ============================================================ */
+
+test('borrar al último miembro se lleva el hogar y todo lo suyo', async () => {
+  // Apareció borrando una cuenta de prueba: el usuario se iba, su
+  // membresía se iba con él, y el HOGAR se quedaba — con todos sus
+  // gastos y saldos dentro. Invisibles, porque sin membresía ninguna
+  // política los deja leer, pero ahí. La política de privacidad
+  // promete que al borrar la cuenta «todo se elimina, no la guardamos
+  // por si acaso», y eso tiene que ser cierto.
+  const correo = `huerfano-${Date.now()}@controlewallet.test`;
+  const u = await crearUsuario(correo);
+
+  const m = await json(await admin(`/rest/v1/miembros?usuario_id=eq.${u.id}&select=hogar_id`));
+  const hogar = m[0]?.hogar_id;
+  assert.ok(hogar, 'el alta no creó hogar');
+
+  await admin('/rest/v1/gastos', {
+    method: 'POST', body: JSON.stringify({ hogar_id: hogar, concepto: 'rastro', monto: 1 })
+  });
+
+  await admin(`/auth/v1/admin/users/${u.id}`, { method: 'DELETE' });
+
+  const quedaHogar = await json(await admin(`/rest/v1/hogares?id=eq.${hogar}&select=id`));
+  const quedanGastos = await json(await admin(`/rest/v1/gastos?hogar_id=eq.${hogar}&select=id`));
+
+  assert.deepEqual(quedaHogar, [], 'el hogar sobrevivió a su único miembro');
+  assert.deepEqual(quedanGastos, [], 'quedaron gastos de un hogar sin dueño');
+});
+
+test('sacar a un miembro de un hogar compartido NO borra el hogar', async () => {
+  // El disparador solo actúa cuando se va el ÚLTIMO. Si borrara el
+  // hogar al sacar a cualquiera, quitarle el acceso a una pareja
+  // destruiría el presupuesto de la casa.
+  const r = await como(sesionB, `/miembros?hogar_id=eq.${hogarB}&usuario_id=eq.${usuarioA.id}`,
+                       { method: 'DELETE' });
+  assert.ok(r.ok || r.status === 200, 'B no pudo sacar a A de su hogar');
+
+  const sigue = await json(await como(sesionB, `/hogares?id=eq.${hogarB}&select=id`));
+  assert.equal(sigue.length, 1, 'sacar a un miembro borró el hogar entero');
+
+  const gasto = await json(await como(sesionB, `/gastos?id=eq.${gastoB.id}&select=id`));
+  assert.equal(gasto.length, 1, 'se perdieron los datos del hogar');
+});

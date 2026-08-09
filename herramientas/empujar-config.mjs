@@ -99,8 +99,18 @@ if (enlazado.ref !== REF_PRODUCCION) {
 console.log(`\nEmpujando la configuración a ${enlazado.name}…`);
 console.log(`  clave de Resend: ${clave.slice(0, 6)}… (${clave.length} caracteres) ✓\n`);
 
+/* `config push` acepta `--project-ref` y nada más: NO tiene
+   `--env-file`. Pasarle una opción que no conoce hace que imprima su
+   ayuda y no empuje nada — un fallo que parece un error de la
+   herramienta cuando en realidad no hizo su trabajo.
+
+   La clave llega por el ambiente del proceso hijo, que es como la
+   CLI resuelve `env(RESEND_API_KEY)` dentro de config.toml.
+
+   El ref va explícito aunque ya se verificó el enlace: dos seguros
+   para lo único que no se puede deshacer con un comando. */
 try {
-  execFileSync('npx', ['supabase', 'config', 'push', '--env-file', ENV],
+  execFileSync('npx', ['supabase', 'config', 'push', '--project-ref', REF_PRODUCCION, '--yes'],
     { stdio: 'inherit', env: { ...process.env, RESEND_API_KEY: clave } });
 } catch {
   morir('El empuje falló. La configuración anterior sigue en pie.');

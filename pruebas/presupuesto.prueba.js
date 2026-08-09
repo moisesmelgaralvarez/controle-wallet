@@ -145,8 +145,17 @@ test('los días de la tarjeta se quedan dentro del mes', () => {
   const t = FILAS.tarjetas({ ...FORMULARIOS.tarjetas, diaCorte: 99, diaPago: 99 }, ctx);
   assert.equal(t.dia_corte, 31);
   assert.equal(t.dia_pago, 31);
-  // El día de pago SÍ admite cero: quiere decir "todavía no lo sé".
-  assert.equal(FILAS.tarjetas({ ...FORMULARIOS.tarjetas, diaPago: null }, ctx).dia_pago, 0);
+  assert.equal(FILAS.tarjetas({ ...FORMULARIOS.tarjetas, diaPago: 0 }, ctx).dia_pago, 0);
+});
+
+test('lo que va en blanco se queda en blanco, no se vuelve cero', () => {
+  // Salió probando contra la base: abrir una tarjeta y guardarla sin
+  // tocar nada le escribía un 0 donde había un nulo. Ese caso no
+  // cambia ningún cálculo, pero el de al lado sí —`desde_mes`— y la
+  // regla tiene que valer entera: guardar sin tocar no modifica nada.
+  const t = FILAS.tarjetas({ ...FORMULARIOS.tarjetas, diaPago: null, desdeMes: '' }, ctx);
+  assert.equal(t.dia_pago, null);
+  assert.equal(t.desde_mes, null);
 });
 
 test('no quedan más cuotas pagadas que cuotas totales', () => {

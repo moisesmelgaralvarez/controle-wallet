@@ -89,7 +89,11 @@ export const FILAS = {
     // guardar. Se limpia al cambiar de tipo para que no arrastre el
     // corte de cuando era de crédito.
     dia_corte: d.tipo === 'debito' ? null : entero(d.diaCorte, 1, 31),
-    dia_pago: entero(d.diaPago, 0, 31),
+    // En blanco se queda en blanco. Escribir un 0 donde no había nada
+    // no cambia ningún cálculo —el armador lo lee como 0 de todos
+    // modos— pero rompe la regla que sí importa: guardar un formulario
+    // sin tocarlo no puede modificar ni un campo.
+    dia_pago: dijoAlgo(d.diaPago) ? entero(d.diaPago, 0, 31) : null,
     paga_con: d.pagaCon || null,
     cuenta_id: d.cuentaId || null,
     saldo_inicial: noNeg(d.saldoInicial),

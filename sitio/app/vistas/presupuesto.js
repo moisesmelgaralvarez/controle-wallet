@@ -405,7 +405,14 @@ export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
       ${campoMonto('saldoInicial', 'Cuánto deben hoy en esta tarjeta', t ? t.saldoInicial : '',
         'El saldo que muestra el banco. Sirve para saber la deuda real, no solo el corte del mes.')}
       ${campo('desdeMes', 'Desde qué mes cuenta ese saldo',
-        `type="month" value="${esc(t && t.desdeMes ? t.desdeMes : mesLocal())}"`)}
+        // El mes de hoy se propone solo al CREAR. Al editar una tarjeta
+        // que no lo tenía, rellenarlo cambia un número sin que nadie lo
+        // haya tocado: `deudaTarjeta` solo cuenta lo que pasó de ese mes
+        // en adelante, así que ponerle agosto le borra de la deuda todo
+        // lo anterior. Guardar un formulario sin tocarlo no puede mover
+        // una cifra.
+        `type="month" value="${esc(t ? (t.desdeMes || '') : mesLocal())}"`,
+        'Lo anterior a este mes no se cuenta en la deuda: se da por incluido en el saldo de arriba. Dejalo vacío si no querés esa raya.')}
       ${campo('tasaAnual', 'Interés anual (%)',
         `type="number" inputmode="decimal" step="0.1" min="0" max="200" value="${esc(t && t.tasaAnual ? t.tasaAnual : '')}" placeholder="Ej. 55"`,
         'Lo que cobra el banco por revolver saldo. Con esto se puede decir cuánto cuesta al mes no saldarla.')}

@@ -46,40 +46,54 @@ npx supabase secrets set ANTHROPIC_API_KEY=... --project-ref <ref>
 
 Los de GitHub, en **Settings → Secrets and variables → Actions**.
 
-La configuración de correo (remitente, plantillas, SMTP) vive en
-`supabase/config.toml` y se empuja desde el repositorio. **La contraseña no está
-ahí**: se lee de `supabase/.env`, que el `.gitignore` deja fuera.
+## La configuración de autenticación se administra en el panel
 
-Se escribe **una sola vez**:
+**No corras `supabase config push` sobre producción.** Rompió el servicio tres
+veces, siempre en silencio: mandó un `site_url` de desarrollo, bajó el límite de
+correos a dos por hora, y dejó la contraseña de SMTP con un texto de ejemplo. La
+causa es siempre la misma — ese comando manda el archivo **entero**, no los
+cambios, y arrastra cada valor de fábrica que nadie tocó.
 
-```bash
-cp supabase/.env.ejemplo supabase/.env
-```
+`supabase/config.toml` se conserva como referencia y para el desarrollo local.
+Estos son los valores vigentes en **producción**, para que el repositorio siga
+describiendo la realidad aunque no la imponga:
 
-y se reemplaza el valor de `RESEND_API_KEY` por la clave de verdad. De ahí en
-adelante, empujar es un comando sin huecos:
+### Authentication → Emails → SMTP Settings
 
-```bash
-npm run config:produccion
-```
+| Campo | Valor |
+|---|---|
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` — literalmente esa palabra, no un correo |
+| Password | la clave de Resend |
+| Sender email | `hola@controlewallet.com` |
+| Sender name | `Controle Wallet` |
 
-### Por qué no se empuja con `supabase config push` a secas
+### Authentication → Rate Limits
 
-Ese comando manda el archivo **entero** y falla en silencio de dos maneras que ya
-ocurrieron en este proyecto:
+| Campo | Valor |
+|---|---|
+| Emails per hour | `50` |
 
-1. **La contraseña sale de una variable de ambiente.** Si no está puesta —o quedó
-   el texto de ejemplo de una instrucción copiada— la CLI empuja igual y el envío
-   de correos queda roto. Nadie se entera hasta que alguien intenta registrarse.
-2. **Empuja al proyecto enlazado.** Si el enlace quedó en pruebas, producción no
-   cambia y uno se queda creyendo que sí.
+### Authentication → Providers → Email
 
-`npm run config:produccion` comprueba las dos cosas antes de empujar y se niega si
-algo no cuadra. Un comando que se puede ejecutar mal es cuestión de tiempo; uno
-que se niega, no.
+| Campo | Valor |
+|---|---|
+| Confirm email | **encendido** |
+| Minimum password length | `8` |
 
-> Nunca escribas una clave dentro de un comando que vayas a pegar en algún lado.
-> Las dos veces que el correo se rompió en este proyecto fue por eso.
+### Authentication → URL Configuration
+
+| Campo | Valor |
+|---|---|
+| Site URL | `https://controlewallet.com/app/` |
+
+> **Nunca escribas una clave dentro de un comando.** Las tres veces que el correo
+> se rompió en este proyecto fue por eso: un comando con un hueco que se puede
+> ejecutar sin llenar termina ejecutándose sin llenar.
+>
+> Y la clave de Resend solo se ve **una vez**, al crearla. Si se pierde, no se
+> recupera: hay que crear otra y borrar la anterior.
 
 ---
 

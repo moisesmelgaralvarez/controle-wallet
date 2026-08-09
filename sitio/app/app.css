@@ -177,3 +177,122 @@
   padding: 0.6rem clamp(1rem, 3vw, 2.5rem);
   font-size: var(--t-sm);
 }
+
+/* ============================================================
+   El asistente de arranque
+   ============================================================ */
+
+/* Mientras se arma el hogar, la navegación estorba: no hay a dónde
+   ir todavía y una barra de secciones vacías solo distrae. */
+body[data-asistente="si"] .riel-app,
+body[data-asistente="si"] .barra-app { display: none; }
+body[data-asistente="si"] .app { grid-template-columns: 1fr; }
+
+.asistente { max-width: 44rem; }
+.asistente__entrada { color: var(--tenue); margin-bottom: var(--e3); }
+.asistente__entrada strong { color: var(--tinta); }
+
+.asistente__pasos { display: flex; gap: 0.4rem; margin-bottom: var(--e3); }
+.asistente__paso {
+  height: 0.35rem; flex: 1; border-radius: 999px; background: var(--borde);
+}
+.asistente__paso[data-estado="hecho"]  { background: var(--acento); }
+.asistente__paso[data-estado="actual"] { background: var(--acento); opacity: .55; }
+
+.asistente__forma { display: grid; gap: var(--e2); }
+.asistente__pie { display: flex; flex-wrap: wrap; gap: var(--e1); margin-top: var(--e2); }
+.asistente__pie .boton--principal { margin-left: auto; }
+
+/* ---------- listas que se editan ---------- */
+
+.lista-edit { display: grid; gap: var(--e2); }
+
+.lista-edit__fila {
+  display: grid; grid-template-columns: 1fr auto; gap: var(--e1); align-items: start;
+  border: 1px solid var(--borde); border-radius: var(--radio);
+  padding: var(--e2); background: var(--superficie);
+}
+
+/* En pantalla ancha los campos de una fila van lado a lado: es la
+   densidad que la especificación pide, no la misma columna estirada. */
+.lista-edit__grupo { display: grid; gap: var(--e1); }
+@media (min-width: 800px)  { .lista-edit__grupo { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1200px) { .lista-edit__grupo { grid-template-columns: repeat(3, 1fr); } }
+
+.boton--bloque { width: 100%; justify-content: center; }
+.boton--peligro { background: transparent; border-color: color-mix(in oklab, var(--alerta) 50%, transparent); color: var(--alerta); }
+.boton--peligro:hover { background: color-mix(in oklab, var(--alerta) 12%, transparent); }
+
+.iconbtn {
+  background: transparent; border: 1px solid var(--borde); border-radius: 8px;
+  color: var(--tenue); cursor: pointer; padding: 0.35rem 0.55rem; font-size: 0.9rem;
+}
+.iconbtn:hover { color: var(--tinta); border-color: var(--acento); }
+
+/* ============================================================
+   La hoja de formularios
+   ============================================================ */
+
+body[data-hoja="abierta"] { overflow: hidden; }
+
+.hoja { position: fixed; inset: 0; z-index: 20; display: grid; }
+.hoja__fondo { position: absolute; inset: 0; background: rgba(0,0,0,.5); }
+
+.hoja__caja {
+  position: relative; z-index: 1;
+  background: var(--superficie); border: 1px solid var(--borde);
+  display: flex; flex-direction: column; max-height: 92svh;
+  /* En teléfono sube desde abajo. */
+  align-self: end; border-radius: 20px 20px 0 0; width: 100%;
+}
+
+/* Y en pantalla grande CRECE. La especificación es explícita: un
+   diálogo no se queda en 560 px cuando hay 1600 disponibles. */
+@media (min-width: 800px) {
+  .hoja { place-items: center; padding: var(--e3); }
+  .hoja__caja { align-self: center; border-radius: var(--radio); max-width: 40rem; }
+  .hoja[data-ancha="si"] .hoja__caja { max-width: 60rem; }
+}
+@media (min-width: 1500px) {
+  .hoja__caja { max-width: 48rem; }
+  .hoja[data-ancha="si"] .hoja__caja { max-width: 76rem; }
+}
+
+.hoja__tope {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--e2);
+  padding: var(--e2) var(--e3); border-bottom: 1px solid var(--borde);
+}
+.hoja__tope h2 { margin: 0; font-size: var(--t-md); }
+.hoja__cuerpo { padding: var(--e3); overflow-y: auto; display: grid; gap: var(--e2); }
+.hoja__pie { display: flex; flex-wrap: wrap; gap: var(--e1); margin-top: var(--e2); }
+.hoja__pie .boton { flex: 1; justify-content: center; }
+
+/* ============================================================
+   Aviso flotante
+   ============================================================ */
+
+.flotante {
+  position: fixed; left: 50%; bottom: 5rem; transform: translateX(-50%) translateY(1rem);
+  z-index: 30; padding: 0.7rem 1.2rem; border-radius: 999px;
+  background: var(--tinta); color: var(--fondo);
+  font-size: var(--t-sm); font-weight: 550;
+  opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s;
+  max-width: calc(100vw - 2rem);
+}
+.flotante[data-visible="si"] { opacity: 1; transform: translateX(-50%) translateY(0); }
+.flotante[data-tono="mal"] { background: var(--alerta); color: #fff; }
+@media (min-width: 900px) { .flotante { bottom: 2rem; } }
+
+/* ---------- campos dentro de la app ---------- */
+
+.campo select {
+  width: 100%; padding: 0.7rem 0.9rem; font: inherit; font-size: var(--t-sm);
+  color: var(--tinta); background: var(--fondo);
+  border: 1px solid var(--borde); border-radius: 10px;
+}
+
+/* Durante el asistente, el armazón de arriba estorba: repetía el
+   título y dejaba DOS <h1> en la misma página, que para un lector de
+   pantalla es una estructura rota. El único encabezado principal
+   pasa a ser el del paso. */
+body[data-asistente="si"] .tope { display: none; }

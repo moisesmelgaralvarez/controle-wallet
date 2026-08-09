@@ -32,7 +32,6 @@
     grid-template-rows: auto 1fr;
   }
   .app__riel  { grid-row: 1 / -1; }
-  .app__barra { display: none; }
 }
 
 @media (min-width: 1500px) { .app { grid-template-columns: 17rem 1fr; } }
@@ -84,6 +83,13 @@
 }
 .barra-app a[aria-current="page"] { color: var(--acento); }
 .barra-app svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+/* La barra desaparece cuando aparece el riel. Esta regla VIVE AQUÍ y
+   no en el media query de arriba: allá tenía la misma especificidad
+   que `.barra-app { display: grid }` y, al estar antes en el archivo,
+   perdía. Un `@media` acota cuándo aplica una regla; no le sube la
+   prioridad. La barra se veía en escritorio por eso. */
+@media (min-width: 900px) { .barra-app { display: none; } }
 
 /* ---------- cabecera del contenido ---------- */
 
@@ -296,3 +302,70 @@ body[data-hoja="abierta"] { overflow: hidden; }
    pantalla es una estructura rota. El único encabezado principal
    pasa a ser el del paso. */
 body[data-asistente="si"] .tope { display: none; }
+
+/* ============================================================
+   Movimientos
+   ============================================================ */
+
+.acciones-mov { display: flex; flex-wrap: wrap; gap: var(--e1); }
+.acciones-mov .boton:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ---------- buscador y filtros ---------- */
+
+.buscador { display: grid; gap: var(--e2); margin-bottom: var(--e2); }
+.buscador input {
+  width: 100%; padding: 0.7rem 0.9rem; font: inherit; font-size: var(--t-sm);
+  color: var(--tinta); background: var(--fondo);
+  border: 1px solid var(--borde); border-radius: 10px;
+}
+.buscador__cuenta { font-size: var(--t-sm); color: var(--tenue); margin: 0 0 var(--e2); }
+.buscador__cuenta strong { color: var(--tinta); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.chip {
+  border: 1px solid var(--borde); background: transparent; color: var(--tenue);
+  border-radius: 999px; padding: 0.3rem 0.8rem; font-size: var(--t-xs);
+  cursor: pointer; font-family: inherit;
+}
+.chip:hover { color: var(--tinta); }
+/* Tocar de nuevo un filtro encendido lo apaga: el estado tiene que
+   verse de un vistazo o nadie sabe qué está filtrando. */
+.chip[aria-pressed="true"] { background: var(--suave); border-color: var(--acento); color: var(--acento); font-weight: 650; }
+
+/* ---------- la lista ---------- */
+
+.movs-lista { list-style: none; padding: 0; margin: 0; display: grid; }
+.movs-lista li + li { border-top: 1px solid var(--borde); }
+
+.mov-fila {
+  width: 100%; display: grid; grid-template-columns: 3.2rem 1fr auto;
+  gap: var(--e2); align-items: center; text-align: left;
+  background: transparent; border: 0; cursor: pointer;
+  padding: 0.7rem 0.2rem; font-family: inherit; color: var(--tinta);
+  font-variant-numeric: tabular-nums;
+}
+.mov-fila:hover { background: var(--elevado); }
+.mov-fila__dia { font-size: var(--t-xs); color: var(--tenue); }
+.mov-fila__txt { display: grid; gap: 0.1rem; min-width: 0; }
+.mov-fila__txt strong { font-weight: 600; font-size: var(--t-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mov-fila__txt small { font-size: var(--t-xs); color: var(--tenue); }
+.mov-fila__monto { font-weight: 650; font-size: var(--t-sm); }
+
+/* ---------- en qué se fue ---------- */
+
+.cat-lista { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.7rem; }
+.cat-lista li { display: grid; grid-template-columns: 1fr 4rem auto; gap: var(--e1); align-items: center; }
+.cat-lista__n { font-size: var(--t-sm); }
+.cat-lista__b { height: 0.4rem; border-radius: 999px; background: var(--elevado); overflow: hidden; }
+.cat-lista__b i { display: block; height: 100%; background: var(--acento); border-radius: 999px; }
+.cat-lista__v { text-align: right; font-size: var(--t-sm); font-weight: 600; font-variant-numeric: tabular-nums; }
+.cat-lista__v small { display: block; font-weight: 400; color: var(--tenue); font-size: var(--t-xs); }
+
+.ciclo-app--aparte { margin-top: var(--e3); padding-top: var(--e2); border-top: 1px solid var(--borde); }
+.ciclo-app__nota { font-size: var(--t-xs); line-height: 1.45; }
+
+.hoja__nota {
+  margin: 0 0 var(--e1); padding: var(--e2);
+  background: var(--suave); border-radius: 10px;
+  font-size: var(--t-sm); color: var(--tenue);
+}

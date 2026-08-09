@@ -30,6 +30,7 @@ import { cargarHogar, datosDelHogar, mesDeHoy, olvidar } from './datos/hogar.js'
 import * as A from './nucleo/index.js';
 import { $, esc, fijarMoneda, nombreMes, cerrarHoja } from './ui.js';
 import { resumen } from './vistas/resumen.js';
+import { movimientos } from './vistas/movimientos.js';
 import { asistente } from './vistas/asistente.js';
 
 /* Primero lo que viene del correo: quien acaba de confirmar su cuenta
@@ -45,8 +46,19 @@ const vista = $('#vista');
 /* ---------- las vistas ---------- */
 
 const VISTAS = {
-  resumen: { titulo: 'Resumen', pintar: resumen }
+  resumen:     { titulo: 'Resumen',     pintar: resumen },
+  movimientos: { titulo: 'Movimientos', pintar: movimientos }
 };
+
+/* La sección activa se marca en los dos juegos de navegación —riel y
+   barra— desde un solo lugar. Si cada uno lo hiciera por su cuenta,
+   tarde o temprano uno se quedaría marcando la sección que no es. */
+function marcarNavegacion() {
+  for (const a of document.querySelectorAll('[data-ruta]')) {
+    if (a.dataset.ruta === ruta) a.setAttribute('aria-current', 'page');
+    else a.removeAttribute('aria-current');
+  }
+}
 
 /* ---------- estado visible ---------- */
 
@@ -108,6 +120,7 @@ async function arrancar({ refrescar = false } = {}) {
 
     const v = VISTAS[ruta] || VISTAS.resumen;
     $('#titulo').textContent = v.titulo;
+    marcarNavegacion();
     v.pintar({ contenedor: vista, D, periodo, hogar, recargar: () => arrancar({ refrescar: true }) });
     saludarSiViene();
 

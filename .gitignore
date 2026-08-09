@@ -11,6 +11,12 @@ node_modules/
 .dev.vars
 *.pem
 
+# …pero el EJEMPLO sí va. `.env.*` de arriba también lo atrapaba, y sin
+# él quien clone el repositorio no tiene de dónde copiar ni sabe qué
+# variables hacen falta. El ejemplo no lleva valores, solo los nombres.
+!.env.ejemplo
+!**/.env.ejemplo
+
 # Estado local de las herramientas
 .wrangler/
 supabase/.temp/

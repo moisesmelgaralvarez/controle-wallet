@@ -48,17 +48,38 @@ Los de GitHub, en **Settings → Secrets and variables → Actions**.
 
 La configuración de correo (remitente, plantillas, SMTP) vive en
 `supabase/config.toml` y se empuja desde el repositorio. **La contraseña no está
-ahí**: se lee de la variable de ambiente en el momento de empujar.
+ahí**: se lee de `supabase/.env`, que el `.gitignore` deja fuera.
+
+Se escribe **una sola vez**:
 
 ```bash
-export RESEND_API_KEY='...'
-npx supabase config push
+cp supabase/.env.ejemplo supabase/.env
 ```
 
-> `config push` empuja la configuración **entera** del proyecto enlazado.
-> Verificá con `npx supabase projects list` que el enlace apunte a donde querés
-> antes de correrlo — y que `RESEND_API_KEY` esté puesta, o el envío de correos
-> queda roto.
+y se reemplaza el valor de `RESEND_API_KEY` por la clave de verdad. De ahí en
+adelante, empujar es un comando sin huecos:
+
+```bash
+npm run config:produccion
+```
+
+### Por qué no se empuja con `supabase config push` a secas
+
+Ese comando manda el archivo **entero** y falla en silencio de dos maneras que ya
+ocurrieron en este proyecto:
+
+1. **La contraseña sale de una variable de ambiente.** Si no está puesta —o quedó
+   el texto de ejemplo de una instrucción copiada— la CLI empuja igual y el envío
+   de correos queda roto. Nadie se entera hasta que alguien intenta registrarse.
+2. **Empuja al proyecto enlazado.** Si el enlace quedó en pruebas, producción no
+   cambia y uno se queda creyendo que sí.
+
+`npm run config:produccion` comprueba las dos cosas antes de empujar y se niega si
+algo no cuadra. Un comando que se puede ejecutar mal es cuestión de tiempo; uno
+que se niega, no.
+
+> Nunca escribas una clave dentro de un comando que vayas a pegar en algún lado.
+> Las dos veces que el correo se rompió en este proyecto fue por eso.
 
 ---
 

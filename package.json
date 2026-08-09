@@ -12,7 +12,8 @@
     "migrar:pruebas": "supabase db push",
     "publicar": "wrangler deploy --env=\"\"",
     "publicar:pruebas": "wrangler deploy --env pruebas",
-    "vista": "wrangler dev"
+    "vista": "wrangler dev",
+    "config:produccion": "node herramientas/empujar-config.mjs"
   },
   "devDependencies": {
     "supabase": "^2.113.0",

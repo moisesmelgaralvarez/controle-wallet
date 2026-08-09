@@ -22,7 +22,7 @@ acuerda de por qué existe una llave y a nadie le da confianza tocarla.
 | Secreto | Para qué | Dónde vive | Si se rota, se rompe |
 |---|---|---|---|
 | `ANTHROPIC_API_KEY` | Leer facturas por foto | Secretos de Supabase, por proyecto | El escaneo de facturas, hasta redesplegar la función |
-| Contraseña SMTP de Resend | Correos de confirmación, recuperación e invitación | Panel de Supabase → Auth → SMTP | El registro de usuarios nuevos y la recuperación de contraseña |
+| `RESEND_API_KEY` (contraseña SMTP) | Correos de confirmación, recuperación e invitación | Variable de ambiente al correr `supabase config push`; guardada en Supabase → Auth → SMTP | El registro de usuarios nuevos y la recuperación de contraseña |
 | Contraseña de la base | Conexión directa a Postgres y migraciones | Gestor de contraseñas del dueño | Las migraciones desde la CLI |
 | `service_role` de Supabase | Borrado real de cuentas y tareas de administración | Secretos de Edge Functions. **Nunca en el navegador** | El borrado de cuenta y el panel de plataforma |
 | Token de API de Cloudflare | Publicar desde CI | Secretos del repositorio en GitHub | La publicación automática |
@@ -45,7 +45,20 @@ npx supabase secrets set ANTHROPIC_API_KEY=... --project-ref <ref>
 ```
 
 Los de GitHub, en **Settings → Secrets and variables → Actions**.
-Los de SMTP, en el panel de Supabase — no hay CLI para eso.
+
+La configuración de correo (remitente, plantillas, SMTP) vive en
+`supabase/config.toml` y se empuja desde el repositorio. **La contraseña no está
+ahí**: se lee de la variable de ambiente en el momento de empujar.
+
+```bash
+export RESEND_API_KEY='...'
+npx supabase config push
+```
+
+> `config push` empuja la configuración **entera** del proyecto enlazado.
+> Verificá con `npx supabase projects list` que el enlace apunte a donde querés
+> antes de correrlo — y que `RESEND_API_KEY` esté puesta, o el envío de correos
+> queda roto.
 
 ---
 

@@ -156,11 +156,28 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://127.0.0.1:3000"
+#
+# A DÓNDE VUELVE LA GENTE. Venía apuntando a `127.0.0.1:3000`, que es
+# el valor de fábrica: empujarlo habría mandado a cada usuario que
+# confirma su correo a una dirección local que no existe en su
+# máquina. El registro se habría visto perfecto hasta el último paso.
+#
+# Este archivo describe PRODUCCIÓN. Al empujarlo, verificar antes que
+# el proyecto enlazado sea `controle-produccion`.
+site_url = "https://controlewallet.com/app/"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+# Lista de destinos permitidos. Es una lista blanca: un destino que no
+# esté aquí se rechaza, y eso es lo que impide que alguien arme un
+# enlace de confirmación que devuelva la sesión a un sitio suyo.
+additional_redirect_urls = [
+  "https://controlewallet.com/app/",
+  "https://www.controlewallet.com/app/",
+  "https://controle-wallet-pruebas.workers.dev/app/",
+  "http://127.0.0.1:8788/app/",
+  "http://localhost:8788/app/"
+]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -223,9 +240,17 @@ enable_signup = true
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = false
-# If enabled, users will need to reauthenticate or have logged in recently to change their password.
-secure_password_change = false
+#
+# EN true, Y NO SE TOCA. Sin confirmación, cualquiera puede registrarse
+# con el correo de otra persona y quedarse con esa cuenta. Este archivo
+# venía con `false` de fábrica y producción ya estaba en `true`: un
+# `config push` a ciegas habría apagado la confirmación sin que nadie
+# se enterara hasta que fuera tarde.
+enable_confirmations = true
+# Cambiar la contraseña exige haber entrado hace poco. Si alguien deja
+# la sesión abierta en una computadora ajena, que no pueda apropiarse
+# de la cuenta con dos clics.
+secure_password_change = true
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
 max_frequency = "1s"
 # Number of characters used in the email OTP.
@@ -233,20 +258,59 @@ otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
 
-# Use a production-ready SMTP server
-# [auth.email.smtp]
-# enabled = true
-# host = "smtp.sendgrid.net"
-# port = 587
-# user = "apikey"
-# pass = "env(SENDGRID_API_KEY)"
-# admin_email = "admin@email.com"
-# sender_name = "Admin"
+# ------------------------------------------------------------
+# Correo de salida — Resend.
+#
+# La contraseña es la clave de API de Resend y NO va escrita aquí:
+# se lee de la variable de ambiente al momento de empujar la
+# configuración. Un secreto en el repositorio deja de ser secreto,
+# y este repositorio es público.
+#
+#   export RESEND_API_KEY='...'
+#   npx supabase config push
+#
+# Si la variable no está puesta, NO se empuja: se rompería el envío
+# de correos en producción. Ver SECRETOS.md.
+# ------------------------------------------------------------
+[auth.email.smtp]
+enabled = true
+host = "smtp.resend.com"
+port = 465
+# El usuario es literalmente "resend", no una dirección de correo.
+user = "resend"
+pass = "env(RESEND_API_KEY)"
+# Remitente. Va `hola@` y no un `no-reply@` a propósito: el reenvío
+# de entrada está configurado, así que si alguien responde un correo
+# de confirmación, esa respuesta llega a una persona en vez de
+# rebotar. En un servicio nuevo, esas respuestas valen oro.
+admin_email = "hola@controlewallet.com"
+sender_name = "Controle Wallet"
 
-# Uncomment to customize email template
-# [auth.email.template.invite]
-# subject = "You have been invited"
-# content_path = "./supabase/templates/invite.html"
+# ------------------------------------------------------------
+# Las plantillas de correo, en español.
+#
+# Las de fábrica vienen en inglés. El primer correo que recibe un
+# usuario nuevo no puede llegarle en otro idioma que el del
+# producto — se notó porque Gmail ofreció traducir la confirmación.
+#
+# Los asuntos también van aquí: son lo primero que se ve en la
+# bandeja y decidieron si el correo se abre o no.
+# ------------------------------------------------------------
+[auth.email.template.confirmation]
+subject = "Confirmá tu correo · Controle Wallet"
+content_path = "./supabase/templates/confirmar.html"
+
+[auth.email.template.recovery]
+subject = "Cambiá tu contraseña · Controle Wallet"
+content_path = "./supabase/templates/recuperar.html"
+
+[auth.email.template.invite]
+subject = "Te invitaron a un hogar en Controle Wallet"
+content_path = "./supabase/templates/invitacion.html"
+
+[auth.email.template.email_change]
+subject = "Confirmá tu correo nuevo · Controle Wallet"
+content_path = "./supabase/templates/cambio-correo.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]

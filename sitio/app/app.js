@@ -23,9 +23,15 @@
       autoritativo vino a quitar.
    ============================================================ */
 
-import { haySesion, usuario, salir, ErrorDatos } from './datos/api.js';
+import { haySesion, usuario, salir, capturarSesionDeURL, ErrorDatos } from './datos/api.js';
 import { cargarHogar, datosDelHogar, mesDeHoy, olvidar } from './datos/hogar.js';
 import * as A from './nucleo/index.js';
+
+/* Primero lo que viene del correo: quien acaba de confirmar su cuenta
+   llega con la sesión colgada de la URL. Esto va ANTES de revisar si
+   hay sesión — si no, se le mandaría de vuelta a iniciar sesión justo
+   después de haber hecho todo bien. */
+const delCorreo = capturarSesionDeURL();
 
 /* Sin sesión no hay nada que mostrar. */
 if (!haySesion()) location.replace('/entrar');
@@ -205,6 +211,17 @@ async function arrancar({ refrescar = false } = {}) {
 
     if (A.faltantes(D).length) pintarVacio();
     else pintarResumen(D, periodo);
+
+    // Quien acaba de confirmar su correo merece que se lo digan. Sin
+    // esto, la confirmación termina en una pantalla idéntica a
+    // cualquier otra y no queda claro si funcionó.
+    if (delCorreo && delCorreo.tipo === 'signup') {
+      const saludo = document.createElement('p');
+      saludo.className = 'aviso aviso--ok';
+      saludo.textContent = 'Tu correo quedó confirmado. Bienvenido a Controle Wallet.';
+      vista.prepend(saludo);
+      delCorreo.tipo = null;   // una sola vez, no en cada recarga
+    }
 
   } catch (err) {
     pintarError(err);

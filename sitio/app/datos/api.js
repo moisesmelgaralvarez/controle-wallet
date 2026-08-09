@@ -56,6 +56,46 @@ export const haySesion = () => Boolean(sesion && sesion.access_token);
 export const usuario   = () => (sesion && sesion.user) || null;
 export const alCambiarSesion = fn => { alCambiar = fn; };
 
+/**
+ * Recoge la sesión que viene en el fragmento de la URL.
+ *
+ * Al confirmar el correo —o al abrir un enlace de recuperación—
+ * Supabase devuelve a la persona con los tokens colgados detrás de
+ * un `#`. Sin esto, alguien confirma su cuenta, aterriza en la app
+ * y la ve pedirle que inicie sesión: hizo todo bien y el servicio
+ * le dice que no. Es el peor primer minuto posible.
+ *
+ * Los tokens se sacan de la barra de direcciones apenas se leen.
+ * Van en el fragmento —que no viaja al servidor— pero igual
+ * quedarían en el historial y en cualquier captura de pantalla.
+ *
+ * Devuelve el tipo de enlace (`signup`, `recovery`…) o null.
+ */
+export function capturarSesionDeURL() {
+  const hash = (typeof location !== 'undefined' && location.hash) || '';
+  if (!hash.includes('access_token') && !hash.includes('error')) return null;
+
+  const p = new URLSearchParams(hash.slice(1));
+  const limpiar = () => history.replaceState(null, '', location.pathname + location.search);
+
+  if (p.get('error')) {
+    limpiar();
+    return { error: p.get('error_description') || p.get('error') };
+  }
+
+  const access_token = p.get('access_token');
+  if (!access_token) return null;
+
+  guardarSesion({
+    access_token,
+    refresh_token: p.get('refresh_token'),
+    token_type: p.get('token_type') || 'bearer',
+    expires_in: Number(p.get('expires_in')) || 3600
+  });
+  limpiar();
+  return { tipo: p.get('type') || 'signup' };
+}
+
 /* ---------- errores en cristiano ---------- */
 
 /**

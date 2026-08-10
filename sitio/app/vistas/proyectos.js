@@ -16,27 +16,41 @@
    mismo tiempo, y esa tensión es justo la información que la app
    existe para dar.
 
-   POR QUÉ EL VEREDICTO A VECES NO SALE
+   DE DÓNDE SALE EL VEREDICTO
 
-   El veredicto necesita saber cuánto tiene el hogar líquido y cuánto
-   debe, y eso sale de `saludFinanciera`, que recorre TODO el
-   histórico. En el navegador solo vive el mes en curso.
+   Necesita saber cuánto tiene el hogar líquido y cuánto debe, y eso
+   sale de `saludFinanciera`, que recorre TODO el histórico. En el
+   navegador solo vive el mes en curso.
 
    Medido: el mismo proyecto sale «Programado» con doce meses de
    historia y «Reconsideralo» con uno solo, inventándose la razón
    («no hay ni un mes de colchón»). Un veredicto al revés, dicho con
    seguridad, es peor que no darlo.
 
-   La salida es el ANCLA DE CONCILIACIÓN. Cuando una cuenta o una
-   tarjeta declara el saldo que dijo el banco, el núcleo parte de esa
-   cifra y solo le suma lo posterior a esa fecha — y eso el navegador
-   sí lo tiene. Medido también: con el ancla dentro del mes cargado,
-   un mes da EXACTAMENTE el mismo número que doce.
+   Por eso hay tres estados, en orden de preferencia, y ninguno
+   miente:
 
-   Así que el veredicto sale cuando las anclas están al día, y cuando
-   no, se dice qué falta y dónde ponerlo. Lo demás —progreso, cuota,
-   plazo y si el dinero alcanza— se muestra siempre, porque siempre
-   es cierto.
+     1. LO DIJO EL SERVIDOR. La Edge Function `historico` corre este
+        mismo núcleo sobre toda la vida del hogar. Es la respuesta
+        buena y la que acaba llegando siempre.
+
+     2. TODAVÍA NO CONTESTA, PERO HAY ANCLA. Cuando una cuenta o una
+        tarjeta declara el saldo que dijo el banco, el núcleo parte de
+        esa cifra y solo le suma lo posterior — y eso el navegador sí
+        lo tiene. Medido: con el ancla dentro del mes cargado, un mes
+        da EXACTAMENTE el mismo número que doce. Ver `alcance.js`.
+
+     3. NI LO UNO NI LO OTRO. Se enseña solo si el dinero alcanza, y
+        se dice qué falta y dónde ponerlo.
+
+   La pantalla arranca en 2 o 3 y sube a 1 cuando el servidor
+   contesta: nunca se queda esperando, lo que dibuja de entrada ya es
+   cierto, y si el viaje falla se queda con lo que había — que nunca
+   fue mentira.
+
+   Lo que no depende del histórico —progreso, cuota, plazo y si el
+   dinero alcanza— se muestra siempre, en los tres estados, porque
+   siempre es cierto.
    ============================================================ */
 
 import * as A from '../nucleo/index.js';

@@ -206,6 +206,25 @@ export const actualizar = (tabla, id, cambios) =>
 export const borrar = (tabla, id) =>
   pedir(`/rest/v1/${tabla}?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
 
+/**
+ * Inserta, y donde ya exista esa combinación única, reemplaza.
+ *
+ * Lo necesitan las líneas de un pago: la fila es «lo que le toca a
+ * esta persona en este pago», y esa pareja YA es única en la base.
+ * Sin esto habría que traer el id de cada línea, decidir fila por
+ * fila si toca crear o actualizar, y mantener esa decisión
+ * sincronizada a mano con una restricción que la base ya impone.
+ *
+ * Solo se tocan las columnas que van en el cuerpo; las demás se
+ * quedan como estaban.
+ */
+export const insertarOReemplazar = (tabla, filas, unicas) =>
+  pedir(`/rest/v1/${tabla}?on_conflict=${encodeURIComponent(unicas)}`, {
+    method: 'POST',
+    headers: { Prefer: 'return=representation,resolution=merge-duplicates' },
+    body: JSON.stringify(filas)
+  });
+
 /** Varias tablas de un tirón, en paralelo. */
 export async function leerVarias(tablas, filtros = {}) {
   const pares = await Promise.all(

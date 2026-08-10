@@ -63,6 +63,31 @@ export function hoyLocal() {
   return `${d.getFullYear()}-${dd(d.getMonth() + 1)}-${dd(d.getDate())}`;
 }
 
+/** El mes de hoy, para los campos `type="month"`. */
+export const mesLocal = () => hoyLocal().slice(0, 7);
+
+/* ---------- vocabulario compartido ----------
+
+   Las categorías viven aquí y no en cada pantalla: el asistente las
+   ofrece al arrancar y el editor de gastos las vuelve a ofrecer
+   después. Dos listas separadas se separan de verdad en cuanto
+   alguien agrega una en un solo lado, y entonces un gasto cambia de
+   categoría sin que nadie lo haya tocado. */
+export const CATEGORIAS = ['Alimentación', 'Servicios', 'Transporte', 'Salud',
+                           'Hogar', 'Educación', 'Otros'];
+
+/* Una moneda por hogar, sin conversión: eso es fase 2. La lista está
+   aquí por lo mismo que las categorías — el asistente la ofrece al
+   arrancar y el editor del hogar la vuelve a ofrecer después. */
+export const MONEDAS = [
+  { valor: 'HNL', texto: 'Lempira (L)' },
+  { valor: 'USD', texto: 'Dólar ($)' },
+  { valor: 'GTQ', texto: 'Quetzal (Q)' },
+  { valor: 'CRC', texto: 'Colón (₡)' },
+  { valor: 'MXN', texto: 'Peso mexicano ($)' },
+  { valor: 'EUR', texto: 'Euro (€)' }
+];
+
 /* ---------- avisos ---------- */
 
 let tiempoAviso = null;

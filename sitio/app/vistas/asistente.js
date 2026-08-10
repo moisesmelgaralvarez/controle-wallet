@@ -19,28 +19,17 @@
       quien la usa.
    ============================================================ */
 
-import { esc, campo, campoMonto, selector, datosDeForma, avisar, $, $$ } from '../ui.js';
+import { esc, campo, campoMonto, selector, datosDeForma, avisar, $, $$, CATEGORIAS, MONEDAS } from '../ui.js';
 import { crear, crearVarias, actualizar } from '../datos/escribir.js';
 
 /* Sugerencias, no imposiciones. Se muestran para que nadie empiece
    frente a una hoja en blanco, y se borran de un toque. */
-const CATEGORIAS = ['Alimentación', 'Servicios', 'Transporte', 'Salud', 'Hogar', 'Educación', 'Otros'];
-
 const GASTOS_SUGERIDOS = [
   { concepto: 'Supermercado', categoria: 'Alimentación', medio: 'tarjeta' },
   { concepto: 'Energía eléctrica', categoria: 'Servicios', medio: 'tarjeta' },
   { concepto: 'Agua', categoria: 'Servicios', medio: 'efectivo' },
   { concepto: 'Internet y teléfono', categoria: 'Servicios', medio: 'tarjeta' },
   { concepto: 'Combustible', categoria: 'Transporte', medio: 'tarjeta' }
-];
-
-const MONEDAS = [
-  { valor: 'HNL', texto: 'Lempira (L)' },
-  { valor: 'USD', texto: 'Dólar ($)' },
-  { valor: 'GTQ', texto: 'Quetzal (Q)' },
-  { valor: 'CRC', texto: 'Colón (₡)' },
-  { valor: 'MXN', texto: 'Peso mexicano ($)' },
-  { valor: 'EUR', texto: 'Euro (€)' }
 ];
 
 export function asistente({ contenedor, hogar, alTerminar }) {

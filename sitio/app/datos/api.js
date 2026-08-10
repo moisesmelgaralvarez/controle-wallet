@@ -30,6 +30,7 @@
    ============================================================ */
 
 import { CONFIG } from './config.js';
+import { traducir } from './mensajes.js';
 
 const LLAVE_SESION = 'controle.sesion';
 
@@ -100,8 +101,9 @@ export function capturarSesionDeURL() {
 
 /**
  * Un error de red y uno de permisos no son lo mismo y no se
- * arreglan igual. Traducirlos aquí evita que cada pantalla invente
- * su propio mensaje — y evita el clásico "Error: [object Object]".
+ * arreglan igual. El texto que ve la persona lo decide
+ * `mensajes.js`; lo que viaja aquí es de qué tipo fue, para que la
+ * pantalla pueda distinguir «sin conexión» de «no tenés permiso».
  */
 export class ErrorDatos extends Error {
   constructor(mensaje, { estado = 0, causa = null, sinConexion = false } = {}) {
@@ -111,27 +113,6 @@ export class ErrorDatos extends Error {
     this.causa = causa;
     this.sinConexion = sinConexion;
   }
-}
-
-const MENSAJES = {
-  400: 'Los datos enviados no son válidos.',
-  401: 'La sesión venció. Volvé a entrar.',
-  403: 'No tenés permiso para hacer eso.',
-  404: 'No se encontró lo que se pidió.',
-  409: 'Ese registro ya existe.',
-  413: 'El archivo es demasiado grande.',
-  429: 'Demasiados intentos. Esperá un momento.',
-  500: 'Falló el servidor. Intentá de nuevo en un momento.'
-};
-
-function traducir(estado, cuerpo) {
-  // Postgres habla claro cuando se le deja: los mensajes de los
-  // disparadores están escritos para leerse tal cual.
-  const propio = cuerpo && (cuerpo.message || cuerpo.error_description || cuerpo.msg || cuerpo.error);
-  if (propio && /mes .* cerrado|solo el propietario/i.test(propio)) return propio;
-  if (estado === 401 && /invalid login/i.test(propio || '')) return 'Correo o contraseña incorrectos.';
-  if (estado === 422 && /already registered/i.test(propio || '')) return 'Ese correo ya tiene cuenta.';
-  return MENSAJES[estado] || propio || `Error ${estado}.`;
 }
 
 /* ---------- la petición ---------- */

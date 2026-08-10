@@ -46,7 +46,8 @@ const CLAVES = clavesDeLaRespuesta(fuente);
 const CONSUMEN = {
   Resumen:   ['patrimonio', 'cuentas', 'salud'],
   Historia:  ['historia', 'filasUsadas'],
-  Proyectos: ['cartera']
+  Proyectos: ['cartera'],
+  Cierre:    ['cierre', 'paraCerrar']
 };
 
 test('el lector del contrato encuentra la respuesta de verdad', () => {

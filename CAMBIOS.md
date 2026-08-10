@@ -4,6 +4,120 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.18.0 — Dar el mes por bueno
+
+*Abre la etapa 5.*
+
+**Qué se hizo**
+
+- **Cierre de mes**, la pantalla que convierte un mes en historia. Hasta ahora,
+  el plan de un mes viejo era el plan de HOY: bajar el presupuesto de comida en
+  septiembre hacía parecer que en agosto se habían pasado. Cerrar le saca la
+  foto al plan que de verdad rigió, y esa foto ya no se mueve.
+- **Las tres conciliaciones**, cada una con su ventana de fechas escrita: lo que
+  la app calcula contra lo que declaró el banco —cuenta por cuenta, tarjeta por
+  tarjeta— y contra lo que hay en la mano.
+- **Reabrir**, que es del propietario del hogar y lo impone la base.
+
+**Cerrar no es marcar una casilla**
+
+Son dos candados. Un descuadre que se deja pasar no se queda quieto: el mes
+siguiente arranca con él encima y ya nadie sabe de dónde salió. Y un exceso sin
+explicar, dentro de tres meses, es indistinguible de un descuido.
+
+Un descuadre se resuelve de dos maneras: que cuadre, o que alguien lo reconozca
+y lo explique. Lo segundo también es información — lo que no vale es esconderlo.
+Por eso un ajuste **sin nota no cuenta**.
+
+**Una cadena de meses cerrados es un ancla que se renueva sola**
+
+Cerrar siembra en el mes siguiente la foto de cómo terminó este: saldo final =
+saldo inicial, sin huecos. Eso hace que la historia encadene, y hace algo que no
+se ve: mientras nadie haya cerrado el mes previo, saber con qué saldos arrancó
+un mes obliga a recorrer TODO lo anterior. Con la apertura sembrada, el arranque
+es un dato guardado y no una deducción. Es el mismo mecanismo que las anclas del
+banco, aplicado al tiempo en vez de al saldo.
+
+**El orden de los dos escritos, que no es el que parece**
+
+Se siembra la apertura del mes siguiente **primero** y se marca cerrado
+**después**. Puesto al derecho, una caída de red en medio deja un mes cerrado
+cuyo siguiente no tiene apertura, y entonces se deduce del histórico… que en el
+navegador es un solo mes. Números creíbles y falsos, sin un solo error en
+pantalla. Al revés, el peor caso es inofensivo: queda sembrada la apertura
+correcta —que es la misma se cierre o no— y el mes sigue abierto.
+
+Y antes de escribir se **lee** el mes siguiente. Si ya está cerrado, no se toca
+nada: reescribirle la apertura le movería el suelo a una cuadratura que alguien
+ya dio por buena.
+
+**Un defecto que habría vaciado el presupuesto del mes entrante**
+
+La columna `montos` es `not null default '{}'`, así que toda fila de
+`presupuesto_mes` trae `{}` aunque nadie haya congelado nada — incluida la que
+se crea solo para sembrar la apertura. El núcleo leía cualquier `{}` como foto
+del plan, y ese mes habría salido con **todos sus rubros en cero**: presupuesto
+de comida cero, de servicios cero, y la app diciendo que se pasaron en todo. En
+la app anterior no podía ocurrir porque ahí la propiedad simplemente no existía;
+apareció al normalizar el esquema. Una foto vacía no es una foto.
+
+**El cálculo va en el servidor, y la segunda razón no es la obvia**
+
+La conocida: el arranque del mes recorre toda la vida del hogar. La otra: el
+ciclo de una tarjeta va **de corte a corte**, así que agarra días del mes
+pasado, y el navegador solo baja el mes en curso — la conciliación de la tarjeta
+se quedaría sin los pagos de esa cola. Las dos inventan un descuadre, y un
+descuadre inventado **bloquea un cierre que sí cuadraba**. `datos/cierre.js` ni
+siquiera recibe el documento del hogar: así no puede calcular con historia
+incompleta ni por accidente.
+
+**Dos defectos que aparecieron midiendo, no mirando**
+
+A 1440 la pantalla salía en **una sola columna**: los párrafos llegaban a **1,302
+px** —más del doble de lo que un ojo sigue sin perder el renglón— y un campo de
+texto ocupaba **1,296 px**. Ahora usa las dos zonas del resto de la app: el
+trabajo a la izquierda, el resultado y el botón a la derecha. Medido después:
+párrafo **728 px**, campo **544 px**.
+
+Y un rubro donde se gastó de menos decía **«L -300.00»** en verde. El signo menos
+se lee un instante como que faltan 300, cuando significa lo contrario. Ahora va
+la palabra: **«L 300.00 de menos»**.
+
+**Un mensaje que mandaba a buscar un dato que no existe**
+
+Al efectivo sin contar le decía «Falta decir cuánto dice **el banco** que hay en
+Efectivo en mano». El efectivo es la única de las tres conciliaciones que **no
+tiene banco** que la declare — por eso se cuenta a mano. Venía así de la app
+anterior. Ahora dice «Falta contar cuánto hay en efectivo», con su prueba.
+
+**Comprobado contra la base, corriendo el código de producción**
+
+Las seis pruebas nuevas de integración no imitan lo que hace la app: importan
+`datos/cierre.js` y lo ejecutan contra la base de pruebas con la sesión de un
+usuario de verdad. Una copia del código no prueba el código.
+
+Cerrar septiembre escribe **las dos filas** —el mes con su plan congelado, sus
+ajustes y su efectivo contado; octubre con la apertura— y esa apertura vuelve del
+armador marcada como **declarada, no deducida**, que es lo que evita que el mes
+siguiente se ponga a recorrer el histórico. Guardar a medias no marca cerrado ni
+inventa una fecha. Con el mes siguiente ya cerrado, el cierre se rechaza y **no
+deja nada a medias**. Reabrir devuelve el mes a editable sin borrar la apertura
+que ya se sembró.
+
+Y una que valía por sí sola: **sembrar la apertura no le borra al mes siguiente
+su foto del plan.** Diciembre tenía sus montos, se cerró noviembre encima, y los
+montos siguen ahí — el upsert solo toca las columnas que viajan.
+
+**Medido:** 58 elementos en oscuro con mínimo **7.42**, 58 en claro con mínimo
+**6.52**, ninguno bajo AA. Sin desbordes a 360 ni 1440, en los tres estados de la
+pantalla: cuadrado, con excesos sin justificar, y descuadrado con las
+conciliaciones sin declarar.
+
+**290 pruebas · 24 de aislamiento · 18 de integración, todas en verde.** El hogar
+de pruebas quedó exactamente como estaba.
+
+---
+
 ## v0.17.0 — El capital, y qué conviene hacer primero
 
 *Cierra la etapa 4.*

@@ -116,6 +116,33 @@ Deno.serve(async (req: Request) => {
 
       patrimonio: A.patrimonio(D, periodo),
       salud: A.saludFinanciera(D, periodo),
+
+      // El cierre se calcula AQUÍ por dos razones, y ninguna es de
+      // rendimiento. La primera: con qué saldos arrancó el mes sale de
+      // recorrer todo lo anterior mientras nadie haya cerrado el mes
+      // previo. La segunda es más fina — el ciclo de una tarjeta va de
+      // corte a corte, así que agarra días del mes pasado, y el
+      // navegador solo baja el mes en curso: la conciliación de la
+      // tarjeta se quedaría sin los pagos de esa cola. Las dos dan un
+      // descuadre inventado, y un descuadre inventado bloquea un
+      // cierre que sí cuadraba.
+      cierre: A.cierreDeMes(D, periodo),
+
+      // Lo que hay que ESCRIBIR para cerrar, ya calculado aquí.
+      //
+      // No es una comodidad. `saldosCierre` recorre toda la vida del
+      // hogar, así que si el navegador lo calculara con su único mes
+      // sembraría un arranque falso en el mes siguiente — y un
+      // arranque falso no se nota nunca: no hay pantalla donde se vea
+      // mal, solo cifras que dejan de cuadrar meses después.
+      //
+      // `montos` es la foto del plan que rigió el mes. Si ya estaba
+      // congelado se respeta la suya: cerrar cuadra las cuentas, no
+      // reescribe el plan que estuvo vigente.
+      paraCerrar: {
+        montos: A.montosDeMes(D, periodo) || A.fotoDelPlan(D),
+        saldos: A.saldosCierre(D, periodo)
+      },
       historia: A.historia(D, periodo, meses),
       cuentas: A.saldosCuentas(D, periodo),
       efectivo: A.efectivo(D, periodo),

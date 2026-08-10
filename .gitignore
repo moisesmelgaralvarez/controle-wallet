@@ -31,5 +31,15 @@ estados-de-cuenta/
 *.xlsx
 *.pdf
 
-# Preferencias locales de Claude Code, propias de esta máquina.
+# Y las capturas de pantalla, por lo mismo: una foto de la app enseña
+# saldos, cuentas y nombres. Se pasan para revisar algo y se olvidan
+# en la carpeta.
+*.heic
+*.HEIC
+Captura*.png
+
+# Preferencias locales de Claude Code, propias de esta máquina. El
+# `launch.json` solo dice cómo levantar `wrangler dev` aquí: es
+# herramienta de escritorio, no parte del producto.
 .claude/settings.local.json
+.claude/launch.json

@@ -46,6 +46,31 @@ const par = (monto, fecha) =>
 /** Ordena por el campo `orden` y, a igualdad, por antigüedad. */
 const porOrden = (a, b) => (a.orden - b.orden) || String(a.creado_en).localeCompare(String(b.creado_en));
 
+/** Cada valor de un mapa id → monto, convertido a número. */
+const mapaDeMontos = m => {
+  const r = {};
+  for (const [k, v] of Object.entries(m || {})) r[k] = num(v);
+  return r;
+};
+
+/**
+ * La apertura sembrada por el cierre del mes anterior.
+ *
+ * `derivada: false` es la afirmación que hace toda la diferencia:
+ * esto no se dedujo recorriendo el histórico, se guardó cuando
+ * alguien cerró el mes anterior y lo cuadró. El núcleo la respeta y
+ * deja de sumar desde el principio — que es justo lo que el
+ * navegador no puede hacer con un solo mes cargado.
+ */
+const aperturaDeFila = a => ({
+  fecha: a.fecha || null,
+  cuentas: mapaDeMontos(a.cuentas),
+  tarjetas: mapaDeMontos(a.tarjetas),
+  financiamientos: mapaDeMontos(a.financiamientos),
+  efectivo: num(a.efectivo),
+  derivada: false
+});
+
 /**
  * Arma el documento del núcleo a partir de las filas del hogar.
  *
@@ -246,15 +271,27 @@ export function armar(filas) {
 
   const presupuestoMes = {};
   for (const p of f('presupuesto_mes')) {
-    // Los montos vienen como jsonb: los valores pueden llegar como
-    // número o como texto según cómo se escribieron. Se normalizan
-    // aquí una sola vez.
-    const montos = {};
-    for (const [k, v] of Object.entries(p.montos || {})) montos[k] = num(v);
+    // Dentro de un `jsonb` los valores pueden llegar como número o
+    // como texto según cómo se escribieron. Se normalizan aquí una
+    // sola vez.
+    const ajustes = {};
+    for (const [k, v] of Object.entries(p.ajustes || {})) {
+      ajustes[k] = { monto: num(v && v.monto), nota: (v && v.nota) || '' };
+    }
 
     presupuestoMes[p.periodo] = {
-      montos,
+      montos: mapaDeMontos(p.montos),
       notas: p.notas || {},
+      ajustes,
+      // Con qué saldos arrancó el mes. Nulo no es cero: significa que
+      // nadie cerró el anterior, y entonces el núcleo la deduce
+      // recorriendo el histórico. Convertirlo en `{}` haría pasar por
+      // declarado un arranque en cero que nadie escribió.
+      apertura: p.apertura ? aperturaDeFila(p.apertura) : null,
+      // `numeric` desde PostgREST llega como TEXTO. Y va con `numOpt`
+      // y no con `num` porque aquí el cero es un dato: «conté y no
+      // había nada» no es lo mismo que «nadie ha contado».
+      efectivoContado: numOpt(p.efectivo_contado),
       cerrado: Boolean(p.cerrado),
       cerradoEl: p.cerrado_el || null
     };

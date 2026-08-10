@@ -21,7 +21,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
-import { FILAS } from '../sitio/app/datos/filas.js';
+import { FILAS, filaApertura } from '../sitio/app/datos/filas.js';
+import { montosDeMes, mesCongelado, cierreDeMes } from '../sitio/app/nucleo/saldos.js';
 
 /* ------------------------------------------------------------
    Qué columnas existen, según las migraciones
@@ -111,7 +112,13 @@ const FORMULARIOS = {
     tipo: 'esencial', urgencia: 'este_ano', consecuencia: 'Seguir pagando lavandería'
   },
   aportes: { personaId: 'p1', monto: 2000, fecha: '2026-08-09', nota: 'Del aguinaldo' },
-  ingresos_mes: { personaId: 'p1', bruto: 27400, deducciones: [{ concepto: 'ISR', monto: 6200 }] }
+  ingresos_mes: { personaId: 'p1', bruto: 27400, deducciones: [{ concepto: 'ISR', monto: 6200 }] },
+  presupuesto_mes: {
+    montos: { g1: 8000, g2: 2400 },
+    notas: { g1: 'Se adelantó la compra del mes' },
+    ajustes: { 'cuenta:c1': { monto: -125.5, nota: 'Comisión que no anotamos' } },
+    efectivoContado: 1450
+  }
 };
 
 test('cada columna que escribe el editor existe en su tabla', () => {
@@ -274,6 +281,96 @@ test('el atajo deja anotado de qué mes copió', () => {
   assert.equal(f.copiado_de, '2026-07');
   // Cuenta para los cálculos igual: lo que cambia es que nadie lo miró.
   assert.equal(f.confirmado, true);
+});
+
+/* ------------------------------------------------------------
+   Cerrar el mes
+   ------------------------------------------------------------ */
+
+test('guardar a medias no escribe una fecha de cierre', () => {
+  // Decir que un mes se cerró el día tal cuando nadie lo cerró es
+  // inventarse un hecho, y encima uno que la pantalla enseña.
+  const a = FILAS.presupuesto_mes(FORMULARIOS.presupuesto_mes, { ...ctx, cerrar: false });
+  assert.equal(a.cerrado, false);
+  assert.ok(!('cerrado_el' in a), 'sin cerrar no hay fecha de cierre');
+
+  const b = FILAS.presupuesto_mes(FORMULARIOS.presupuesto_mes, { ...ctx, cerrar: true });
+  assert.equal(b.cerrado, true);
+  assert.ok(b.cerrado_el, 'al cerrar sí queda constancia de cuándo');
+});
+
+test('el efectivo contado distingue el cero de la ausencia', () => {
+  // «Conté y no había nada» resuelve la conciliación; «nadie ha
+  // contado» la deja bloqueando el cierre, que es lo correcto.
+  const cero = FILAS.presupuesto_mes({ ...FORMULARIOS.presupuesto_mes, efectivoContado: 0 }, ctx);
+  assert.equal(cero.efectivo_contado, 0);
+
+  for (const vacio of ['', null, undefined]) {
+    const f = FILAS.presupuesto_mes({ ...FORMULARIOS.presupuesto_mes, efectivoContado: vacio }, ctx);
+    assert.equal(f.efectivo_contado, null, `${JSON.stringify(vacio)} debería quedar sin contar`);
+  }
+});
+
+test('la apertura que se le siembra al mes siguiente lleva tres columnas y nada más', () => {
+  // Es lo que impide que sembrar la apertura le borre al mes siguiente
+  // la foto de su plan: el upsert solo toca las columnas que viajan.
+  const f = filaApertura(
+    { fecha: '2026-09-07', cuentas: { c1: 28750.25 }, tarjetas: { t1: 19101 },
+      financiamientos: { f1: 9600 }, efectivo: 1450 },
+    { hogarId: 'h1', periodo: '2026-09' });
+
+  assert.deepEqual(Object.keys(f).sort(), ['apertura', 'hogar_id', 'periodo']);
+  for (const columna of Object.keys(f)) {
+    assert.ok(COLUMNAS.presupuesto_mes.has(columna), `presupuesto_mes.${columna} no existe`);
+  }
+  assert.equal(f.periodo, '2026-09');
+  assert.equal(f.apertura.cuentas.c1, 28750.25);
+});
+
+test('un efectivo imposible se siembra tal cual, sin recortar a cero', () => {
+  // Recortarlo convertiría un error —un retiro sin anotar— en un
+  // arranque creíble, y entonces ya nadie lo encuentra.
+  const f = filaApertura({ fecha: '2026-09-07', efectivo: -320 }, { hogarId: 'h1', periodo: '2026-09' });
+  assert.equal(f.apertura.efectivo, -320);
+});
+
+test('la apertura no guarda que es declarada: serlo es estar guardada', () => {
+  const f = filaApertura({ fecha: '2026-09-07', efectivo: 0 }, { hogarId: 'h1', periodo: '2026-09' });
+  assert.ok(!('derivada' in f.apertura),
+    'guardar un `derivada` dejaría que alguien convierta un hecho en una deducción');
+});
+
+test('una foto vacía del plan no es una foto', () => {
+  /* La columna `montos` es `not null default '{}'`, así que TODA fila
+     de `presupuesto_mes` trae `{}` — incluida la que se crea solo para
+     sembrarle la apertura al mes siguiente. Leyendo ese `{}` como foto
+     del plan, ese mes saldría con todos sus rubros en cero y la app
+     diría que se pasaron en todo. En la app anterior no podía pasar
+     porque ahí la propiedad simplemente no existía. */
+  const sembrado = { presupuestoMes: { '2026-09': { montos: {}, apertura: { efectivo: 0 } } } };
+  assert.equal(montosDeMes(sembrado, '2026-09'), null);
+  assert.equal(mesCongelado(sembrado, '2026-09'), false);
+
+  const congelado = { presupuestoMes: { '2026-09': { montos: { g1: 8000 } } } };
+  assert.deepEqual(montosDeMes(congelado, '2026-09'), { g1: 8000 });
+  assert.equal(mesCongelado(congelado, '2026-09'), true);
+});
+
+test('al efectivo no se le pide el saldo del banco: se le pide contarlo', () => {
+  /* El efectivo es la única de las tres conciliaciones sin banco que la
+     declare — por eso se cuenta a mano. Pedirle «lo que dice el banco»
+     manda a buscar un dato que no existe, y un mensaje tiene que decir
+     qué hacer. Venía así de la app anterior. */
+  const D = {
+    inicioMes: 1, personas: [], cuentas: [], tarjetas: [], gastos: [],
+    financiamientos: [], proyectos: [], plantillaIngresos: [], ingresosMes: {},
+    movimientos: [], retiros: [], pagosTarjeta: [], comercios: {},
+    presupuestoMes: { '2026-08': { montos: { g1: 100 } } }
+  };
+  const b = cierreDeMes(D, '2026-08').bloqueos.find(x => x.clave === 'efectivo');
+  assert.ok(b, 'el efectivo sin contar tiene que bloquear el cierre');
+  assert.equal(b.texto, 'Falta contar cuánto hay en efectivo.');
+  assert.doesNotMatch(b.texto, /banco/, 'el efectivo no tiene banco que lo declare');
 });
 
 /* ------------------------------------------------------------

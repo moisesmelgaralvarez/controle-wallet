@@ -420,7 +420,11 @@ body[data-asistente="si"] .tope { display: none; }
   gap: var(--e2); margin-bottom: var(--e2);
 }
 .panel__tope h2 { margin: 0; }
-.panel__nota { margin-top: var(--e2); }
+/* El límite de lectura va en el bloque que lo necesita, no global.
+   Medido a 1440 en el cierre: un párrafo de nota llegaba a 1,302 px —
+   más del doble de lo que un ojo sigue sin perder el renglón. Es el
+   mismo criterio que ya tenía `.destacado__d`. */
+.panel__nota { margin-top: var(--e2); max-width: 68ch; }
 
 /* Un botón que acompaña a un título no puede tener el mismo peso que
    la acción principal de la pantalla. */
@@ -737,3 +741,100 @@ body[data-mes-pasado="si"] .mes-nav .tope__mes {
 
 /* Un enlace dentro de una nota de aviso tiene que verse como enlace. */
 .panel__nota a { color: var(--acento); }
+
+/* ============================================================
+   Cierre de mes
+   ============================================================ */
+
+/* Un aviso que hay que leer pero que no es un error: el saldo
+   declarado quedó viejo, la ventana no es la que uno cree. Va en el
+   color de lo que urge, rebajado, para que no compita con un
+   descuadre de verdad. */
+.aviso--ojo {
+  background: color-mix(in oklab, var(--alerta) 7%, transparent);
+  border-color: color-mix(in oklab, var(--alerta) 30%, transparent);
+  color: var(--tinta);
+}
+
+/* Un campo que cuelga de la fila de arriba, no uno suelto del
+   formulario: sin el margen de abajo se lee como parte de ella.
+
+   El tope de ancho no es estético. Medido a 1440: un campo de nota
+   quedaba de 1,296 px de ancho. Un renglón de escritura del ancho de
+   la pantalla se ve roto, cuesta apuntarle y no se corresponde con lo
+   que se escribe adentro — una frase corta o un monto. */
+.campo--pegado { margin: var(--e1) 0 0; max-width: 34rem; }
+
+/* ---------- rubro por rubro ---------- */
+
+.lista-cierre { list-style: none; padding: 0; margin: 0; display: grid; }
+.lista-cierre li + li { border-top: 1px solid var(--borde); }
+
+.cierre-rubro { padding: 0.7rem 0.2rem; }
+.cierre-rubro__tope {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--e2); align-items: center;
+  font-variant-numeric: tabular-nums;
+}
+.cierre-rubro__t { display: grid; gap: 0.15rem; min-width: 0; }
+.cierre-rubro__t strong { font-weight: 600; font-size: var(--t-sm); }
+.cierre-rubro__t small  { font-size: var(--t-xs); color: var(--tenue); }
+/* La cifra no se parte, por lo mismo que en `.fila-cfg__v`: partida
+   en dos renglones se lee un instante como dos números distintos. */
+.cierre-rubro__v { text-align: right; font-weight: 650; font-size: var(--t-sm); white-space: nowrap; }
+.cierre-rubro__v small { display: block; font-weight: 400; color: var(--tenue); font-size: var(--t-xs); }
+.cierre-rubro__v.bien { color: var(--acento); }
+.cierre-rubro__v.mal  { color: var(--alerta); }
+
+/* ---------- las tres conciliaciones ---------- */
+
+.lista-conc { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--e2); }
+
+/* El estado va en el borde izquierdo, como los pasos del diagnóstico:
+   se ve de un vistazo cuál falta sin tener que leer las tres. */
+.conc {
+  border: 1px solid var(--borde); border-left-width: 3px;
+  border-radius: var(--radio); padding: var(--e2); background: var(--fondo);
+}
+.conc[data-estado="ok"]    { border-left-color: var(--acento); }
+.conc[data-estado="mal"]   { border-left-color: var(--alerta); }
+.conc[data-estado="falta"] { border-left-color: color-mix(in oklab, var(--alerta) 55%, transparent); }
+
+.conc__tope {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--e2); align-items: start; font-variant-numeric: tabular-nums;
+}
+.conc__t { display: grid; gap: 0.15rem; min-width: 0; }
+.conc__t strong { font-weight: 650; font-size: var(--t-sm); }
+.conc__t small  { font-size: var(--t-xs); color: var(--tenue); }
+.conc__v { text-align: right; font-weight: 650; font-size: var(--t-sm); white-space: nowrap; }
+.conc__v small { display: block; font-weight: 400; color: var(--tenue); font-size: var(--t-xs); }
+.conc__falta { font-style: normal; font-weight: 650; color: var(--alerta); font-size: var(--t-sm); }
+
+/* Las tres cifras que forman la comparación, escritas. Sin esto la
+   diferencia es un número sin origen, y nadie puede comprobarlo. */
+.conc__cuentas {
+  display: flex; flex-wrap: wrap; gap: 0.35rem var(--e2);
+  margin-top: var(--e1); font-size: var(--t-xs); color: var(--tenue);
+  font-variant-numeric: tabular-nums;
+}
+.conc__cuentas b { color: var(--tinta); font-weight: 650; }
+
+.conc__ajuste { margin-top: var(--e1); padding-top: var(--e1); border-top: 1px solid var(--borde); }
+.conc__ajuste-d { margin: 0; font-size: var(--t-xs); color: var(--tenue); }
+.conc__resuelto {
+  margin: var(--e1) 0 0; font-size: var(--t-xs); color: var(--tenue);
+  font-style: italic;
+}
+.conc .aviso { margin: var(--e1) 0 0; }
+
+/* ---------- lo que falta para cerrar ---------- */
+
+.lista-bloqueos { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--e1); }
+.lista-bloqueos li {
+  font-size: var(--t-sm);
+  border-left: 3px solid var(--alerta); padding-left: var(--e2);
+}
+.lista-bloqueos li[data-tipo="exceso"] {
+  border-left-color: color-mix(in oklab, var(--alerta) 55%, transparent);
+}

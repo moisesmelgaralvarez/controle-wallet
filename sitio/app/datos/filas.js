@@ -170,6 +170,27 @@ export const FILAS = {
     };
   },
 
+  /**
+   * Lo que de verdad entró, para una persona en un pago de un mes.
+   *
+   * `copiado_de` lleva el mes del que salió la cifra cuando vino del
+   * atajo, y va en `null` cuando alguien la confirmó mirándola. Se
+   * escribe SIEMPRE —no se omite— porque confirmar a mano encima de
+   * una copia tiene que borrar la marca: omitir la columna en un
+   * upsert la dejaría puesta, y el pago seguiría diciendo «sin
+   * revisar» después de que alguien lo revisó.
+   */
+  ingresos_mes: (l, ctx) => ({
+    hogar_id: ctx.hogarId,
+    periodo: ctx.periodo,
+    plantilla_id: ctx.plantillaId,
+    persona_id: l.personaId,
+    bruto: noNeg(l.bruto),
+    deducciones: l.deducciones,
+    confirmado: true,
+    copiado_de: ctx.copiadoDe || null
+  }),
+
   aportes: (d, ctx) => ({
     hogar_id: ctx.hogarId,
     proyecto_id: ctx.proyectoId,

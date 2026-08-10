@@ -31,17 +31,83 @@
 
 import * as A from '../nucleo/index.js';
 import {
-  $, $$, esc, dinero, mesLocal, hoja, campo, campoMonto,
+  $, $$, esc, dinero, mesLocal, nombreMes, hoja, campo, campoMonto,
   selector, avisar, CATEGORIAS, MONEDAS
 } from '../ui.js';
-import { crear, actualizar, borrar, fusionar } from '../datos/escribir.js';
+import { crear, actualizar, borrar, fusionar, borrarDonde } from '../datos/escribir.js';
 import { FILAS, dijoAlgo } from '../datos/filas.js';
+
+
+/* ============================================================
+   Los bloques de persona, que dos formularios comparten.
+
+   El editor del plan y la confirmación del mes preguntan lo mismo —
+   bruto y retenciones de cada persona— y se leen igual. Vivían
+   duplicados dentro de un formulario; separados, el día que uno
+   cambie de forma el otro se queda atrás sin que nada avise.
+   ============================================================ */
+
+/** Una fila de retención, vacía o con lo que ya había. */
+const filaDed = d => `
+  <div class="ded" data-ded>
+    <input class="ded__c" data-k="concepto" value="${esc(d ? d.concepto : '')}" placeholder="ISR, seguro…" aria-label="Concepto de la retención">
+    <input class="ded__m" data-k="monto" type="number" inputmode="decimal" step="0.01" min="0"
+           value="${esc(d ? d.monto : '')}" placeholder="0.00" aria-label="Monto de la retención">
+    <button class="iconbtn" type="button" data-quita-ded aria-label="Quitar retención">✕</button>
+  </div>`;
+
+/** Lo que dicen los bloques de persona de una hoja, ahora mismo. */
+function leerBloques(caja) {
+  return $$('[data-persona]', caja).map(b => ({
+    personaId: b.dataset.persona,
+    bruto: Math.max(0, Number($('[data-k="bruto"]', b).value) || 0),
+    deducciones: $$('[data-ded]', b).map(f => ({
+      concepto: $('[data-k="concepto"]', f).value.trim() || 'Retención',
+      monto: Math.max(0, Number($('[data-k="monto"]', f).value) || 0)
+    })).filter(x => x.monto > 0)
+  }));
+}
+
+/** Agregar y quitar retenciones, con el neto en vivo. */
+function engancharDeducciones(caja) {
+  const refrescarNetos = () => {
+    for (const b of $$('[data-persona]', caja)) {
+      const l = leerBloques(caja).find(x => x.personaId === b.dataset.persona);
+      const neto = l.bruto - l.deducciones.reduce((s, x) => s + x.monto, 0);
+      const pie = $('[data-neto]', b);
+      if (!pie) continue;
+      // El neto es la cifra que la persona reconoce de su boleta: es
+      // contra esa que compara, no contra el bruto.
+      pie.textContent = `Neto: ${dinero(neto)}`;
+      pie.dataset.tono = neto < 0 ? 'mal' : 'ok';
+    }
+  };
+
+  caja.addEventListener('click', e => {
+    const mas = e.target.closest('[data-mas-ded]');
+    if (mas) {
+      const cont = $('[data-deds]', mas.closest('[data-persona]'));
+      cont.insertAdjacentHTML('beforeend', filaDed(null));
+      $$('input', cont).pop().focus();
+      return refrescarNetos();
+    }
+    const quita = e.target.closest('[data-quita-ded]');
+    if (quita) { quita.closest('[data-ded]').remove(); refrescarNetos(); }
+  });
+
+  caja.addEventListener('input', refrescarNetos);
+  refrescarNetos();
+}
 
 
 export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
   const ctx = { hogarId: hogar.id };
   const r = A.resumenMes(D, periodo);
   const congelado = A.mesCongelado(D, periodo);
+  // Un mes cerrado no admite cambios: lo impone la base con un
+  // disparador, y aquí se apaga el botón para no prometer lo que el
+  // servidor va a rechazar.
+  const cerrado = A.mesCerrado(D, periodo);
 
   const porId = (lista, id) => (lista || []).find(x => x.id === id);
   const nombreDe = (lista, id) => porId(lista, id)?.nombre || '';
@@ -54,9 +120,45 @@ export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
   const finan = D.financiamientos || [];
   const credito = tarjetas.filter(t => (t.tipo || 'credito') === 'credito');
 
-  /** Neto típico de un pago: lo que dice la plantilla, no lo confirmado. */
-  const netoTipico = ev => (ev.lineas || []).reduce((s, l) => s + A.netoLinea(l), 0);
-  const totalTipico = pagos.reduce((s, ev) => s + netoTipico(ev), 0);
+  /* ---------- lo que entra, en el mes que se está mirando ----------
+
+     Dos capas, y la pantalla no las puede confundir:
+
+       PLANTILLA   el mes típico. Es lo que alguien tecleó al armar el
+                   hogar y lo que se usa mientras nadie confirme.
+       CONFIRMADO  lo que de verdad entró ese mes, con el ISR que tocó.
+
+     `lineaDe` ya elige: si el mes tiene su línea, manda esa. Aquí solo
+     se rotula de dónde salió cada cifra, que es lo que separa una
+     estimación de un hecho. */
+
+  const netoDelMes = ev =>
+    personas.reduce((s, p) => s + A.netoLinea(A.lineaDe(D, ev, p.id, periodo)), 0);
+
+  const copiadoDe = ev => ((D.ingresosMes || {})[periodo] || {}).copiado?.[ev.id] || null;
+
+  function estadoDelPago(ev) {
+    const quienes = personas
+      .filter(p => A.lineaDe(D, ev, p.id, periodo))
+      .map(p => esc(p.nombre)).join(' y ');
+    const detalle = quienes || 'sin personas asignadas';
+
+    const copia = copiadoDe(ev);
+    if (copia) {
+      return { confirmado: true, tono: 'espera', rotulo: 'sin revisar',
+               pie: `copiado de ${nombreMes(copia).toLowerCase()}`, detalle };
+    }
+    if (A.eventoConfirmado(D, ev.id, periodo)) {
+      return { confirmado: true, tono: 'bien', rotulo: 'confirmado', pie: 'entró', detalle };
+    }
+    return { confirmado: false, tono: 'neutro', rotulo: 'estimado', pie: 'monto típico', detalle };
+  }
+
+  /* Los pagos que se pueden confirmar de un tirón: los que faltan y
+     tienen un mes confirmado antes de dónde copiar. */
+  const copiables = pagos.filter(ev =>
+    !A.eventoConfirmado(D, ev.id, periodo) && A.mesConfirmadoPrevio(D, ev.id, periodo));
+  const desdeCopia = copiables.length ? A.mesConfirmadoPrevio(D, copiables[0].id, periodo) : null;
   const totalGastos = gastos.reduce((s, g) => s + (Number(g.monto) || 0), 0);
 
   /* ---------- piezas de la lista ---------- */
@@ -96,18 +198,46 @@ export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
         <section class="panel">
           ${encabezado('Lo que entra', 'pago', 'Agregar pago')}
           ${pagos.length ? `
-            ${lista(pagos.map(ev => fila('pago', ev.id,
-              `${esc(ev.nombre)} <span class="etiqueta">día ${esc(ev.dia)}</span>`,
-              (ev.lineas || []).length
-                ? esc(personas.filter(p => (ev.lineas || []).some(l => l.personaId === p.id))
-                    .map(p => p.nombre).join(' y ')) || 'sin personas asignadas'
-                : 'todavía sin montos',
-              dinero(netoTipico(ev)), 'neto típico')))}
-            ${total('Ingreso neto típico del mes', totalTipico)}
-            <p class="pulso-app__pie panel__nota">
-              Son los montos de un mes normal. Lo que de verdad entró se confirma
-              mes a mes, y ahí es donde se registra el ISR que tocó.
-            </p>`
+            <ul class="lista-cfg">
+              ${pagos.map(ev => {
+                const e = estadoDelPago(ev);
+                return `
+                <li>
+                  <div class="fila-cfg fila-cfg--quieta">
+                    <span class="fila-cfg__t">
+                      <strong>${esc(ev.nombre)} <span class="etiqueta">día ${esc(ev.dia)}</span>
+                        <span class="sello" data-tono="${esc(e.tono)}">${esc(e.rotulo)}</span></strong>
+                      <small>${e.detalle}</small>
+                    </span>
+                    <span class="fila-cfg__v">${esc(dinero(netoDelMes(ev)))}<small>${esc(e.pie)}</small></span>
+                  </div>
+                  <div class="fila-cfg__acciones">
+                    <button class="boton boton--borde boton--chico" type="button"
+                            data-confirmar="${esc(ev.id)}" ${cerrado ? 'disabled' : ''}>
+                      ${e.confirmado ? 'Corregir lo recibido' : 'Confirmar lo recibido'}
+                    </button>
+                    <button class="boton boton--borde boton--chico" type="button"
+                            data-editar="pago" data-id="${esc(ev.id)}">Editar el plan</button>
+                  </div>
+                </li>`;
+              }).join('')}
+            </ul>
+            ${total('Ingreso neto del mes', r.neto)}
+
+            ${copiables.length && !cerrado ? `
+              <button class="boton boton--borde boton--bloque" type="button" data-copiar>
+                Confirmar ${esc(copiables.length)} ${copiables.length === 1 ? 'pago' : 'pagos'}
+                igual que ${esc(nombreMes(desdeCopia))}
+              </button>
+              <p class="pulso-app__pie panel__nota">
+                Copia lo último confirmado y lo da por bueno. Usalo solo si el mes vino
+                igual: queda marcado como <b>sin revisar</b> hasta que abras cada pago y
+                lo guardes, porque «confirmado» quiere decir que alguien lo miró.
+              </p>` : `
+              <p class="pulso-app__pie panel__nota">
+                La cifra de cada pago es la del <b>mes que estás viendo</b>: lo confirmado
+                donde se confirmó, y el monto típico del plan donde todavía no.
+              </p>`}`
           : nada('Sin pagos registrados. Sin ellos no hay con qué calcular el mes.')}
         </section>
 
@@ -237,6 +367,12 @@ export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
 
   $$('[data-editar]', contenedor).forEach(b =>
     b.addEventListener('click', () => ABRIR[b.dataset.editar](b.dataset.id)));
+
+  $$('[data-confirmar]', contenedor).forEach(b =>
+    b.addEventListener('click', () => formConfirmar(porId(pagos, b.dataset.confirmar))));
+
+  const botonCopiar = $('[data-copiar]', contenedor);
+  if (botonCopiar) botonCopiar.addEventListener('click', copiarDelMesAnterior);
 
   /* ---------- opciones de los selectores ---------- */
 
@@ -509,6 +645,144 @@ export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
     });
   }
 
+  /* ============================================================
+     Confirmar lo que entró
+
+     Lo que separa una estimación de un hecho es que alguien lo mire.
+     Por eso el formulario viene relleno pero NO se guarda solo: se
+     abre con lo último confirmado —que se parece mucho más al mes que
+     viene que la plantilla del asistente— y quien confirma sigue
+     siendo la persona.
+     ============================================================ */
+
+  function formConfirmar(ev) {
+    if (!ev) return;
+
+    /* De dónde sale lo que aparece relleno. Se resuelve por persona:
+       puede que a una se le copie de junio y a la otra no, porque
+       entró al hogar después. */
+    const fuentes = personas.map(p => ({ p, ...A.lineaParaConfirmar(D, ev, p.id, periodo) }));
+    const deCopia = fuentes.find(f => f.origen === 'copia');
+    const yaCopiado = copiadoDe(ev);
+    const confirmado = A.eventoConfirmado(D, ev.id, periodo);
+
+    const bloque = ({ p, linea }) => `
+      <div class="perbloque" data-persona="${esc(p.id)}">
+        <div class="perbloque__t">${esc(p.nombre)}</div>
+        <label class="campo">
+          <span>Bruto que entró</span>
+          <input data-k="bruto" type="number" inputmode="decimal" step="0.01" min="0"
+                 value="${esc(linea ? linea.bruto : '')}" placeholder="0.00">
+        </label>
+        <div class="campo">
+          <span>Retenciones</span>
+          <div data-deds>${((linea && linea.deducciones) || []).map(filaDed).join('')}</div>
+          <button class="boton boton--borde boton--bloque boton--chico" type="button" data-mas-ded>+ Agregar retención</button>
+          <small class="campo__ayuda" data-neto></small>
+        </div>
+      </div>`;
+
+    const caja = hoja(`${ev.nombre} · ${nombreMes(periodo)}`, `
+      ${yaCopiado ? `<p class="hoja__nota ojo">
+        Estos números se <strong>copiaron de ${esc(nombreMes(yaCopiado))}</strong> con el
+        atajo y nadie los ha revisado. Comparalos con lo que de verdad entró y guardá:
+        con eso dejan de estar sin revisar.</p>`
+      : deCopia && !confirmado ? `<p class="hoja__nota">
+        Ya viene lleno con lo de <strong>${esc(nombreMes(deCopia.desde))}</strong>, que es
+        lo último confirmado. Si el mes vino igual, dale a confirmar; si cambió algo,
+        corregí el renglón que sea.</p>`
+      : `<p class="hoja__nota">
+        ${confirmado ? 'Ya confirmaste este pago. Podés corregirlo.'
+                     : 'Anotá lo que realmente entró este mes: el bruto y las retenciones que aplicaron.'}</p>`}
+
+      ${personas.map(p => bloque(fuentes.find(f => f.p.id === p.id))).join('')}
+
+      <label class="campo campo--casilla">
+        <input type="checkbox" name="tipico">
+        <span>Guardar también como el <strong>monto típico</strong> de este pago. Sirve para
+        que las estimaciones de los meses que vienen dejen de usar la cifra del asistente.</span>
+      </label>
+    `, {
+      ancha: true,
+      textoGuardar: `Confirmar ${nombreMes(periodo)}`,
+      alBorrar: confirmado ? async () => {
+        // Volver a estimado borra las líneas del mes: sin ellas el
+        // núcleo vuelve solo a la plantilla. Dejarlas con
+        // `confirmado: false` no serviría — `lineaDe` usa la línea del
+        // mes exista o no la confirmación.
+        await borrarDonde('ingresos_mes',
+          { periodo: `eq.${periodo}`, plantilla_id: `eq.${ev.id}` },
+          { periodo });
+        avisar('Vuelve a usar el monto típico.');
+        recargar();
+      } : null,
+      alGuardar: async (d, fallo) => {
+        const lineas = leerBloques(caja);
+        const mala = lineas.find(l => l.deducciones.reduce((s, x) => s + x.monto, 0) > l.bruto);
+        if (mala) {
+          return fallo(`En «${nombreDe(personas, mala.personaId)}» las retenciones superan al bruto.`), false;
+        }
+        if (!lineas.some(l => l.bruto > 0)) return fallo('Falta el monto que entró.'), false;
+
+        await fusionar('ingresos_mes',
+          lineas.map(l => FILAS.ingresos_mes(l, { ...ctx, periodo, plantillaId: ev.id, copiadoDe: null })),
+          'hogar_id,periodo,plantilla_id,persona_id');
+
+        /* Que la plantilla siga a la realidad, si lo piden. Es opcional
+           a propósito: un mes con un bono o un descuento raro no debe
+           reescribir el monto típico de todos los meses que vienen. */
+        if (d.tipico) {
+          await fusionar('plantilla_lineas',
+            lineas.map(l => FILAS.plantilla_lineas(l, { ...ctx, plantillaId: ev.id })),
+            'plantilla_id,persona_id');
+        }
+
+        avisar(`${ev.nombre} confirmado.`);
+        recargar();
+      }
+    });
+
+    engancharDeducciones(caja);
+  }
+
+  /**
+   * El atajo: confirmar de un tirón los pagos que faltan con lo del
+   * último mes confirmado.
+   *
+   * Quedan marcados como copiados —«sin revisar»— y no como
+   * confirmados a secas. Confirmar quiere decir que alguien miró; aquí
+   * nadie miró todavía, y decir lo contrario sería inventarse un
+   * hecho. La marca se va sola cuando alguien abre el pago y lo
+   * guarda, porque abrirlo y guardarlo ES revisarlo.
+   */
+  async function copiarDelMesAnterior() {
+    let cuantos = 0;
+    try {
+      for (const ev of copiables) {
+        const desde = A.mesConfirmadoPrevio(D, ev.id, periodo);
+        if (!desde) continue;
+
+        const lineas = personas
+          .map(p => ({ p, ...A.lineaParaConfirmar(D, ev, p.id, periodo) }))
+          .filter(f => f.origen === 'copia' && f.linea)
+          .map(f => ({ personaId: f.p.id, bruto: f.linea.bruto,
+                       deducciones: (f.linea.deducciones || []).slice() }));
+        if (!lineas.length) continue;
+
+        await fusionar('ingresos_mes',
+          lineas.map(l => FILAS.ingresos_mes(l, { ...ctx, periodo, plantillaId: ev.id, copiadoDe: desde })),
+          'hogar_id,periodo,plantilla_id,persona_id');
+        cuantos++;
+      }
+    } catch (e) {
+      return avisar(e.message || 'No se pudo copiar.', 'mal');
+    }
+
+    if (!cuantos) return avisar('No hay nada que copiar.', 'mal');
+    avisar(`${cuantos} ${cuantos === 1 ? 'pago copiado' : 'pagos copiados'}. Revisá y corregí si algo cambió.`);
+    recargar();
+  }
+
   /* ---------- el editor de pagos ----------
 
      El único formulario con estructura: un pago lleva dentro lo que
@@ -519,14 +793,6 @@ export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
   function formPago(ev) {
     const sePuedeBorrar = Boolean(ev) && pagos.length > 1;
     const lineaDe = pid => (ev && (ev.lineas || []).find(l => l.personaId === pid)) || null;
-
-    const filaDed = d => `
-      <div class="ded" data-ded>
-        <input class="ded__c" data-k="concepto" value="${esc(d ? d.concepto : '')}" placeholder="ISR, seguro…" aria-label="Concepto de la retención">
-        <input class="ded__m" data-k="monto" type="number" inputmode="decimal" step="0.01" min="0"
-               value="${esc(d ? d.monto : '')}" placeholder="0.00" aria-label="Monto de la retención">
-        <button class="iconbtn" type="button" data-quita-ded aria-label="Quitar retención">✕</button>
-      </div>`;
 
     const bloque = p => {
       const l = lineaDe(p.id);
@@ -586,42 +852,6 @@ export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
       }
     });
 
-    /** Lo que dice cada bloque de persona, ahora mismo. */
-    function leerBloques() {
-      return $$('[data-persona]', caja).map(b => ({
-        personaId: b.dataset.persona,
-        bruto: Math.max(0, Number($('[data-k="bruto"]', b).value) || 0),
-        deducciones: $$('[data-ded]', b).map(f => ({
-          concepto: $('[data-k="concepto"]', f).value.trim() || 'Retención',
-          monto: Math.max(0, Number($('[data-k="monto"]', f).value) || 0)
-        })).filter(x => x.monto > 0)
-      }));
-    }
-
-    /** El neto, en vivo. Es la cifra que la persona reconoce de su boleta. */
-    function refrescarNetos() {
-      for (const b of $$('[data-persona]', caja)) {
-        const l = leerBloques().find(x => x.personaId === b.dataset.persona);
-        const neto = l.bruto - l.deducciones.reduce((s, x) => s + x.monto, 0);
-        const pie = $('[data-neto]', b);
-        pie.textContent = `Neto: ${dinero(neto)}`;
-        pie.dataset.tono = neto < 0 ? 'mal' : 'ok';
-      }
-    }
-
-    caja.addEventListener('click', e => {
-      const mas = e.target.closest('[data-mas-ded]');
-      if (mas) {
-        const cont = $('[data-deds]', mas.closest('[data-persona]'));
-        cont.insertAdjacentHTML('beforeend', filaDed(null));
-        $$('input', cont).pop().focus();
-        return refrescarNetos();
-      }
-      const quita = e.target.closest('[data-quita-ded]');
-      if (quita) { quita.closest('[data-ded]').remove(); refrescarNetos(); }
-    });
-
-    caja.addEventListener('input', refrescarNetos);
-    refrescarNetos();
+    engancharDeducciones(caja);
   }
 }

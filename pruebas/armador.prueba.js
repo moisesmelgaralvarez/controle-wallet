@@ -289,3 +289,37 @@ test('pedir solo una parte de las tablas no rompe el armado', () => {
   assert.deepEqual(parcial.proyectos, []);
   assert.deepEqual(parcial.comercios, {});
 });
+
+test('la marca de «copiado, sin revisar» llega al documento', () => {
+  // Confirmar quiere decir que alguien miró lo que entró. El atajo que
+  // copia el mes anterior cuenta para los cálculos —está confirmado—
+  // pero nadie lo revisó, y eso se dice en pantalla. La columna existía
+  // en la app anterior y se quedó sin migrar al normalizar el esquema:
+  // el núcleo la esperaba y el armador no la producía.
+  const conCopia = armar({
+    hogar: { inicio_mes: 1 },
+    personas: [{ id: 'p1', nombre: 'Moisés' }],
+    plantilla_ingresos: [{ id: 'q1', nombre: 'Sueldo', dia: 1 }],
+    ingresos_mes: [{
+      periodo: '2026-08', plantilla_id: 'q1', persona_id: 'p1',
+      bruto: '43100.00', deducciones: [{ concepto: 'ISR', monto: '5210.00' }],
+      confirmado: true, copiado_de: '2026-07'
+    }]
+  });
+
+  assert.equal(conCopia.ingresosMes['2026-08'].copiado.q1, '2026-07');
+  assert.equal(A.eventoConfirmado(conCopia, 'q1', '2026-08'), true,
+    'cuenta para los cálculos: lo que cambia es que nadie lo miró');
+
+  // Y confirmado a mano no deja marca.
+  const aMano = armar({
+    hogar: { inicio_mes: 1 },
+    personas: [{ id: 'p1', nombre: 'Moisés' }],
+    plantilla_ingresos: [{ id: 'q1', nombre: 'Sueldo', dia: 1 }],
+    ingresos_mes: [{
+      periodo: '2026-08', plantilla_id: 'q1', persona_id: 'p1',
+      bruto: '43100.00', deducciones: [], confirmado: true, copiado_de: null
+    }]
+  });
+  assert.deepEqual(aMano.ingresosMes['2026-08'].copiado, {});
+});

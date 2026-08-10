@@ -149,8 +149,16 @@ export function armar(filas) {
   const pendientesPorMes = new Map();
 
   for (const r of f('ingresos_mes')) {
-    const mes = ingresosMes[r.periodo] || (ingresosMes[r.periodo] = { lineas: {}, confirmado: {} });
+    const mes = ingresosMes[r.periodo] ||
+      (ingresosMes[r.periodo] = { lineas: {}, confirmado: {}, copiado: {} });
     const porPlantilla = mes.lineas[r.plantilla_id] || (mes.lineas[r.plantilla_id] = {});
+
+    /* De qué mes se copió, mientras nadie lo haya revisado. Cuenta
+       para los cálculos —está confirmado— pero en pantalla se dice que
+       nadie lo miró todavía. Basta con que UNA línea del pago venga
+       copiada para que el pago entero cuente como sin revisar: es un
+       acto sobre el pago completo, igual que confirmarlo. */
+    if (r.copiado_de) mes.copiado[r.plantilla_id] = r.copiado_de;
 
     porPlantilla[r.persona_id] = {
       bruto: num(r.bruto),
@@ -286,7 +294,20 @@ export function armar(filas) {
  */
 export const CONFIGURACION = [
   'personas', 'cuentas', 'tarjetas', 'gastos', 'financiamientos',
-  'proyectos', 'aportes', 'plantilla_ingresos', 'plantilla_lineas', 'comercios'
+  'proyectos', 'aportes', 'plantilla_ingresos', 'plantilla_lineas', 'comercios',
+
+  /* `ingresos_mes` es de un mes, pero se trae ENTERO. El corte de esta
+     lista no es «configuración contra hechos»: es qué crece sin techo
+     y qué no. Los movimientos de tres años son miles de filas; los
+     ingresos confirmados son un puñado por mes —una por persona y
+     pago— y en tres años no pasan de un par de cientos.
+
+     Y hace falta tenerlos todos: confirmar un mes se rellena con lo
+     ÚLTIMO confirmado (`lineaParaConfirmar`), que se parece mucho más
+     al mes que viene que la plantilla que alguien tecleó una vez al
+     armar el hogar. Con solo el mes en curso cargado, esa búsqueda no
+     encuentra nada y el atajo de copiar no existe. */
+  'ingresos_mes'
 ];
 
-export const POR_MES = ['movimientos', 'retiros', 'pagos_tarjeta', 'ingresos_mes', 'presupuesto_mes'];
+export const POR_MES = ['movimientos', 'retiros', 'pagos_tarjeta', 'presupuesto_mes'];

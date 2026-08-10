@@ -82,7 +82,8 @@ test('el lector de migraciones encuentra las tablas y sus columnas', () => {
    Un formulario lleno de cada cosa
    ------------------------------------------------------------ */
 
-const ctx = { hogarId: 'h1', orden: 3, plantillaId: 'ev1', proyectoId: 'x1' };
+const ctx = { hogarId: 'h1', orden: 3, plantillaId: 'ev1', proyectoId: 'x1',
+              periodo: '2026-08', copiadoDe: null };
 
 const FORMULARIOS = {
   hogares: { nombre: 'Casa', moneda: 'HNL', inicioMes: 7 },
@@ -109,7 +110,8 @@ const FORMULARIOS = {
     fechaObjetivo: '2027-03', nota: 'La de ahora ya no centrifuga',
     tipo: 'esencial', urgencia: 'este_ano', consecuencia: 'Seguir pagando lavandería'
   },
-  aportes: { personaId: 'p1', monto: 2000, fecha: '2026-08-09', nota: 'Del aguinaldo' }
+  aportes: { personaId: 'p1', monto: 2000, fecha: '2026-08-09', nota: 'Del aguinaldo' },
+  ingresos_mes: { personaId: 'p1', bruto: 27400, deducciones: [{ concepto: 'ISR', monto: 6200 }] }
 };
 
 test('cada columna que escribe el editor existe en su tabla', () => {
@@ -250,6 +252,28 @@ test('un aporte cuelga de su proyecto y puede no tener persona', () => {
   assert.equal(a.proyecto_id, 'x1');
   assert.equal(typeof a.monto, 'number');
   assert.equal(FILAS.aportes({ ...FORMULARIOS.aportes, personaId: '' }, ctx).persona_id, null);
+});
+
+/* ------------------------------------------------------------
+   Confirmar lo que entró
+   ------------------------------------------------------------ */
+
+test('confirmar a mano borra la marca de copiado', () => {
+  // El upsert manda todas las columnas del cuerpo. Si `copiado_de` se
+  // omitiera cuando es nulo, la marca de la copia anterior quedaría
+  // puesta y el pago seguiría diciendo «sin revisar» DESPUÉS de que
+  // alguien lo revisó.
+  const f = FILAS.ingresos_mes(FORMULARIOS.ingresos_mes, ctx);
+  assert.ok('copiado_de' in f, 'la columna tiene que viajar siempre');
+  assert.equal(f.copiado_de, null);
+  assert.equal(f.confirmado, true);
+});
+
+test('el atajo deja anotado de qué mes copió', () => {
+  const f = FILAS.ingresos_mes(FORMULARIOS.ingresos_mes, { ...ctx, copiadoDe: '2026-07' });
+  assert.equal(f.copiado_de, '2026-07');
+  // Cuenta para los cálculos igual: lo que cambia es que nadie lo miró.
+  assert.equal(f.confirmado, true);
 });
 
 /* ------------------------------------------------------------

@@ -22,6 +22,7 @@ import {
   selector, avisar, vacio
 } from '../ui.js';
 import { guardar, borrar } from '../datos/escribir.js';
+import { fechaPorOmision } from '../datos/periodos.js';
 
 /** Sin tildes y en minúsculas, para comparar como la gente escribe. */
 const plano = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -37,6 +38,14 @@ export function movimientos({ contenedor, D, periodo, hogar, recargar }) {
   const categoriaDe  = id => porId(D.gastos, id)?.categoria || 'Otros';
 
   /* ---------- lo del mes, ya filtrado ---------- */
+
+  /* Con qué fecha se abre un formulario. Mirando el mes en curso es
+     hoy; mirando uno pasado, el último día de ESE mes. El período de
+     un movimiento sale de su FECHA, no de la pantalla: con la fecha de
+     hoy, un gasto anotado mientras se mira julio se guardaría en agosto
+     y desaparecería al guardarlo — anotado bien, en un mes que no se
+     está mirando, y nadie lo encuentra después. */
+  const fechaNueva = () => fechaPorOmision(A.rangoPeriodo(periodo, A.inicioMes(D)), hoyLocal());
 
   const delMes = (D.movimientos || []).filter(m => A.perDe(m) === periodo);
 
@@ -177,7 +186,7 @@ export function movimientos({ contenedor, D, periodo, hogar, recargar }) {
     const credito = (D.tarjetas || []);
     hoja(m ? 'Editar movimiento' : 'Registrar gasto', `
       ${campoMonto('monto', 'Cuánto', m ? m.monto : '')}
-      ${campo('fecha', 'Cuándo', `type="date" value="${esc(m ? m.fecha : hoyLocal())}"`)}
+      ${campo('fecha', 'Cuándo', `type="date" value="${esc(m ? m.fecha : fechaNueva())}"`)}
       ${selector('gastoId', 'A qué rubro', opcionesGasto(), m ? m.gastoId : '')}
       ${campo('concepto', 'Detalle', `value="${esc(m ? m.concepto : '')}" placeholder="Dónde, o qué fue"`)}
       ${selector('medioPago', 'Cómo se pagó',
@@ -224,7 +233,7 @@ export function movimientos({ contenedor, D, periodo, hogar, recargar }) {
         No resta del presupuesto ni entra al corte de la tarjeta.
       </p>
       ${campoMonto('monto', 'Cuánto', r ? r.monto : '')}
-      ${campo('fecha', 'Cuándo', `type="date" value="${esc(r ? r.fecha : hoyLocal())}"`)}
+      ${campo('fecha', 'Cuándo', `type="date" value="${esc(r ? r.fecha : fechaNueva())}"`)}
       ${(D.cuentas || []).length ? selector('cuentaId', 'De qué cuenta', opcionesCuenta(), r ? r.cuentaId : '') : ''}
       ${selector('personaId', 'Quién lo sacó', opcionesPersona(), r ? r.personaId : '')}
       ${campo('nota', 'Nota', `value="${esc(r ? r.nota : '')}" placeholder="En qué cajero"`)}
@@ -259,7 +268,7 @@ export function movimientos({ contenedor, D, periodo, hogar, recargar }) {
         Esto solo mueve el dinero de la cuenta a la tarjeta.
       </p>
       ${campoMonto('monto', 'Cuánto', sugerido ? sugerido.toFixed(2) : '')}
-      ${campo('fecha', 'Cuándo', `type="date" value="${esc(hoyLocal())}"`)}
+      ${campo('fecha', 'Cuándo', `type="date" value="${esc(fechaNueva())}"`)}
       ${selector('tarjetaId', 'Qué tarjeta', opcionesTarjeta(), credito[0].id)}
       ${(D.cuentas || []).length ? selector('cuentaId', 'De qué cuenta sale', opcionesCuenta()) : ''}
       ${campo('nota', 'Nota', 'placeholder="Opcional"')}

@@ -4,6 +4,68 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.15.0 — Mirar otro mes
+
+*Cierra un hueco que la app arrastraba desde el principio.*
+
+**Qué se hizo**
+
+- **El selector de mes**, en la cabecera y en todas las pantallas. Hasta ahora la
+  app solo sabía enseñar el mes en curso: no había forma de mirar julio, ni de
+  revisar en qué se fue diciembre.
+- **El mes viaja con uno al cambiar de vista.** Mirar julio en Movimientos y que
+  Resumen salte a agosto sería perder el hilo a mitad de una pregunta.
+- **El mes va en la dirección** (`#/movimientos/2026-07`): el enlace se puede
+  compartir, el botón de atrás del navegador hace lo que uno espera, y al recargar
+  se queda donde estaba. Sin mes en la dirección se entiende «el mes en curso»,
+  que es lo que la app contestaba antes y sigue contestando.
+
+**Los topes, y por qué**
+
+- **Hacia adelante, el mes en curso y pará.** Después de él no ha pasado nada: el
+  plan estaría entero y el gasto en cero, así que cualquier pantalla diría que van
+  holgadísimos. Es una respuesta creíble a una pregunta que nadie hizo.
+- **Hacia atrás, lo más viejo entre el saldo declarado más antiguo y un año.** Se
+  toman los dos porque cada uno solo falla: solo lo declarado esconde datos —
+  `desdeMes` dice desde cuándo vale un saldo, no cuándo empezó el hogar, y alguien
+  puede declarar su cuenta desde agosto con movimientos de julio anotados—, y solo
+  un año se queda corto para quien ya trajo su historia. Un año, y no otro número,
+  porque es hasta donde llega Historia: todo mes que esa pantalla lista tiene que
+  poder abrirse.
+- **Las flechas se apagan en los extremos** en vez de no hacer nada. Una flecha
+  encendida que no responde se siente rota.
+
+**La trampa que este trabajo tenía adentro**
+
+El período de un movimiento sale de su **fecha**, no de la pantalla. Con la fecha
+de hoy por omisión, un gasto anotado mientras se mira julio se guardaría en agosto
+y **desaparecería al guardarlo**: anotado bien, en un mes que no se está mirando, y
+nadie lo encuentra después. Ahora el formulario se abre con hoy si hoy cae dentro
+del mes que se mira, y con el último día de ese mes si no. Respeta el día de
+arranque del hogar: con arranque el 7, «julio» termina el 6 de agosto.
+
+**Que se vea que no es hoy**
+
+Mirando otro mes, el rótulo cambia de color y aparece **«Volver a hoy»**. Cada
+cifra de cada pantalla cambia de significado con el mes: leer el disponible de
+julio creyendo que es el de agosto es el error más caro que este control puede
+provocar.
+
+**Lo que hay que saber**
+
+Un mes pasado **sin plan congelado** se calcula con el plan de hoy, rotulado como
+estimado. Es lo que el núcleo hace por diseño mientras ese mes no tenga su foto
+(`presupuesto_mes`), y se resuelve solo cuando llegue el cierre de mes de la etapa
+5. Hasta entonces, un mes viejo sin cerrar muestra el presupuesto actual como
+estimación, no como hecho.
+
+Medido: contraste del rótulo **5.48** en claro y **7.77** en oscuro, botones de
+44 px, sin desbordes a 360 ni 1440. **274 pruebas en verde**, once de ellas sobre
+la aritmética de meses — diciembre a enero, el mes anterior al primero, el tope
+pasado por uno.
+
+---
+
 ## v0.14.0 — Historia: cómo van los meses
 
 *Sigue la etapa 4.*

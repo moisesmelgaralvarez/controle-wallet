@@ -504,6 +504,16 @@ function efectivoHasta(D, per) {
  * Foto de saldos al terminar `per`. Es lo que el periodo siguiente arrastra:
  * saldo final = saldo inicial, sin huecos. Sin esto cada mes empezaría de cero
  * y la historia dejaría de encadenar.
+ *
+ * EL EFECTIVO CONTADO MANDA sobre el calculado, igual que el saldo declarado
+ * por el banco manda en `saldoCuenta`. Si alguien contó el dinero al cerrar,
+ * eso es un HECHO MEDIDO; lo que suma la app es una deducción a partir de lo
+ * que se anotó, y lo que no se anotó no existe para ella. Arrancar el mes
+ * siguiente con la deducción significaría empezar con una cifra que ya sabemos
+ * equivocada, y arrastrarla.
+ *
+ * La diferencia no se pierde: queda en `ajustes`, con su nota, que es lo que
+ * la convierte en historia en vez de en un descuadre escondido.
  */
 function saldosCierre(D, per) {
   const cuentas = {}, tarjetas = {}, financiamientos = {};
@@ -511,9 +521,17 @@ function saldosCierre(D, per) {
   (D.tarjetas || []).filter(esCredito)
     .forEach(t => { tarjetas[t.id] = cent(deudaTarjeta(D, t, per).deuda); });
   (D.financiamientos || []).forEach(f => { financiamientos[f.id] = cent(saldoFinanciamiento(f)); });
+
+  // El cero cuenta: «conté y no había nada» es una respuesta. Solo la
+  // ausencia deja que mande el calculado.
+  const contado = ((D.presupuestoMes || {})[per] || {}).efectivoContado;
+  const efectivo = contado === null || contado === undefined
+    ? efectivoHasta(D, per)
+    : cent(contado);
+
   return {
     fecha: rangoPeriodo(per, inicioMes(D)).hasta,
-    cuentas, tarjetas, financiamientos, efectivo: efectivoHasta(D, per)
+    cuentas, tarjetas, financiamientos, efectivo
   };
 }
 

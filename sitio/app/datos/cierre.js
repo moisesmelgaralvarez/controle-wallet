@@ -101,7 +101,7 @@ export async function guardarAvance(datos) {
  * qué hay guardado en el mes siguiente.
  */
 export async function cerrarMes(datos) {
-  const { periodo, hogarId, saldos, desdeSiguiente } = datos;
+  const { periodo, hogarId, saldos, desdeSiguiente, efectivoContado } = datos;
   const sig = sumaMeses(periodo, 1);
 
   // Se lee ANTES de escribir nada. Si el mes que viene ya está
@@ -110,8 +110,21 @@ export async function cerrarMes(datos) {
   const filaSig = await filaExistente(sig);
   if (filaSig && filaSig.cerrado) throw new ErrorSiguienteCerrado(periodo, sig);
 
-  const apertura = filaApertura({ ...saldos, fecha: desdeSiguiente },
-                                { hogarId, periodo: sig });
+  /* El efectivo que la persona acaba de contar gana, y hay que ponerlo
+     aquí a mano por una razón de tiempos: `saldos` lo calculó el
+     servidor AL ABRIR LA PANTALLA, o sea antes de que nadie escribiera
+     nada. El núcleo ya prefiere lo contado sobre lo calculado, pero
+     sobre lo que había GUARDADO en ese momento.
+     Sin esta línea pasaría lo más torcido posible: la cifra contada se
+     guardaría en el mes que se cierra —se vería en pantalla, correcta—
+     y el mes siguiente arrancaría igual con la deducción vieja. */
+  const apertura = filaApertura(
+    { ...saldos,
+      fecha: desdeSiguiente,
+      ...(efectivoContado === null || efectivoContado === undefined || efectivoContado === ''
+        ? {}
+        : { efectivo: Number(efectivoContado) || 0 }) },
+    { hogarId, periodo: sig });
 
   // Primero la apertura del siguiente; después el cierre de este. Ver
   // el encabezado: el orden es lo que hace que una caída de red en

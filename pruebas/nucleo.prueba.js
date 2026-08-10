@@ -1374,6 +1374,45 @@ probar('Sin apertura sembrada se deduce del cierre anterior, y se dice', () => {
            det: 'no se hace pasar por declarado algo que se dedujo' };
 });
 
+probar('El efectivo CONTADO manda sobre el calculado al cerrar', () => {
+  /* La app calcula 500 con lo anotado; la persona contó 380. La cifra
+     contada es un hecho medido y la calculada una deducción a partir de
+     lo que se anotó — y lo que no se anotó no existe para la app.
+     Arrancar el mes siguiente con 500 sería empezar con un número que
+     ya sabemos equivocado, y arrastrarlo. Es el mismo criterio con el
+     que el saldo declarado por el banco manda en `saldoCuenta`. */
+  const d = hogarCuadrado();
+  const calculado = A.saldosCierre(d, '2026-08').efectivo;
+  d.presupuestoMes['2026-08'].efectivoContado = 380;
+  const s = A.saldosCierre(d, '2026-08');
+  return { ok: calculado === 500 && s.efectivo === 380,
+           det: `la app calculaba ${calculado} y se contaron 380 → arranca con ${s.efectivo}` };
+});
+
+probar('Contar cero SÍ es contar: no se cae al calculado', () => {
+  const d = hogarCuadrado();
+  d.presupuestoMes['2026-08'].efectivoContado = 0;
+  return { ok: A.saldosCierre(d, '2026-08').efectivo === 0,
+           det: '«conté y no había nada» es una respuesta, no una ausencia' };
+});
+
+probar('Sin contar nada, manda lo calculado', () => {
+  const d = hogarCuadrado();
+  delete d.presupuestoMes['2026-08'].efectivoContado;
+  return { ok: A.saldosCierre(d, '2026-08').efectivo === 500,
+           det: 'sin dato medido, la deducción es lo mejor que hay' };
+});
+
+probar('La diferencia no se pierde: queda en el ajuste con su nota', () => {
+  // Que lo contado mande no significa taparlo. El descuadre sigue
+  // bloqueando el cierre hasta que alguien lo explique.
+  const d = hogarCuadrado();
+  d.presupuestoMes['2026-08'].efectivoContado = 380;
+  const c = A.conciliaciones(d, '2026-08');
+  return { ok: c.efectivo.declarado === 380 && cerca(c.efectivo.diferencia, 120) && c.efectivo.resuelta === false,
+           det: `declarado ${c.efectivo.declarado} · diferencia ${c.efectivo.diferencia}` };
+});
+
 /* ============ el asesor decide, no solo cuenta ============ */
 grupo('Priorizar por mérito');
 

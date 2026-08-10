@@ -22,6 +22,9 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import * as A from '../sitio/app/nucleo/index.js';
 import { armar, CONFIGURACION, POR_MES } from '../sitio/app/datos/armador.js';
+import { entrar } from '../sitio/app/datos/api.js';
+import { cerrarMes, guardarAvance, reabrirMes, ErrorSiguienteCerrado }
+  from '../sitio/app/datos/cierre.js';
 
 const URL     = process.env.SUPABASE_URL;
 const ANON    = process.env.SUPABASE_ANON_KEY;
@@ -165,6 +168,13 @@ before(async () => {
     filas[t] = await json(await api(`/${t}?select=*`));
   }
   doc = armar(filas);
+
+  /* La misma sesión, pero dentro del cliente DE LA APP. Es lo que
+     permite que las pruebas del cierre corran el módulo de producción
+     —`datos/cierre.js`, con su `api.js` debajo— en vez de una
+     imitación. Sin esto habría que reescribir aquí el orden de los dos
+     escritos, y una copia del código no prueba el código. */
+  await entrar(correo, clave);
 });
 
 after(async () => {
@@ -284,4 +294,125 @@ test('cerrar un mes desde la API lo vuelve inmutable de verdad', async () => {
     body: JSON.stringify({ hogar_id: hogar.id, fecha: '2026-07-28', periodo: '2026-07', monto: 1 })
   });
   assert.ok(!r.ok, 'entró un movimiento en un mes ya cerrado');
+});
+
+/* ============================================================
+   El cierre de mes, corriendo el módulo de producción
+
+   Estas no imitan lo que hace la app: importan `datos/cierre.js` y lo
+   ejecutan contra la base de pruebas con la sesión de un usuario de
+   verdad. Es la única forma de comprobar lo que más caro sale y menos
+   se ve — el ORDEN de los dos escritos, y que sembrarle la apertura al
+   mes siguiente no le borre lo que ya tenía.
+
+   Se usan meses distintos de 2026-07 porque la prueba de arriba lo
+   dejó cerrado, y un mes cerrado ya no admite nada.
+   ============================================================ */
+
+/** La fila de `presupuesto_mes` de un período, leída con la clave de servicio. */
+const filaMes = async periodo => (await json(
+  await admin(`/rest/v1/presupuesto_mes?hogar_id=eq.${hogar.id}&periodo=eq.${periodo}&select=*`)))[0] || null;
+
+/** Lo que la pantalla le pasa a `cerrarMes`, ya calculado por el servidor. */
+const paraCerrar = (periodo, extra = {}) => ({
+  periodo, hogarId: hogar.id,
+  montos: { g1: 8000 }, notas: { g1: 'Compra grande de despensa' },
+  ajustes: { 'cuenta:c1': { monto: -125.5, nota: 'Comisión que no anotamos' } },
+  efectivoContado: 1450,
+  saldos: { fecha: '2026-09-06', cuentas: { c1: 28750.25 }, tarjetas: { t1: 19101 },
+            financiamientos: { f1: 3500 }, efectivo: 1450 },
+  desdeSiguiente: '2026-09-07',
+  ...extra
+});
+
+test('guardar a medias no cierra el mes ni le inventa una fecha', async () => {
+  await guardarAvance(paraCerrar('2026-09'));
+  const f = await filaMes('2026-09');
+  assert.ok(f, 'no se escribió la fila');
+  assert.equal(f.cerrado, false);
+  assert.equal(f.cerrado_el, null, 'decir que se cerró el día tal, sin haberlo cerrado, es inventar un hecho');
+  assert.equal(f.notas.g1, 'Compra grande de despensa');
+  assert.equal(Number(f.efectivo_contado), 1450);
+});
+
+test('cerrar escribe las DOS filas: el mes y la apertura del siguiente', async () => {
+  const r = await cerrarMes(paraCerrar('2026-09'));
+  assert.equal(r.sig, '2026-10');
+
+  const mes = await filaMes('2026-09');
+  assert.equal(mes.cerrado, true);
+  assert.ok(mes.cerrado_el, 'un mes cerrado deja constancia de cuándo');
+  assert.equal(mes.montos.g1, 8000);
+  assert.equal(mes.ajustes['cuenta:c1'].nota, 'Comisión que no anotamos');
+
+  const sig = await filaMes('2026-10');
+  assert.ok(sig, 'el mes siguiente se quedó sin apertura: arrancaría deduciendo del histórico');
+  assert.equal(sig.cerrado, false, 'sembrar la apertura no cierra el mes siguiente');
+  assert.equal(sig.apertura.cuentas.c1, 28750.25);
+  assert.equal(sig.apertura.efectivo, 1450);
+  assert.equal(sig.apertura.fecha, '2026-09-07');
+});
+
+test('la apertura sembrada vuelve del armador como DECLARADA, no deducida', async () => {
+  // Es la vuelta completa: lo que se escribió al cerrar tiene que
+  // llegarle al núcleo como un hecho. Si volviera `derivada`, el mes
+  // siguiente se pondría a recorrer el histórico — que en el navegador
+  // no está.
+  const filas = { hogar: (await json(await api(`/hogares?id=eq.${hogar.id}&select=*`)))[0] };
+  for (const t of [...CONFIGURACION, ...POR_MES]) filas[t] = await json(await api(`/${t}?select=*`));
+  const D = armar(filas);
+
+  const ap = A.aperturaDe(D, '2026-10');
+  assert.equal(ap.derivada, false, 'la apertura guardada se estaría tratando como deducción');
+  assert.equal(ap.cuentas[Object.keys(ap.cuentas)[0]], 28750.25);
+  assert.equal(ap.efectivo, 1450);
+});
+
+test('sembrar la apertura NO le borra al mes siguiente su foto del plan', async () => {
+  /* El upsert solo toca las columnas que viajan. Si `filaApertura`
+     mandara la fila entera, el mes siguiente perdería sus montos —y con
+     ellos el plan que rigió— sin que nada avisara. */
+  await admin('/rest/v1/presupuesto_mes', {
+    method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates' },
+    body: JSON.stringify({ hogar_id: hogar.id, periodo: '2026-12',
+                           montos: { g1: 4321 }, notas: { g1: 'lo de diciembre' } })
+  });
+
+  await cerrarMes(paraCerrar('2026-11', { desdeSiguiente: '2026-12-07' }));
+
+  const dic = await filaMes('2026-12');
+  assert.equal(dic.montos.g1, 4321, 'la foto del plan de diciembre se perdió al sembrarle la apertura');
+  assert.equal(dic.notas.g1, 'lo de diciembre');
+  assert.ok(dic.apertura, 'y aun así la apertura tiene que haber quedado');
+});
+
+test('no se cierra un mes si el siguiente ya está cerrado, y no queda nada a medias', async () => {
+  await meter('presupuesto_mes', {
+    hogar_id: hogar.id, periodo: '2027-02',
+    montos: { g1: 1 }, cerrado: true, cerrado_el: new Date().toISOString()
+  });
+
+  await assert.rejects(
+    () => cerrarMes(paraCerrar('2027-01', { desdeSiguiente: '2027-02-07' })),
+    e => e instanceof ErrorSiguienteCerrado && e.siguiente === '2027-02');
+
+  // Lo que importa no es que fallara: es que no dejó el mes cerrado a
+  // medias. Se lee ANTES de escribir justo para esto.
+  const enero = await filaMes('2027-01');
+  assert.ok(!enero || enero.cerrado === false, 'enero quedó cerrado pese a que el cierre se rechazó');
+});
+
+test('reabrir devuelve el mes a editable y le quita la fecha de cierre', async () => {
+  const antes = await filaMes('2026-09');
+  assert.equal(antes.cerrado, true, 'la prueba anterior debía dejarlo cerrado');
+
+  await reabrirMes({ periodo: '2026-09', hogarId: hogar.id });
+
+  const f = await filaMes('2026-09');
+  assert.equal(f.cerrado, false);
+  assert.equal(f.cerrado_el, null);
+  // La apertura del siguiente NO se borra: mientras el mes vuelve a
+  // cuadrar, esa cifra sigue siendo la mejor que hay.
+  assert.ok((await filaMes('2026-10')).apertura, 'se borró la apertura del mes siguiente al reabrir');
 });

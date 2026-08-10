@@ -90,10 +90,31 @@ Efectivo en mano». El efectivo es la única de las tres conciliaciones que **no
 tiene banco** que la declare — por eso se cuenta a mano. Venía así de la app
 anterior. Ahora dice «Falta contar cuánto hay en efectivo», con su prueba.
 
+**Comprobado contra la base, corriendo el código de producción**
+
+Las seis pruebas nuevas de integración no imitan lo que hace la app: importan
+`datos/cierre.js` y lo ejecutan contra la base de pruebas con la sesión de un
+usuario de verdad. Una copia del código no prueba el código.
+
+Cerrar septiembre escribe **las dos filas** —el mes con su plan congelado, sus
+ajustes y su efectivo contado; octubre con la apertura— y esa apertura vuelve del
+armador marcada como **declarada, no deducida**, que es lo que evita que el mes
+siguiente se ponga a recorrer el histórico. Guardar a medias no marca cerrado ni
+inventa una fecha. Con el mes siguiente ya cerrado, el cierre se rechaza y **no
+deja nada a medias**. Reabrir devuelve el mes a editable sin borrar la apertura
+que ya se sembró.
+
+Y una que valía por sí sola: **sembrar la apertura no le borra al mes siguiente
+su foto del plan.** Diciembre tenía sus montos, se cerró noviembre encima, y los
+montos siguen ahí — el upsert solo toca las columnas que viajan.
+
 **Medido:** 58 elementos en oscuro con mínimo **7.42**, 58 en claro con mínimo
 **6.52**, ninguno bajo AA. Sin desbordes a 360 ni 1440, en los tres estados de la
 pantalla: cuadrado, con excesos sin justificar, y descuadrado con las
-conciliaciones sin declarar. **290 pruebas en verde.**
+conciliaciones sin declarar.
+
+**290 pruebas · 24 de aislamiento · 18 de integración, todas en verde.** El hogar
+de pruebas quedó exactamente como estaba.
 
 ---
 

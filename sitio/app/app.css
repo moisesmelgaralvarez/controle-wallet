@@ -654,3 +654,33 @@ body[data-mes-pasado="si"] .mes-nav .tope__mes {
   background: color-mix(in oklab, var(--alerta) 14%, transparent);
   border-radius: 999px; padding: 0.15rem 0.7rem;
 }
+
+/* ---------- confirmar lo que entró ---------- */
+
+/* Un pago tiene dos acciones distintas —confirmar el mes y editar el
+   plan— así que la fila no puede ser un botón: van debajo, separadas,
+   y la de arriba se queda quieta. */
+.fila-cfg__acciones {
+  display: flex; flex-wrap: wrap; gap: var(--e1);
+  padding: 0 0.2rem 0.7rem;
+}
+.fila-cfg__acciones .boton:disabled { opacity: .5; cursor: not-allowed; }
+
+/* La casilla del «monto típico»: el cuadrito arriba y el texto al
+   lado, no debajo como el resto de los campos. */
+.campo--casilla {
+  display: grid; grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.6rem; align-items: start; cursor: pointer;
+}
+.campo--casilla input { width: auto; margin-top: 0.2rem; }
+.campo--casilla span {
+  margin-bottom: 0; font-weight: 400; font-size: var(--t-sm); color: var(--tenue);
+}
+.campo--casilla strong { color: var(--tinta); font-weight: 650; }
+
+/* Un aviso dentro de una hoja que hay que mirar dos veces. */
+.hoja__nota.ojo {
+  background: color-mix(in oklab, var(--alerta) 12%, transparent);
+  color: var(--tinta);
+}
+.hoja__nota.ojo strong { color: var(--alerta); }

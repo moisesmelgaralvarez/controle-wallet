@@ -79,6 +79,18 @@ export async function crearVarias(tabla, filas) {
 }
 
 /**
+ * Borra todas las filas que cumplan un filtro.
+ *
+ * `fila` es solo para saber qué olvidar de lo que hay en memoria: le
+ * basta con traer el `periodo`.
+ */
+export async function borrarDonde(tabla, filtros, fila) {
+  const r = await api.borrarDonde(tabla, filtros);
+  olvidar(tabla, fila);
+  return r;
+}
+
+/**
  * Varias filas de un tirón, reemplazando las que ya existan.
  *
  * `unicas` son las columnas que la base ya declaró únicas. Lo usa el

@@ -4,6 +4,68 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.16.0 — Confirmar lo que de verdad entró
+
+*Cierra la etapa 4.*
+
+**Qué se hizo**
+
+- **Confirmar ingresos, mes a mes.** La plantilla es una estimación; ahora se
+  puede anotar lo que realmente entró, con el ISR y las retenciones que tocaron
+  ese mes. Cada pago dice de dónde sale su cifra: **confirmado**, **estimado** o
+  **sin revisar**.
+- El panel «Lo que entra» pasa a hablar del **mes que se está mirando** en vez de
+  solo del plan. El total dejó de ser «neto típico» para ser el **ingreso neto del
+  mes**, que es la cifra que el resto de la app usa.
+- **El formulario viene relleno con lo último confirmado**, no con la plantilla:
+  el sueldo del mes pasado se parece mucho más al de este que la cifra que alguien
+  tecleó una vez al armar el hogar. Rellenar no es confirmar — quien confirma
+  sigue siendo la persona.
+- **El atajo para el mes que vino igual:** confirmar de un tirón los pagos que
+  faltan con lo del último mes confirmado.
+- Opcional al confirmar: **guardar también como monto típico**, para que las
+  estimaciones de los meses que vienen dejen de usar la cifra del asistente. Es
+  opcional a propósito: un mes con un bono raro no debe reescribir el plan.
+- **Volver a estimado**, que borra lo confirmado de ese mes y devuelve el monto
+  típico.
+
+**«Confirmado» quiere decir que alguien lo miró**
+
+El atajo ahorra trabajo real, pero deja filas que cuentan como confirmadas sin que
+nadie las haya visto. Decir «confirmado» de eso sería inventarse un hecho. Así que
+la copia se marca: la fila dice **«sin revisar»** y el formulario avisa de qué mes
+salió. La marca se va sola cuando alguien abre el pago y lo guarda, porque abrirlo
+y guardarlo **es** revisarlo.
+
+Esa distinción venía de la app anterior y el núcleo ya la esperaba —tiene su prueba
+portada— pero al normalizar el esquema la columna se quedó sin migrar: el armador
+no tenía de dónde leerla. Ahora `ingresos_mes.copiado_de` existe, con su reverso.
+
+**Un límite que apareció al probarlo**
+
+El atajo no aparecía nunca, y el formulario se rellenaba con la plantilla en vez de
+con lo último confirmado. La causa: `ingresos_mes` se bajaba **solo del mes en
+curso**, así que buscar «el último mes confirmado» no encontraba nada.
+
+El corte entre lo que se baja entero y lo que se baja por mes no es «configuración
+contra hechos»: es **qué crece sin techo y qué no**. Los movimientos de tres años
+son miles de filas; los ingresos confirmados son un puñado por mes —uno por persona
+y pago— y en tres años no pasan de un par de cientos. Se bajan enteros.
+
+**Comprobado contra la base de pruebas**
+
+Confirmar agosto con 24,800 de bruto y 2,810 de ISR: la fila llega con el monto
+como **número**, `copiado_de` en nulo, el sello pasa a «confirmado» y el neto del
+mes sube a 21,494.35. La plantilla **no se toca** si no se marca la casilla.
+Confirmar julio, volver a agosto y usar el atajo: la fila queda con
+`copiado_de: 2026-07` y el sello dice «sin revisar»; abrirla y guardarla la deja en
+nulo y «confirmado». «Volver a estimado» borra las filas y el panel vuelve al monto
+típico. El hogar de pruebas quedó igual que antes de empezar.
+
+**277 pruebas en verde.**
+
+---
+
 ## v0.15.0 — Mirar otro mes
 
 *Cierra un hueco que la app arrastraba desde el principio.*

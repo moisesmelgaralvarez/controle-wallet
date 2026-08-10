@@ -207,6 +207,23 @@ export const borrar = (tabla, id) =>
   pedir(`/rest/v1/${tabla}?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
 
 /**
+ * Borra las filas que cumplan un filtro, no una sola por id.
+ *
+ * Lo necesita «volver a estimado»: se van todas las líneas de un pago
+ * en un mes, que son una por persona y de las que no se tiene el id.
+ *
+ * Sin filtros NO se llama. PostgREST borraría todo lo que las
+ * políticas le dejen —que es el hogar entero de quien pregunta— y un
+ * `undefined` mal pasado no puede costar eso.
+ */
+export const borrarDonde = (tabla, filtros) => {
+  if (!filtros || !Object.keys(filtros).length) {
+    throw new ErrorDatos('Un borrado sin filtro se llevaría el hogar entero.');
+  }
+  return pedir(`/rest/v1/${tabla}${consulta(filtros)}`, { method: 'DELETE' });
+};
+
+/**
  * Inserta, y donde ya exista esa combinación única, reemplaza.
  *
  * Lo necesitan las líneas de un pago: la fila es «lo que le toca a

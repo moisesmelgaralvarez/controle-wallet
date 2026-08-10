@@ -32,6 +32,23 @@ acuerda de por qué existe una llave y a nadie le da confianza tocarla.
 > de aislamiento crea y borra usuarios: apuntarla a producción sería destructivo,
 > y por eso el propio archivo aborta si detecta el ref de producción.
 
+### La Edge Function `historico` no lleva ningún secreto
+
+Corre el núcleo sobre todo el histórico del hogar para calcular saldos, deuda y
+patrimonio — cifras que el navegador no puede sacar porque solo baja el mes en
+curso. Va con **el token de quien pregunta**, no con la clave de servicio, así que
+las políticas RLS siguen siendo las que deciden qué se ve. No filtra por hogar en
+ninguna línea, y esa ausencia es deliberada: filtrar en el código sería teatro, y
+el día que alguien borrara esa línea se llevaría el aislamiento con ella.
+
+Comprobado: sin sesión devuelve 401; con la clave publicable sola, RLS no
+devuelve ningún hogar y contesta 404 sin filtrar nada.
+
+Las únicas variables que usa —`SUPABASE_URL` y `SUPABASE_ANON_KEY`— las inyecta
+Supabase en toda función y no hay que cargarlas.
+
+---
+
 La clave `anon` de Supabase **no es un secreto**: va dentro de la aplicación y eso
 es correcto. Por sí sola no abre nada, porque cada tabla exige sesión iniciada y
 las políticas RLS deciden qué puede ver cada quien.

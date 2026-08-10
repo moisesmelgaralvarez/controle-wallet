@@ -42,7 +42,7 @@ aplicar una migración donde no toca.
 
 ## 3. Qué ya está hecho
 
-`main` va en **v0.12.0**. Todo pasa por Pull Request; `main` está protegido y ni
+`main` va en **v0.13.0**. Todo pasa por Pull Request; `main` está protegido y ni
 el dueño puede escribirle directo (comprobado). Dos verificaciones obligatorias en
 CI.
 
@@ -76,7 +76,7 @@ dispositivos dibujada en HTML y CSS, y parallax solo con CSS.
 ### Las pruebas
 
 ```
-npm run pruebas               243 · núcleo, armador, equivalencia, filas y alcance
+npm run pruebas               253 · núcleo, armador, equivalencia, filas, alcance y paginado
 npm run pruebas:aislamiento    24 · ~55 intentos de violar el aislamiento
 npm run pruebas:integracion    12 · base → armador → núcleo, contra la base real
 ```
@@ -225,15 +225,14 @@ gh pr create
 
 **Etapa 4 — completar la interfaz**
 - **Historia** ← lo siguiente. Mes a mes, con el mes en curso fuera del promedio.
-  Necesita el histórico completo: leé antes `datos/alcance.js`.
+  El dato ya viene hecho: la Edge Function `historico` lo devuelve calculado, y
+  `datos/historico.js` lo trae. Falta solo la pantalla.
 - Confirmar ingresos mes a mes (la distinción estimado / confirmado). El editor
   del Presupuesto ya deja la plantilla —el mes típico— en su sitio; falta la
   pantalla que convierte esa estimación en hecho.
-- **El saldo de las cuentas**, que hoy no se enseña en ninguna parte a propósito:
-  recorre todo el histórico y en el navegador solo vive el mes en curso. Se
-  calcula en el servidor, con el mismo núcleo, junto con historia y patrimonio.
-  Mientras tanto, `datos/alcance.js` dice cuándo lo cargado SÍ alcanza —cuando
-  las anclas de conciliación están al día— y Proyectos se apoya en eso.
+- **El saldo de las cuentas y el patrimonio**, que ya se calculan en el servidor
+  pero todavía no los enseña ninguna pantalla. `historico` los devuelve; falta
+  ponerlos en Resumen y donde toque.
 
 **Etapa 5 — funciones pesadas**
 - Importar estados de cuenta (BAC, Ficohsa, CSV, PDF) con conciliación. El
@@ -267,7 +266,7 @@ gh pr create
 ## 10. Cómo empezar la sesión nueva
 
 1. Leé `README.md`, `CAMBIOS.md`, `VUELTA-ATRAS.md` y `SECRETOS.md`.
-2. Corré `npm run pruebas` — deben salir 243 en verde.
+2. Corré `npm run pruebas` — deben salir 253 en verde.
 3. Mirá `sitio/app/vistas/movimientos.js` como referencia del estilo, y
    `vistas/presupuesto.js` con `datos/filas.js` para lo que se edita: ahí está
    cómo se arma una fila, cómo se valida y por qué eso vive fuera de la pantalla.

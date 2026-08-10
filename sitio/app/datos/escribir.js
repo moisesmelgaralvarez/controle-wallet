@@ -14,11 +14,18 @@
 
 import * as api from './api.js';
 import { invalidarMes, invalidarConfiguracion } from './hogar.js';
+import { olvidarHistorico } from './historico.js';
 import { POR_MES } from './armador.js';
 
 const esDelMes = tabla => POR_MES.includes(tabla);
 
 function olvidar(tabla, fila) {
+  // El cálculo del servidor se hizo sobre TODO el histórico, así que
+  // cualquier escritura lo deja viejo — no solo las del mes que se
+  // tocó. Un gasto de agosto cambia el saldo de la cuenta, y de ahí
+  // cuelga el veredicto de cada proyecto.
+  olvidarHistorico();
+
   if (esDelMes(tabla)) {
     // Si la fila trae período, solo ese mes deja de valer. Sin él
     // —un borrado donde no sabemos de qué mes era— se olvida todo,

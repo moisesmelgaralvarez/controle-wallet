@@ -47,6 +47,7 @@ import {
 import { crear, actualizar, borrar } from '../datos/escribir.js';
 import { FILAS } from '../datos/filas.js';
 import { alcanzaParaPatrimonio } from '../datos/alcance.js';
+import { historico } from '../datos/historico.js';
 
 /* ---------- vocabulario ---------- */
 
@@ -101,20 +102,53 @@ export function proyectos({ contenedor, D, periodo, hogar, recargar }) {
   const personas = D.personas || [];
   const cuentas = D.cuentas || [];
 
-  /* ---------- ¿se puede juzgar, o solo medir el flujo? ----------
-     La regla vive en `datos/alcance.js`, con el porqué escrito. */
+  /* ---------- de dónde sale el veredicto ----------
 
-  const alcance = alcanzaParaPatrimonio(D, periodo);
-  const sinAncla = alcance.faltan;
-  const puedeJuzgar = alcance.exacto;
+     Tres estados, en orden de preferencia, y ninguno miente:
 
-  const pri = puedeJuzgar ? A.priorizar(D, periodo) : null;
+       1. Lo dijo EL SERVIDOR, que corrió el mismo núcleo sobre todo
+          el histórico. Es la respuesta buena y la que acaba llegando.
 
-  // Sin veredicto, el orden es el que la persona le dio a la lista.
-  const filas = puedeJuzgar
-    ? pri.filas
-    : lista.map(p => ({ p, ev: A.evaluarProyecto(D, p, periodo), porque: [],
-                        tipo: A.tipoDe(p), urgencia: A.urgenciaDe(p) }));
+       2. Todavía no contesta, pero las anclas de conciliación están
+          al día — y entonces lo que hay cargado alcanza para el mismo
+          resultado exacto. Ver `datos/alcance.js`.
+
+       3. Ni lo uno ni lo otro: solo se enseña si el dinero alcanza, y
+          se dice qué falta.
+
+     La pantalla arranca en 2 o 3 y sube a 1 cuando el servidor
+     contesta. Nunca se queda esperando: lo que se dibuja de entrada
+     ya es cierto, y lo que llega después solo agrega. */
+
+  let cartera = null;      // lo que devolvió el servidor
+  let falloDelServidor = null;
+
+  function estado() {
+    if (cartera) return { juzga: true, fuente: 'servidor' };
+    const alcance = alcanzaParaPatrimonio(D, periodo);
+    if (alcance.exacto) return { juzga: true, fuente: 'ancla' };
+    return { juzga: false, fuente: null, faltan: alcance.faltan };
+  }
+
+  /** Las metas en el orden y con el juicio que corresponda al estado. */
+  function ordenar(est) {
+    if (!est.juzga) {
+      // Sin veredicto, el orden es el que la persona le dio a la lista.
+      return lista.map(p => ({ p, ev: A.evaluarProyecto(D, p, periodo), porque: [],
+                               tipo: A.tipoDe(p), urgencia: A.urgenciaDe(p) }));
+    }
+    if (est.fuente === 'ancla') return A.priorizar(D, periodo).filas;
+
+    // Del servidor viene un mapa por id; el orden lo da `posicion`.
+    return lista
+      .filter(p => cartera[p.id])
+      .map(p => {
+        const ev = cartera[p.id];
+        return { p, ev, porque: ev.porque || [], tipo: ev.tipo, urgencia: ev.urgencia,
+                 veredicto: ev.veredicto, posicion: ev.posicion };
+      })
+      .sort((a, b) => a.posicion - b.posicion);
+  }
 
   /* ---------- piezas ---------- */
 
@@ -162,7 +196,7 @@ export function proyectos({ contenedor, D, periodo, hogar, recargar }) {
       </div>`;
   }
 
-  function tarjeta(f, i) {
+  function tarjeta(f, i, est, cuantas) {
     const p = f.p, ev = f.ev;
     const rango = ev.max > ev.min;
     const pct = ev.max > 0 ? Math.min(100, ev.junta / ev.max * 100) : 0;
@@ -182,12 +216,12 @@ export function proyectos({ contenedor, D, periodo, hogar, recargar }) {
         </div>
 
         <div class="sellos">
-          ${puedeJuzgar
+          ${est.juzga
             ? insignia(A.VEREDICTOS[f.veredicto], TONO[f.veredicto] || 'espera')
             : insignia(FLUJO[ev.veredicto].texto, FLUJO[ev.veredicto].tono)}
           ${insignia(A.TIPOS_PROYECTO[f.tipo].etiqueta, 'neutro')}
           ${insignia(A.ETIQUETA_URGENCIA[f.urgencia], 'neutro')}
-          ${puedeJuzgar && filas.length > 1 ? insignia(`#${i + 1} por mérito`, 'neutro') : ''}
+          ${est.juzga && cuantas > 1 ? insignia(`#${i + 1} por mérito`, 'neutro') : ''}
         </div>
 
         ${f.porque.length ? `<p class="proy__porque">${esc(mayus(f.porque.join('; ')))}.</p>` : ''}
@@ -225,72 +259,108 @@ export function proyectos({ contenedor, D, periodo, hogar, recargar }) {
 
   /* ---------- pintar ---------- */
 
-  if (!lista.length) {
-    contenedor.innerHTML = vacio(
-      'Sin proyectos todavía',
-      'Una compra grande, un viaje, un fondo de emergencia. Registrala y te digo si conviene hacerla ahora.',
-      { accion: 'nuevo', texto: 'Crear el primero' });
-    $('[data-accion="nuevo"]', contenedor).addEventListener('click', () => formProyecto(null));
-    return;
+  /* Lo dibujado en la última pasada. Sirve para saber si esta pantalla
+     sigue siendo la que está puesta: cuando el servidor contesta tarde
+     y mientras tanto alguien se fue a otra vista, repintar aquí
+     borraría la vista de esa persona. */
+  let mio = null;
+
+  function pintar() {
+    const est = estado();
+    const filas = ordenar(est);
+
+    if (!lista.length) {
+      contenedor.innerHTML = vacio(
+        'Sin proyectos todavía',
+        'Una compra grande, un viaje, un fondo de emergencia. Registrala y te digo si conviene hacerla ahora.',
+        { accion: 'nuevo', texto: 'Crear el primero' });
+      mio = contenedor.firstElementChild;
+      $('[data-accion="nuevo"]', contenedor).addEventListener('click', () => formProyecto(null));
+      return;
+    }
+
+    contenedor.innerHTML = `
+      <section class="acciones-mov">
+        <button class="boton boton--principal" type="button" data-nuevo-proyecto>Nuevo proyecto</button>
+      </section>
+
+      ${est.juzga ? (filas.length > 1 ? `
+        <p class="aviso aviso--ok">
+          ${/* `<b>` y no `<strong>`: dentro de un aviso, `strong` es el titular
+               y va en su propia línea (`display: block` en sitio.css). Usado en
+               medio de una frase, la parte en dos y deja la coma huérfana. */''}
+          Ordenados por <b>mérito</b>, no por antigüedad: salud y seguridad van
+          primero, y el disponible se reparte en ese orden. El porqué de cada
+          una va escrito debajo de su nombre.
+        </p>` : '')
+      : `
+        <div class="aviso aviso--error">
+          <strong>Falta un dato para poder decirte si conviene</strong>
+          <p>
+            Lo que ves abajo —cuánto llevan, cuánto apartar y en cuánto llegan— es exacto.
+            Lo que no puedo darte todavía es el <b>veredicto</b>: para eso hace falta saber
+            cuánto tienen líquido hoy, y eso sale del saldo que declara el banco.
+          </p>
+          <p>
+            ${cuentas.length
+              ? `Falta el saldo del banco, con fecha de este mes, en:
+                 <b>${esc((est.faltan || []).map(x => x.nombre).join(', '))}</b>.`
+              : 'Todavía no hay ninguna cuenta de banco registrada.'}
+            Se pone en <a href="#/presupuesto">Presupuesto</a>, y el importador de estados de
+            cuenta lo va a llenar solo cuando llegue.
+          </p>
+          ${falloDelServidor ? `<p>Tampoco se pudo preguntar al servidor: ${esc(falloDelServidor)}</p>` : ''}
+        </div>`}
+
+      <div class="proyectos">
+        ${filas.map((f, i) => tarjeta(f, i, est, filas.length)).join('')}
+      </div>`;
+
+    mio = contenedor.firstElementChild;
+
+    // Los anchos se aplican aquí y no con `style=` en el HTML: un solo
+    // estilo en línea obligaría a abrirle la mano a la CSP.
+    $$('[data-ancho]', contenedor).forEach(b => { b.style.width = b.dataset.ancho + '%'; });
+
+    enganchar();
   }
 
-  contenedor.innerHTML = `
-    <section class="acciones-mov">
-      <button class="boton boton--principal" type="button" data-nuevo-proyecto>Nuevo proyecto</button>
-    </section>
+  /* Se pinta ya, con lo que hay. El viaje al servidor va aparte y solo
+     agrega: si tarda, la pantalla ya sirve; si falla, se queda lo que
+     había, que nunca fue mentira. */
+  pintar();
 
-    ${puedeJuzgar ? (filas.length > 1 ? `
-      <p class="aviso aviso--ok">
-        ${/* `<b>` y no `<strong>`: dentro de un aviso, `strong` es el titular
-             y va en su propia línea (`display: block` en sitio.css). Usado en
-             medio de una frase, la parte en dos y deja la coma huérfana. */''}
-        Ordenados por <b>mérito</b>, no por antigüedad: salud y seguridad van
-        primero, y el disponible se reparte en ese orden.${pri.colchonFlaco
-          ? ' Con el colchón por debajo de un mes, los gustos quedan pospuestos.' : ''}${pri.deudaCara
-          ? ' Y con deuda cara encima, abonar ahí rinde más que cualquier meta.' : ''}
-      </p>` : '')
-    : `
-      <div class="aviso aviso--error">
-        <strong>Falta un dato para poder decirte si conviene</strong>
-        <p>
-          Lo que ves abajo —cuánto llevan, cuánto apartar y en cuánto llegan— es exacto.
-          Lo que no puedo darte todavía es el <b>veredicto</b>: para eso hace falta saber
-          cuánto tienen líquido hoy, y eso sale del saldo que declara el banco.
-        </p>
-        <p>
-          ${cuentas.length
-            ? `Falta el saldo del banco, con fecha de este mes, en:
-               <b>${esc(sinAncla.map(x => x.nombre).join(', '))}</b>.`
-            : 'Todavía no hay ninguna cuenta de banco registrada.'}
-          Se pone en <a href="#/presupuesto">Presupuesto</a>, y el importador de estados de
-          cuenta lo va a llenar solo cuando llegue.
-        </p>
-      </div>`}
+  if (lista.length) {
+    historico(periodo)
+      .then(r => { cartera = r.cartera || null; })
+      .catch(e => { falloDelServidor = e.message; })
+      .finally(() => {
+        // Solo si esta pantalla sigue puesta. Si alguien navegó a otra
+        // vista mientras tanto, repintar aquí le borraría la suya.
+        if (mio && contenedor.contains(mio)) pintar();
+      });
+  }
 
-    <div class="proyectos">
-      ${filas.map(tarjeta).join('')}
-    </div>`;
-
-  // Los anchos se aplican aquí y no con `style=` en el HTML: un solo
-  // estilo en línea obligaría a abrirle la mano a la CSP.
-  $$('[data-ancho]', contenedor).forEach(b => { b.style.width = b.dataset.ancho + '%'; });
-
-  /* ---------- interacción ---------- */
+  /* ---------- interacción ----------
+     Se vuelve a enganchar en cada pintada: el HTML se rehace entero,
+     así que los oyentes del anterior se fueron con él. */
 
   const porId = id => lista.find(p => p.id === id);
 
-  $('[data-nuevo-proyecto]', contenedor).addEventListener('click', () => formProyecto(null));
+  function enganchar() {
+    $('[data-nuevo-proyecto]', contenedor).addEventListener('click', () => formProyecto(null));
 
-  $$('[data-editar-proyecto]', contenedor).forEach(b =>
-    b.addEventListener('click', () => formProyecto(porId(b.dataset.editarProyecto))));
+    $$('[data-editar-proyecto]', contenedor).forEach(b =>
+      b.addEventListener('click', () => formProyecto(porId(b.dataset.editarProyecto))));
 
-  $$('[data-nuevo-aporte]', contenedor).forEach(b =>
-    b.addEventListener('click', () => formAporte(porId(b.dataset.nuevoAporte), null)));
+    $$('[data-nuevo-aporte]', contenedor).forEach(b =>
+      b.addEventListener('click', () => formAporte(porId(b.dataset.nuevoAporte), null)));
 
-  $$('[data-editar-aporte]', contenedor).forEach(b => b.addEventListener('click', () => {
-    const p = porId(b.dataset.proyecto);
-    formAporte(p, (p.aportes || []).find(a => a.id === b.dataset.editarAporte));
-  }));
+    $$('[data-editar-aporte]', contenedor).forEach(b => b.addEventListener('click', () => {
+      const p = porId(b.dataset.proyecto);
+      formAporte(p, (p.aportes || []).find(a => a.id === b.dataset.editarAporte));
+    }));
+  }
 
   /* ============================================================
      Los formularios
@@ -354,7 +424,11 @@ export function proyectos({ contenedor, D, periodo, hogar, recargar }) {
       ${campo('fecha', 'Cuándo', `type="date" value="${esc(ap && ap.fecha ? ap.fecha : hoyLocal())}"`)}
       ${personas.length ? selector('personaId', 'Quién aporta',
         [{ valor: '', texto: '— sin persona —' }, ...personas.map(x => ({ valor: x.id, texto: x.nombre }))],
-        (ap && ap.personaId) || '') : ''}
+        // Al registrar uno nuevo se propone la primera persona, como
+        // hacía la app anterior: en un hogar de uno solo, obligar a
+        // elegir es una pregunta cuya respuesta ya se sabe. Se puede
+        // dejar sin dueño, pero hay que quererlo.
+        ap ? (ap.personaId || '') : personas[0].id) : ''}
       ${campo('nota', 'Nota', `value="${esc(ap ? ap.nota : '')}" placeholder="De dónde salió"`)}
       <p class="hoja__nota">
         Un aporte no es un gasto: es dinero que ya tenían y que ahora está apartado para

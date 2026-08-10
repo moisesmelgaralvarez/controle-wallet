@@ -63,7 +63,12 @@ const filaRubro = (f, cerrado) => `
           ${f.plan > 0 ? `· ${esc(pct(f.pct))}` : '· sin presupuesto'}</small>
       </span>
       <span class="cierre-rubro__v ${f.excedido ? 'mal' : 'bien'}">
-        ${f.diferencia > 0 ? '+' : ''}${esc(dinero(f.diferencia))}
+        ${esc(dinero(Math.abs(f.diferencia)))}
+        <!-- La palabra, no el signo. Un «L -300.00» en verde se lee un
+             instante como que FALTAN 300, cuando significa lo contrario:
+             gastaron 300 menos de lo planeado. En una app de dinero ese
+             instante es todo el problema. -->
+        <small>${f.diferencia > 0 ? 'de más' : f.diferencia < 0 ? 'de menos' : 'exacto'}</small>
       </span>
     </div>
     ${cerrado
@@ -241,83 +246,91 @@ export function cierre({ contenedor, D, periodo, hogar, recargar }) {
     const conc = c.conciliaciones;
     const excedidos = c.filas.filter(f => f.excedido);
 
+    const resto = c.filas.filter(f => !f.excedido || c.cerrado);
+
+    /* Dos zonas, como el resto de la app: a la izquierda el trabajo
+       —conciliar y explicar—, a la derecha el resultado y el botón. En
+       una sola columna a 1440 los párrafos salían de 1300 px y los
+       campos de texto ocupaban la pantalla entera. Medido, no a ojo. */
     contenedor.innerHTML = `
-      <section class="panel destacado">
-        <span class="destacado__t">${c.cerrado
-          ? `${esc(nombreMes(periodo))} está cerrado`
-          : `Les quedó en ${esc(nombreMes(periodo))}`}</span>
-        <div class="destacado__v ${c.quedo < 0 ? 'mal' : 'bien'}">${esc(dinero(c.quedo))}</div>
-        <p class="destacado__d">
-          Entró ${esc(dinero(c.ingreso))}${c.ingresoConfirmado ? '' : ' <b>estimado</b>'} ·
-          gastaron ${esc(dinero(c.gastado))} de ${esc(dinero(c.plan))} planeados.
-        </p>
-        ${!c.ingresoConfirmado ? `<p class="destacado__d ojo">
-          El ingreso de este mes no está confirmado, así que esta cifra usa el monto
-          típico. El gasto es real; el ingreso contra el que se resta, no.</p>` : ''}
-      </section>
+      <div class="zonas">
+        <div class="pila">
 
-      ${c.cerrado ? `
-        <section class="panel">
-          <div class="panel__tope"><h2>Cerrado</h2></div>
-          <p class="panel__nota">Se cerró el ${esc(diaCorto(String(c.cerradoEl).slice(0, 10)))}.
-            Su presupuesto quedó fijo y sus movimientos ya no admiten cambios —
-            lo impone la base de datos, no esta pantalla.</p>
-          <button class="boton boton--borde" type="button" data-reabrir>Reabrir el mes</button>
-          <p class="panel__nota">Reabrir es del propietario del hogar. Lo que ya se
-            sembró como arranque del mes siguiente no se borra: mientras esto vuelve
-            a cuadrar, sigue siendo la mejor cifra que hay.</p>
-        </section>` : ''}
-
-      <section class="panel">
-        <div class="panel__tope"><h2>Las tres conciliaciones</h2></div>
-        <p class="panel__nota">Cada una lleva escrita su ventana de fechas. La de una
-          tarjeta va de corte a corte y la de una cuenta por el mes del hogar: no son
-          el mismo período, y confundirlos es el error más caro de esta pantalla.</p>
-        <ul class="lista-conc">
-          ${conc.todas.map(x => filaConciliacion(x, c.cerrado)).join('')}
-        </ul>
-      </section>
-
-      ${excedidos.length && !c.cerrado ? `
-        <section class="panel">
-          <div class="panel__tope"><h2>Lo que se pasó</h2></div>
-          <p class="panel__nota">Un exceso explicado hoy es información dentro de tres
-            meses. Sin explicación, es indistinguible de un descuido.</p>
-          <ul class="lista-cierre">${excedidos.map(f => filaRubro(f, false)).join('')}</ul>
-        </section>` : ''}
-
-      ${(() => {
-        const resto = c.filas.filter(f => !f.excedido || c.cerrado);
-        // Un panel con una lista vacía no informa de nada y hace creer
-        // que algo no cargó.
-        if (!resto.length) return '';
-        return `
           <section class="panel">
-            <div class="panel__tope"><h2>Rubro por rubro</h2></div>
-            <ul class="lista-cierre">
-              ${resto.map(f => filaRubro(f, c.cerrado)).join('')}
+            <div class="panel__tope"><h2>Las tres conciliaciones</h2></div>
+            <p class="panel__nota">Cada una lleva escrita su ventana de fechas. La de una
+              tarjeta va de corte a corte y la de una cuenta por el mes del hogar: no son
+              el mismo período, y confundirlos es el error más caro de esta pantalla.</p>
+            <ul class="lista-conc">
+              ${conc.todas.map(x => filaConciliacion(x, c.cerrado)).join('')}
             </ul>
-          </section>`;
-      })()}
+          </section>
 
-      ${c.cerrado ? '' : `
-        <section class="panel">
-          ${c.bloqueos.length ? `
-            <div class="panel__tope"><h2>Falta para poder cerrar</h2></div>
-            <ul class="lista-bloqueos">
-              ${c.bloqueos.map(b => `<li data-tipo="${esc(b.tipo)}">${esc(b.texto)}</li>`).join('')}
-            </ul>
-            <p class="panel__nota">Un cierre con un descuadre encima no sirve: al mes
-              siguiente la apertura arrastra el error y ya nadie sabe de dónde salió.</p>
-            <button class="boton boton--borde" type="button" data-guardar>Guardar lo escrito</button>
-          ` : `
-            <div class="panel__tope"><h2>Todo cuadra</h2></div>
-            <p class="panel__nota">Al cerrar, el plan de ${esc(nombreMes(periodo))} queda
-              fijo y ${esc(nombreMes(sumaMeses(periodo, 1)))} arranca con estos saldos.
-              Sus movimientos dejan de admitir cambios.</p>
-            <button class="boton boton--principal" type="button" data-cerrar>Cerrar ${esc(nombreMes(periodo))}</button>
-          `}
-        </section>`}`;
+          ${excedidos.length && !c.cerrado ? `
+            <section class="panel">
+              <div class="panel__tope"><h2>Lo que se pasó</h2></div>
+              <p class="panel__nota">Un exceso explicado hoy es información dentro de tres
+                meses. Sin explicación, es indistinguible de un descuido.</p>
+              <ul class="lista-cierre">${excedidos.map(f => filaRubro(f, false)).join('')}</ul>
+            </section>` : ''}
+
+          ${/* Un panel con una lista vacía no informa de nada y hace
+                creer que algo no cargó. */ resto.length ? `
+            <section class="panel">
+              <div class="panel__tope"><h2>Rubro por rubro</h2></div>
+              <ul class="lista-cierre">
+                ${resto.map(f => filaRubro(f, c.cerrado)).join('')}
+              </ul>
+            </section>` : ''}
+
+        </div>
+        <div class="pila">
+
+          <section class="panel destacado">
+            <span class="destacado__t">${c.cerrado
+              ? `${esc(nombreMes(periodo))} está cerrado`
+              : `Les quedó en ${esc(nombreMes(periodo))}`}</span>
+            <div class="destacado__v ${c.quedo < 0 ? 'mal' : 'bien'}">${esc(dinero(c.quedo))}</div>
+            <p class="destacado__d">
+              Entró ${esc(dinero(c.ingreso))}${c.ingresoConfirmado ? '' : ' <b>estimado</b>'} ·
+              gastaron ${esc(dinero(c.gastado))} de ${esc(dinero(c.plan))} planeados.
+            </p>
+            ${!c.ingresoConfirmado ? `<p class="destacado__d ojo">
+              El ingreso de este mes no está confirmado, así que esta cifra usa el monto
+              típico. El gasto es real; el ingreso contra el que se resta, no.</p>` : ''}
+          </section>
+
+          ${c.cerrado ? `
+            <section class="panel">
+              <div class="panel__tope"><h2>Cerrado</h2></div>
+              <p class="panel__nota">Se cerró el ${esc(diaCorto(String(c.cerradoEl).slice(0, 10)))}.
+                Su presupuesto quedó fijo y sus movimientos ya no admiten cambios —
+                lo impone la base de datos, no esta pantalla.</p>
+              <button class="boton boton--borde" type="button" data-reabrir>Reabrir el mes</button>
+              <p class="panel__nota">Reabrir es del propietario del hogar. Lo que ya se
+                sembró como arranque del mes siguiente no se borra: mientras esto vuelve
+                a cuadrar, sigue siendo la mejor cifra que hay.</p>
+            </section>` : `
+            <section class="panel">
+              ${c.bloqueos.length ? `
+                <div class="panel__tope"><h2>Falta para poder cerrar</h2></div>
+                <ul class="lista-bloqueos">
+                  ${c.bloqueos.map(b => `<li data-tipo="${esc(b.tipo)}">${esc(b.texto)}</li>`).join('')}
+                </ul>
+                <p class="panel__nota">Un cierre con un descuadre encima no sirve: al mes
+                  siguiente la apertura arrastra el error y ya nadie sabe de dónde salió.</p>
+                <button class="boton boton--borde" type="button" data-guardar>Guardar lo escrito</button>
+              ` : `
+                <div class="panel__tope"><h2>Todo cuadra</h2></div>
+                <p class="panel__nota">Al cerrar, el plan de ${esc(nombreMes(periodo))} queda
+                  fijo y ${esc(nombreMes(sumaMeses(periodo, 1)))} arranca con estos saldos.
+                  Sus movimientos dejan de admitir cambios.</p>
+                <button class="boton boton--principal" type="button" data-cerrar>Cerrar ${esc(nombreMes(periodo))}</button>
+              `}
+            </section>`}
+
+        </div>
+      </div>`;
 
     /* ---------- enganches ---------- */
 

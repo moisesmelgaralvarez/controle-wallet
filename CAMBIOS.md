@@ -71,7 +71,29 @@ descuadre inventado **bloquea un cierre que sí cuadraba**. `datos/cierre.js` ni
 siquiera recibe el documento del hogar: así no puede calcular con historia
 incompleta ni por accidente.
 
-**289 pruebas en verde.**
+**Dos defectos que aparecieron midiendo, no mirando**
+
+A 1440 la pantalla salía en **una sola columna**: los párrafos llegaban a **1,302
+px** —más del doble de lo que un ojo sigue sin perder el renglón— y un campo de
+texto ocupaba **1,296 px**. Ahora usa las dos zonas del resto de la app: el
+trabajo a la izquierda, el resultado y el botón a la derecha. Medido después:
+párrafo **728 px**, campo **544 px**.
+
+Y un rubro donde se gastó de menos decía **«L -300.00»** en verde. El signo menos
+se lee un instante como que faltan 300, cuando significa lo contrario. Ahora va
+la palabra: **«L 300.00 de menos»**.
+
+**Un mensaje que mandaba a buscar un dato que no existe**
+
+Al efectivo sin contar le decía «Falta decir cuánto dice **el banco** que hay en
+Efectivo en mano». El efectivo es la única de las tres conciliaciones que **no
+tiene banco** que la declare — por eso se cuenta a mano. Venía así de la app
+anterior. Ahora dice «Falta contar cuánto hay en efectivo», con su prueba.
+
+**Medido:** 58 elementos en oscuro con mínimo **7.42**, 58 en claro con mínimo
+**6.52**, ninguno bajo AA. Sin desbordes a 360 ni 1440, en los tres estados de la
+pantalla: cuadrado, con excesos sin justificar, y descuadrado con las
+conciliaciones sin declarar. **290 pruebas en verde.**
 
 ---
 

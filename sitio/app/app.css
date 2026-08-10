@@ -420,7 +420,11 @@ body[data-asistente="si"] .tope { display: none; }
   gap: var(--e2); margin-bottom: var(--e2);
 }
 .panel__tope h2 { margin: 0; }
-.panel__nota { margin-top: var(--e2); }
+/* El límite de lectura va en el bloque que lo necesita, no global.
+   Medido a 1440 en el cierre: un párrafo de nota llegaba a 1,302 px —
+   más del doble de lo que un ojo sigue sin perder el renglón. Es el
+   mismo criterio que ya tenía `.destacado__d`. */
+.panel__nota { margin-top: var(--e2); max-width: 68ch; }
 
 /* Un botón que acompaña a un título no puede tener el mismo peso que
    la acción principal de la pantalla. */
@@ -753,8 +757,13 @@ body[data-mes-pasado="si"] .mes-nav .tope__mes {
 }
 
 /* Un campo que cuelga de la fila de arriba, no uno suelto del
-   formulario: sin el margen de abajo se lee como parte de ella. */
-.campo--pegado { margin: var(--e1) 0 0; }
+   formulario: sin el margen de abajo se lee como parte de ella.
+
+   El tope de ancho no es estético. Medido a 1440: un campo de nota
+   quedaba de 1,296 px de ancho. Un renglón de escritura del ancho de
+   la pantalla se ve roto, cuesta apuntarle y no se corresponde con lo
+   que se escribe adentro — una frase corta o un monto. */
+.campo--pegado { margin: var(--e1) 0 0; max-width: 34rem; }
 
 /* ---------- rubro por rubro ---------- */
 
@@ -773,6 +782,7 @@ body[data-mes-pasado="si"] .mes-nav .tope__mes {
 /* La cifra no se parte, por lo mismo que en `.fila-cfg__v`: partida
    en dos renglones se lee un instante como dos números distintos. */
 .cierre-rubro__v { text-align: right; font-weight: 650; font-size: var(--t-sm); white-space: nowrap; }
+.cierre-rubro__v small { display: block; font-weight: 400; color: var(--tenue); font-size: var(--t-xs); }
 .cierre-rubro__v.bien { color: var(--acento); }
 .cierre-rubro__v.mal  { color: var(--alerta); }
 

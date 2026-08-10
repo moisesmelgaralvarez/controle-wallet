@@ -130,7 +130,13 @@ function cierreDeMes(D, per) {
   conc.sinResolver.forEach(x => bloqueos.push({
     clave: x.clave, tipo: 'conciliacion', nombre: x.nombre,
     texto: x.sinDeclarar
-      ? `Falta decir cuánto dice el banco que hay en ${x.nombre}.`
+      // El efectivo no tiene banco que lo declare —por eso es la única
+      // de las tres que se cuenta a mano— y pedirle «lo que dice el
+      // banco» manda a buscar un dato que no existe. Un mensaje tiene
+      // que decir QUÉ HACER; este decía qué es imposible.
+      ? (x.clave === 'efectivo'
+          ? 'Falta contar cuánto hay en efectivo.'
+          : `Falta decir cuánto dice el banco que hay en ${x.nombre}.`)
       : `${x.nombre} no cuadra por ${fmt(Math.abs(x.diferencia))}.`
   }));
   sinJustificar.forEach(f => bloqueos.push({

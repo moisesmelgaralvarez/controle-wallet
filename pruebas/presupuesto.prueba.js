@@ -22,7 +22,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { FILAS, filaApertura } from '../sitio/app/datos/filas.js';
-import { montosDeMes, mesCongelado } from '../sitio/app/nucleo/saldos.js';
+import { montosDeMes, mesCongelado, cierreDeMes } from '../sitio/app/nucleo/saldos.js';
 
 /* ------------------------------------------------------------
    Qué columnas existen, según las migraciones
@@ -354,6 +354,23 @@ test('una foto vacía del plan no es una foto', () => {
   const congelado = { presupuestoMes: { '2026-09': { montos: { g1: 8000 } } } };
   assert.deepEqual(montosDeMes(congelado, '2026-09'), { g1: 8000 });
   assert.equal(mesCongelado(congelado, '2026-09'), true);
+});
+
+test('al efectivo no se le pide el saldo del banco: se le pide contarlo', () => {
+  /* El efectivo es la única de las tres conciliaciones sin banco que la
+     declare — por eso se cuenta a mano. Pedirle «lo que dice el banco»
+     manda a buscar un dato que no existe, y un mensaje tiene que decir
+     qué hacer. Venía así de la app anterior. */
+  const D = {
+    inicioMes: 1, personas: [], cuentas: [], tarjetas: [], gastos: [],
+    financiamientos: [], proyectos: [], plantillaIngresos: [], ingresosMes: {},
+    movimientos: [], retiros: [], pagosTarjeta: [], comercios: {},
+    presupuestoMes: { '2026-08': { montos: { g1: 100 } } }
+  };
+  const b = cierreDeMes(D, '2026-08').bloqueos.find(x => x.clave === 'efectivo');
+  assert.ok(b, 'el efectivo sin contar tiene que bloquear el cierre');
+  assert.equal(b.texto, 'Falta contar cuánto hay en efectivo.');
+  assert.doesNotMatch(b.texto, /banco/, 'el efectivo no tiene banco que lo declare');
 });
 
 /* ------------------------------------------------------------

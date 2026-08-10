@@ -471,3 +471,79 @@ body[data-asistente="si"] .tope { display: none; }
 
 [data-neto] { font-variant-numeric: tabular-nums; }
 [data-neto][data-tono="mal"] { color: var(--alerta); font-weight: 650; }
+
+/* ============================================================
+   Proyectos
+   ============================================================ */
+
+/* Las fichas no se estiran a lo ancho del monitor: a partir de cierto
+   punto se ponen dos al lado, que es enseñar más y no lo mismo más
+   grande. `start` para que una ficha corta no herede el alto de la
+   larga que tiene al lado. */
+.proyectos { display: grid; gap: var(--e3); align-items: start; }
+@media (min-width: 1300px) { .proyectos { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 2000px) { .proyectos { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.proy { display: grid; gap: var(--e2); align-content: start; }
+.proy .panel__tope { align-items: start; margin-bottom: 0; }
+.proy__id { min-width: 0; }
+.proy__id h2 { margin: 0; }
+.proy__id small { display: block; margin-top: 0.15rem; font-size: var(--t-xs); color: var(--tenue); }
+.proy__porque { margin: 0; font-size: var(--t-sm); color: var(--tenue); }
+
+/* ---------- sellos ---------- */
+
+.sellos { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+.sello {
+  display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px;
+  font-size: var(--t-xs); font-weight: 650;
+  border: 1px solid var(--borde); color: var(--tenue);
+}
+/* El veredicto es lo primero que se lee, así que es lo único con
+   color propio. Los demás sellos acompañan, no compiten.
+
+   «Hazlo ya» va con el par acento/acento-ct, el mismo del botón
+   principal: blanco sobre `--alerta` medía 1.98 de contraste cuando
+   la norma AA pide 4.5 — el sello más importante de la pantalla era
+   el menos legible. Y va RELLENO mientras «Programado» va en tinte:
+   los dos dicen «sí», y la diferencia entre ellos es la prisa, no el
+   sentido. El rojo se reserva para el que dice que pares. */
+.sello[data-tono="ya"]     { background: var(--acento); border-color: var(--acento); color: var(--acento-ct); }
+.sello[data-tono="mal"]    { background: color-mix(in oklab, var(--alerta) 14%, transparent);
+                             border-color: color-mix(in oklab, var(--alerta) 45%, transparent); color: var(--alerta); }
+.sello[data-tono="bien"],
+.sello[data-tono="listo"]  { background: var(--suave); border-color: color-mix(in oklab, var(--acento) 45%, transparent); color: var(--acento); }
+.sello[data-tono="espera"] { background: var(--elevado); color: var(--tinta); }
+
+/* ---------- avance ---------- */
+
+.proy__via { height: 0.6rem; border-radius: 999px; background: var(--elevado); overflow: hidden; }
+.proy__va { height: 100%; border-radius: 999px; background: var(--acento); transition: width .4s; }
+.proy__cifras {
+  display: flex; justify-content: space-between; gap: var(--e2);
+  font-size: var(--t-sm); color: var(--tenue); font-variant-numeric: tabular-nums;
+}
+
+/* ---------- consejo y alertas ---------- */
+
+.consejo {
+  border-left: 3px solid var(--acento); padding: var(--e2);
+  background: var(--suave); border-radius: 0 10px 10px 0;
+}
+.consejo[data-tono="mal"]   { border-left-color: var(--alerta); background: color-mix(in oklab, var(--alerta) 10%, transparent); }
+.consejo[data-tono="listo"] { border-left-color: var(--acento); }
+.consejo strong { display: block; font-size: var(--t-sm); margin-bottom: 0.3rem; }
+.consejo p { margin: 0 0 0.4rem; font-size: var(--t-sm); color: var(--tenue); }
+.consejo p:last-of-type { margin-bottom: 0; }
+.consejo small { display: block; margin-top: 0.5rem; font-size: var(--t-xs); color: var(--tenue); }
+
+.alertas { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.4rem; }
+.alertas li {
+  font-size: var(--t-xs); line-height: 1.5; color: var(--tenue);
+  padding-left: 0.8rem; border-left: 2px solid var(--borde);
+}
+.alertas li[data-nivel="critical"] { border-left-color: var(--alerta); color: var(--tinta); }
+.alertas li[data-nivel="serious"]  { border-left-color: color-mix(in oklab, var(--alerta) 55%, transparent); }
+
+.proy__aportes { margin-top: var(--e1); border-top: 1px solid var(--borde); }

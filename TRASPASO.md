@@ -42,7 +42,7 @@ aplicar una migración donde no toca.
 
 ## 3. Qué ya está hecho
 
-`main` va en **v0.11.0**. Todo pasa por Pull Request; `main` está protegido y ni
+`main` va en **v0.12.0**. Todo pasa por Pull Request; `main` está protegido y ni
 el dueño puede escribirle directo (comprobado). Dos verificaciones obligatorias en
 CI.
 
@@ -66,8 +66,9 @@ sin reescribir la aritmética. Registro, confirmación por correo, sesión y
 recuperación funcionando en producción.
 
 **Etapa 4 · Interfaz.** Listos: el armazón con riel y barra de pestañas, el
-**asistente de arranque** (5 pasos), **Resumen**, **Movimientos** y
-**Presupuesto** — que es donde se edita todo lo que el asistente creó.
+**asistente de arranque** (5 pasos), **Resumen**, **Movimientos**,
+**Presupuesto** —donde se edita todo lo que el asistente creó— y **Proyectos**,
+con veredicto y prioridad por mérito.
 
 **Etapa 7 · Sitio público.** Seis páginas en `controlewallet.com`, con vitrina de
 dispositivos dibujada en HTML y CSS, y parallax solo con CSS.
@@ -75,7 +76,7 @@ dispositivos dibujada en HTML y CSS, y parallax solo con CSS.
 ### Las pruebas
 
 ```
-npm run pruebas               229 · núcleo, armador, equivalencia y filas
+npm run pruebas               243 · núcleo, armador, equivalencia, filas y alcance
 npm run pruebas:aislamiento    24 · ~55 intentos de violar el aislamiento
 npm run pruebas:integracion    12 · base → armador → núcleo, contra la base real
 ```
@@ -149,6 +150,19 @@ anotados en `SECRETOS.md`.
 un comando con un texto de ejemplo dentro y se ejecutó tal cual. Si necesita
 poner un secreto, que lo haga en el panel del servicio.
 
+**Hay cifras del núcleo que recorren TODO el histórico, y el navegador solo tiene
+el mes en curso.** Son `saldoCuenta`, `deudaTarjeta` y `efectivo`, y de ellas
+cuelga el veredicto de un proyecto. Medido: el mismo proyecto sale «Programado»
+con doce meses cargados y «Reconsideralo» con uno solo, inventándose la razón.
+El ancla de conciliación lo arregla —con ella, un mes da EXACTAMENTE lo mismo que
+doce— y `datos/alcance.js` es quien decide si se puede o no. Antes de enseñar
+cualquier cifra que venga de esas tres, preguntale.
+
+**Un formulario que se abre y se guarda sin tocar nada no puede cambiar un dato.**
+El campo «desde qué mes» de la tarjeta se rellenaba con el mes de hoy al editar,
+y eso le borraba de la deuda todo lo anterior. Los valores por omisión son para
+CREAR; al editar, lo que estaba vacío se queda vacío.
+
 **PostgREST devuelve las columnas `numeric` como TEXTO.** Un `"8000.00"` sin
 convertir no revienta: se concatena, y el número absurdo aparece tres pantallas
 después. Todo pasa por `num()` en el armador, y hay una prueba dedicada.
@@ -210,15 +224,16 @@ gh pr create
 ## 8. Lo que falta, en orden
 
 **Etapa 4 — completar la interfaz**
-- **Proyectos** ← lo siguiente. Metas con aportes, veredicto y prioridad por
-  mérito.
-- **Historia** — mes a mes, con el mes en curso fuera del promedio.
+- **Historia** ← lo siguiente. Mes a mes, con el mes en curso fuera del promedio.
+  Necesita el histórico completo: leé antes `datos/alcance.js`.
 - Confirmar ingresos mes a mes (la distinción estimado / confirmado). El editor
   del Presupuesto ya deja la plantilla —el mes típico— en su sitio; falta la
   pantalla que convierte esa estimación en hecho.
 - **El saldo de las cuentas**, que hoy no se enseña en ninguna parte a propósito:
   recorre todo el histórico y en el navegador solo vive el mes en curso. Se
   calcula en el servidor, con el mismo núcleo, junto con historia y patrimonio.
+  Mientras tanto, `datos/alcance.js` dice cuándo lo cargado SÍ alcanza —cuando
+  las anclas de conciliación están al día— y Proyectos se apoya en eso.
 
 **Etapa 5 — funciones pesadas**
 - Importar estados de cuenta (BAC, Ficohsa, CSV, PDF) con conciliación. El
@@ -252,7 +267,7 @@ gh pr create
 ## 10. Cómo empezar la sesión nueva
 
 1. Leé `README.md`, `CAMBIOS.md`, `VUELTA-ATRAS.md` y `SECRETOS.md`.
-2. Corré `npm run pruebas` — deben salir 229 en verde.
+2. Corré `npm run pruebas` — deben salir 243 en verde.
 3. Mirá `sitio/app/vistas/movimientos.js` como referencia del estilo, y
    `vistas/presupuesto.js` con `datos/filas.js` para lo que se edita: ahí está
    cómo se arma una fila, cómo se valida y por qué eso vive fuera de la pantalla.

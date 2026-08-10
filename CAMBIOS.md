@@ -4,6 +4,55 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.12.0 — Proyectos, y el veredicto que no se inventa
+
+*Sigue la etapa 4.*
+
+**Qué se hizo**
+
+- **La pantalla de Proyectos.** Metas con su rango de costo, aportes, avance, y las
+  dos capas que el núcleo distingue: si el dinero **alcanza** y si además
+  **conviene** hacerlo ahora. Ordenadas por mérito —salud y seguridad antes que
+  cualquier gusto— con el disponible repartido en ese orden.
+- Cada meta dice su plazo con la cuota sugerida, lo que costaría llegar a la fecha
+  objetivo si la hay, y qué porcentaje del disponible compromete.
+- El **porqué** del orden va escrito: «abonar a BAC rinde 58% garantizado
+  (L 1,421.52 al mes)» pesa más que cualquier etiqueta.
+
+**El hallazgo que definió la pantalla**
+
+El veredicto sale de `saludFinanciera`, que recorre **todo el histórico** — y en el
+navegador solo vive el mes en curso. Medido con el mismo hogar y el mismo
+proyecto: sale **«Programado»** con doce meses cargados y **«Reconsideralo»** con
+uno solo, inventándose la razón («no hay ni un mes de colchón»). No es un
+redondeo: son 600 puntos de castigo por un colchón que sí existe.
+
+La salida es el **ancla de conciliación**. Cuando una cuenta o una tarjeta declara
+el saldo que dijo el banco, el núcleo parte de esa cifra —que es un hecho, no una
+deducción— y solo le suma lo posterior a esa fecha. Medido también: **con el ancla
+dentro del mes cargado, un mes da exactamente el mismo resultado que doce.**
+
+Así que el veredicto aparece cuando las anclas están al día, y cuando no, la
+pantalla dice **qué falta y dónde ponerlo** en vez de dar un juicio al revés. Lo
+que no depende del histórico —avance, cuota, plazo y si el dinero alcanza— se
+muestra siempre, porque siempre es cierto.
+
+Esa regla vive en `datos/alcance.js`, aparte de la pantalla, porque Historia y
+Patrimonio van a necesitar la misma.
+
+**Un error de contraste, encontrado midiendo**
+
+El sello **«Hazlo ya»** —el veredicto más importante de la pantalla— salía en
+blanco sobre el color de alerta: **1.98 de contraste**, cuando la norma AA pide
+4.5. Era el menos legible de todos. Ahora usa el par del botón principal y mide
+**9.04**. Y va relleno mientras «Programado» va en tinte: los dos dicen que sí, y
+lo que los separa es la prisa, no el sentido.
+
+Medido en los dos modos con la composición real de capas: 61 elementos, mínimo
+**5.7** en claro y **6.24** en oscuro. Sin desbordes a 360, 768, 1440 y 2400 px.
+
+---
+
 ## v0.11.0 — El presupuesto se edita
 
 *Sigue la etapa 4.*

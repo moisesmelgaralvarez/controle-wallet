@@ -27,6 +27,7 @@
 
 import { haySesion, salir, capturarSesionDeURL, ErrorDatos } from './datos/api.js';
 import { cargarHogar, datosDelHogar, mesDeHoy, olvidar } from './datos/hogar.js';
+import { olvidarHistorico } from './datos/historico.js';
 import * as A from './nucleo/index.js';
 import { $, esc, fijarMoneda, nombreMes, cerrarHoja } from './ui.js';
 import { resumen } from './vistas/resumen.js';
@@ -157,6 +158,7 @@ window.addEventListener('hashchange', () => {
 $('#salir').addEventListener('click', async () => {
   await salir();
   olvidar();            // nada del hogar sobrevive al cierre de sesión
+  olvidarHistorico();
   location.replace('/');
 });
 

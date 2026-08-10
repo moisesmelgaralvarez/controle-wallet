@@ -4,6 +4,53 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.13.0 — El histórico, calculado donde sí cabe
+
+*Cierra el hueco que dejó Proyectos.*
+
+**Qué se hizo**
+
+- **Una Edge Function (`historico`) que corre el mismo núcleo sobre toda la vida
+  del hogar.** No es una segunda implementación en SQL: son los mismos trece
+  módulos que corren en el navegador y en las pruebas, importados tal cual. Si
+  hubiera dos aritméticas, tarde o temprano darían dos respuestas y no habría
+  forma de saber cuál creer.
+- Devuelve lo que el navegador no puede calcular: patrimonio, salud financiera,
+  historia mes a mes, saldos de cuentas, efectivo, deuda de tarjetas y el
+  veredicto de cada proyecto.
+- **Proyectos ya no necesita las anclas.** Pinta de inmediato todo lo que es
+  cierto con lo que hay —avance, cuota, plazo— y sube al veredicto cuando el
+  servidor contesta. Nunca se queda esperando, y si el viaje falla se queda lo
+  que había, que nunca fue mentira.
+
+**La trampa que este trabajo existía para no repetir**
+
+PostgREST puede cortar una respuesta larga sin avisar: devuelve las primeras mil
+filas de tres mil con un `Content-Range` que nadie mira. Calcular un saldo con un
+tercio de la historia da un número creíble y falso — la misma familia del
+`numeric` que llega como texto. Así que se pide el **conteo exacto**, se pagina
+hasta tenerlo todo, y si al final no cuadra **se levanta la mano en vez de
+calcular**. Diez pruebas cubren ese camino, incluido el múltiplo exacto del
+tamaño de página, que es donde un `<` mal puesto se come la última.
+
+**Seguridad**
+
+La función **no lleva ningún secreto**. Va con el token de quien pregunta, no con
+la clave de servicio, y no filtra por hogar en ninguna línea: de eso siguen
+encargándose las políticas RLS. Comprobado contra el proyecto de pruebas: sin
+sesión devuelve 401, y con la clave publicable sola contesta 404 sin filtrar nada.
+
+**Comprobado de punta a punta**
+
+Desplegada a pruebas y llamada con una sesión real: 710 ms, y trajo exactamente
+el hogar de quien preguntó. Un proyecto creado desde la interfaz salió primero
+como «El dinero alcanza» y pasó a **«Reconsideralo»** al llegar la respuesta —con
+la tarjeta sin ancla, que es justo lo que antes lo impedía—, explicando por qué:
+«es un gusto y no hay ni un mes de colchón». El hogar de pruebas quedó igual que
+antes de empezar.
+
+---
+
 ## v0.12.0 — Proyectos, y el veredicto que no se inventa
 
 *Sigue la etapa 4.*

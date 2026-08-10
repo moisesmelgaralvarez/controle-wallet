@@ -374,6 +374,26 @@ test('al efectivo no se le pide el saldo del banco: se le pide contarlo', () => 
 });
 
 /* ------------------------------------------------------------
+   La procedencia de lo importado
+   ------------------------------------------------------------ */
+
+test('las tres tablas que escribe el importador saben de dónde vino cada fila', () => {
+  /* De esto cuelga la única regla que impide duplicar al reimportar:
+     el archivo manda sobre su propio rango. Para acotar el borrado
+     hacen falta las tres columnas, en las TRES tablas — `aplicarLote`
+     las escribe en todas. Si a una le faltan, esa tabla no se puede
+     acotar: reimportar duplicaría sus filas, y un retiro duplicado no
+     da error, se resta dos veces y el descuadre sale en el cierre. */
+  const faltan = [];
+  for (const tabla of ['movimientos', 'retiros', 'pagos_tarjeta']) {
+    for (const columna of ['origen', 'fuente', 'lote']) {
+      if (!COLUMNAS[tabla].has(columna)) faltan.push(`${tabla}.${columna}`);
+    }
+  }
+  assert.deepEqual(faltan, [], `sin estas columnas el reimportado duplica: ${faltan.join(', ')}`);
+});
+
+/* ------------------------------------------------------------
    Las anclas de conciliación
    ------------------------------------------------------------ */
 

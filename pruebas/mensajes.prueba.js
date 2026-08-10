@@ -76,6 +76,24 @@ test('los mensajes de los disparadores de la base pasan tal cual', () => {
     /solo el propietario/i);
 });
 
+test('lo que manda una Edge Function nuestra pasa tal cual', () => {
+  // La marca `propio` la ponen nuestras funciones. Sin ella, un 500 se
+  // convertía en «Falló el servidor. Intentá de nuevo en un momento», y
+  // eso borra justo lo que hay que leer: por qué se negó el cálculo.
+  const negado = 'Faltaron 412 filas de movimientos: el cálculo no se hace a medias.';
+  assert.equal(traducir(500, { error: negado, propio: true }), negado);
+  assert.notEqual(traducir(500, { error: negado, propio: true }), MENSAJES[500]);
+
+  // Y funciona en cualquier código, no solo en el 500.
+  assert.match(traducir(404, { error: 'No se encontró tu hogar.', propio: true }), /tu hogar/);
+});
+
+test('sin la marca, un error ajeno sigue cayendo en su genérico', () => {
+  // Un 500 de PostgREST puede traer texto técnico en inglés. Ese sí se
+  // cambia por el mensaje de la tabla: no está escrito para leerse.
+  assert.equal(traducir(500, { message: 'deadlock detected' }), MENSAJES[500]);
+});
+
 test('un estado sin motivo cae en el mensaje de su código', () => {
   assert.equal(traducir(403, null), MENSAJES[403]);
   assert.equal(traducir(500, {}), MENSAJES[500]);

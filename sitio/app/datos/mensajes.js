@@ -64,6 +64,16 @@ const TAL_CUAL = /mes .* cerrado|solo el propietario/i;
 
 export function traducir(estado, cuerpo) {
   const propio = cuerpo && (cuerpo.message || cuerpo.error_description || cuerpo.msg || cuerpo.error);
+
+  /* Nuestras propias Edge Functions marcan sus errores con `propio`.
+     Ya están escritos en español y para leerse, y varios dicen algo que
+     ningún genérico puede decir: cuando el cálculo del histórico se
+     niega porque faltaron 412 filas, ESA es la frase que hay que leer,
+     no «falló el servidor, intentá de nuevo». La marca es explícita a
+     propósito: una lista de patrones que hay que mantener al día se
+     queda vieja el día que alguien agrega un mensaje. */
+  if (cuerpo && cuerpo.propio && propio) return propio;
+
   if (propio && TAL_CUAL.test(propio)) return propio;
 
   const motivo = `${(cuerpo && cuerpo.error_code) || ''} ${propio || ''}`;

@@ -44,6 +44,21 @@ const responder = (cuerpo: unknown, estado = 200) =>
   new Response(JSON.stringify(cuerpo), { status: estado, headers: CABECERAS });
 
 /**
+ * Un error que ya está escrito para leerse.
+ *
+ * `propio: true` es la marca que le dice al navegador «este mensaje
+ * pasa tal cual, no lo cambies por el genérico de tu tabla». Sin ella,
+ * `traducir()` ve un 500 y muestra «Falló el servidor. Intentá de
+ * nuevo», que es justo lo contrario de lo que hace falta: cuando el
+ * cálculo se niega porque faltaron 412 filas, ESA es la frase que hay
+ * que leer. Se pagó una vez con los errores de entrada, que decían
+ * «los datos enviados no son válidos» a quien tenía el correo sin
+ * confirmar.
+ */
+const fallar = (mensaje: string, estado: number) =>
+  responder({ error: mensaje, propio: true }, estado);
+
+/**
  * Cada proyecto evaluado trae dentro la proyección a 60 meses con la
  * que se calculó su plazo. Son sesenta filas por proyecto que el
  * navegador no dibuja: con diez metas son seiscientas filas de más
@@ -62,17 +77,17 @@ Deno.serve(async (req: Request) => {
 
   const autorizacion = req.headers.get('Authorization') || '';
   if (!autorizacion.startsWith('Bearer ')) {
-    return responder({ error: 'Hace falta iniciar sesión.' }, 401);
+    return fallar('Hace falta iniciar sesión.', 401);
   }
 
   const url = Deno.env.get('SUPABASE_URL');
   const clave = Deno.env.get('SUPABASE_ANON_KEY');
-  if (!url || !clave) return responder({ error: 'Falta configuración del proyecto.' }, 500);
+  if (!url || !clave) return fallar('Falta configuración del proyecto.', 500);
 
   try {
     const { periodo, meses = 12 } = await req.json().catch(() => ({}));
     if (!/^\d{4}-\d{2}$/.test(String(periodo || ''))) {
-      return responder({ error: 'Falta el período, con forma AAAA-MM.' }, 400);
+      return fallar('Falta el período, con forma AAAA-MM.', 400);
     }
 
     const traer = (tabla: string) =>
@@ -81,7 +96,7 @@ Deno.serve(async (req: Request) => {
     // El hogar sale de RLS: quien pregunta solo ve el suyo.
     const hogares = await traer('hogares');
     const hogar = hogares[0];
-    if (!hogar) return responder({ error: 'No se encontró tu hogar.' }, 404);
+    if (!hogar) return fallar('No se encontró tu hogar.', 404);
 
     // Aquí NO se filtra por mes: eso es justo lo que el navegador hace
     // y lo que esta función viene a completar.
@@ -116,6 +131,6 @@ Deno.serve(async (req: Request) => {
   } catch (e) {
     // El mensaje de `traerTodo` está escrito para leerse: dice cuántas
     // filas faltaron. No se lo traga un genérico.
-    return responder({ error: (e as Error).message || 'Falló el cálculo.' }, 500);
+    return fallar((e as Error).message || 'Falló el cálculo.', 500);
   }
 });

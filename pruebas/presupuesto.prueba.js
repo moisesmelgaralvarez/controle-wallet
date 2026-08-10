@@ -82,7 +82,7 @@ test('el lector de migraciones encuentra las tablas y sus columnas', () => {
    Un formulario lleno de cada cosa
    ------------------------------------------------------------ */
 
-const ctx = { hogarId: 'h1', orden: 3, plantillaId: 'ev1' };
+const ctx = { hogarId: 'h1', orden: 3, plantillaId: 'ev1', proyectoId: 'x1' };
 
 const FORMULARIOS = {
   hogares: { nombre: 'Casa', moneda: 'HNL', inicioMes: 7 },
@@ -103,7 +103,13 @@ const FORMULARIOS = {
   },
   financiamientos: { nombre: 'Refrigeradora', cuotaMensual: 1200, cuotasTotales: 12, cuotasPagadas: 4 },
   plantilla_ingresos: { nombre: 'Comisiones', dia: 6 },
-  plantilla_lineas: { personaId: 'p1', bruto: 25000, deducciones: [{ concepto: 'ISR', monto: 5000 }] }
+  plantilla_lineas: { personaId: 'p1', bruto: 25000, deducciones: [{ concepto: 'ISR', monto: 5000 }] },
+  proyectos: {
+    nombre: 'Lavadora', costoMin: 12000, costoMax: 18000, aporteMensual: 1500,
+    fechaObjetivo: '2027-03', nota: 'La de ahora ya no centrifuga',
+    tipo: 'esencial', urgencia: 'este_ano', consecuencia: 'Seguir pagando lavandería'
+  },
+  aportes: { personaId: 'p1', monto: 2000, fecha: '2026-08-09', nota: 'Del aguinaldo' }
 };
 
 test('cada columna que escribe el editor existe en su tabla', () => {
@@ -198,6 +204,52 @@ test('el orden de un gasto solo viaja cuando se está creando', () => {
   // movería de sitio cada vez que alguien corrige un monto.
   assert.equal(FILAS.gastos(FORMULARIOS.gastos, { hogarId: 'h1', orden: 3 }).orden, 3);
   assert.ok(!('orden' in FILAS.gastos(FORMULARIOS.gastos, { hogarId: 'h1', orden: null })));
+});
+
+/* ------------------------------------------------------------
+   Proyectos
+   ------------------------------------------------------------ */
+
+test('un costo suelto vale por los dos extremos del rango', () => {
+  // El rango es una comodidad para cuando no hay cotización firme, no
+  // una obligación. Con un solo número, mínimo y máximo son ese número:
+  // si uno quedara en cero, `evaluarProyecto` daría la meta por
+  // alcanzada desde el primer día.
+  const soloMin = FILAS.proyectos({ ...FORMULARIOS.proyectos, costoMax: null }, ctx);
+  assert.equal(soloMin.costo_min, 12000);
+  assert.equal(soloMin.costo_max, 12000);
+
+  const soloMax = FILAS.proyectos({ ...FORMULARIOS.proyectos, costoMin: null }, ctx);
+  assert.equal(soloMax.costo_min, 18000);
+  assert.equal(soloMax.costo_max, 18000);
+});
+
+test('un rango al revés se endereza en vez de rechazarse', () => {
+  const p = FILAS.proyectos({ ...FORMULARIOS.proyectos, costoMin: 18000, costoMax: 12000 }, ctx);
+  assert.equal(p.costo_min, 12000);
+  assert.equal(p.costo_max, 18000);
+});
+
+test('la fecha objetivo se guarda como fecha, aunque se pregunte por mes', () => {
+  // La columna es `date` y el campo es `type="month"`. Sin el día, la
+  // base lo rechaza con un 400.
+  assert.equal(FILAS.proyectos(FORMULARIOS.proyectos, ctx).fecha_objetivo, '2027-03-01');
+  assert.equal(FILAS.proyectos({ ...FORMULARIOS.proyectos, fechaObjetivo: '' }, ctx).fecha_objetivo, null);
+});
+
+test('un proyecto sin clasificar es un deseo que puede esperar', () => {
+  // Son los valores por omisión de la base, y los que hacen que el
+  // orden por mérito no premie a un proyecto por no contestar.
+  const p = FILAS.proyectos({ nombre: 'X', costoMin: 100 }, ctx);
+  assert.equal(p.tipo, 'deseo');
+  assert.equal(p.urgencia, 'algun_dia');
+});
+
+test('un aporte cuelga de su proyecto y puede no tener persona', () => {
+  const a = FILAS.aportes(FORMULARIOS.aportes, ctx);
+  assert.equal(a.proyecto_id, 'x1');
+  assert.equal(typeof a.monto, 'number');
+  assert.equal(FILAS.aportes({ ...FORMULARIOS.aportes, personaId: '' }, ctx).persona_id, null);
 });
 
 /* ------------------------------------------------------------

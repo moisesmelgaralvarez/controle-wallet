@@ -142,5 +142,40 @@ export const FILAS = {
     persona_id: l.personaId,
     bruto: noNeg(l.bruto),
     deducciones: l.deducciones
+  }),
+
+  proyectos: (d, ctx) => {
+    // Con un solo costo escrito, ese vale por los dos: el rango es una
+    // comodidad para cuando no hay cotización firme, no una obligación.
+    let min = noNeg(d.costoMin), max = noNeg(d.costoMax);
+    if (max <= 0) max = min;
+    if (min <= 0) min = max;
+    if (min > max) [min, max] = [max, min];
+
+    return {
+      hogar_id: ctx.hogarId,
+      nombre: d.nombre,
+      costo_min: min,
+      costo_max: max,
+      aporte_mensual: noNeg(d.aporteMensual),
+      // El formulario pregunta por un MES y la columna guarda una fecha:
+      // se ancla al día 1. `evaluarProyecto` vuelve a recortar a `YYYY-MM`,
+      // así que el día no participa de ningún cálculo.
+      fecha_objetivo: d.fechaObjetivo ? `${d.fechaObjetivo}-01` : null,
+      nota: d.nota || null,
+      tipo: d.tipo || 'deseo',
+      urgencia: d.urgencia || 'algun_dia',
+      consecuencia: d.consecuencia || null,
+      ...(ctx.orden == null ? {} : { orden: ctx.orden })
+    };
+  },
+
+  aportes: (d, ctx) => ({
+    hogar_id: ctx.hogarId,
+    proyecto_id: ctx.proyectoId,
+    persona_id: d.personaId || null,
+    fecha: d.fecha,
+    monto: noNeg(d.monto),
+    nota: d.nota || null
   })
 };

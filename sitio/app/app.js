@@ -32,6 +32,7 @@ import { $, esc, fijarMoneda, nombreMes, cerrarHoja } from './ui.js';
 import { resumen } from './vistas/resumen.js';
 import { movimientos } from './vistas/movimientos.js';
 import { presupuesto } from './vistas/presupuesto.js';
+import { proyectos } from './vistas/proyectos.js';
 import { asistente } from './vistas/asistente.js';
 
 /* Primero lo que viene del correo: quien acaba de confirmar su cuenta
@@ -49,7 +50,8 @@ const vista = $('#vista');
 const VISTAS = {
   resumen:     { titulo: 'Resumen',     pintar: resumen },
   movimientos: { titulo: 'Movimientos', pintar: movimientos },
-  presupuesto: { titulo: 'Presupuesto', pintar: presupuesto }
+  presupuesto: { titulo: 'Presupuesto', pintar: presupuesto },
+  proyectos:   { titulo: 'Proyectos',   pintar: proyectos }
 };
 
 /* La sección activa se marca en los dos juegos de navegación —riel y

@@ -4,6 +4,41 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.18.1 — El efectivo contado manda
+
+**Qué cambia**
+
+Al cerrar un mes, si alguien contó el dinero que hay en la mano, **esa cifra es
+la que arrastra el mes siguiente**. Antes arrastraba la que la app deducía de lo
+anotado.
+
+**Por qué**
+
+Contar es medir; sumar lo anotado es deducir — y lo que nadie anotó no existe
+para la app. Cuando las dos no coinciden, arrancar el mes siguiente con la
+deducción es empezar con una cifra que ya sabemos equivocada, y arrastrarla mes
+tras mes. Es el mismo criterio con el que el saldo declarado por el banco ya
+mandaba en las cuentas y en las tarjetas; el efectivo era el único que no lo
+seguía, y solo porque no tiene banco que lo declare.
+
+**La diferencia no se tapa.** Sigue bloqueando el cierre hasta que alguien la
+explique, y queda guardada como ajuste con su nota. Que lo contado mande no
+significa esconder por qué no cuadraba.
+
+**Un hueco de tiempos que este cambio destapó**
+
+Los saldos que se le siembran al mes siguiente los calcula el servidor **al abrir
+la pantalla** — antes de que nadie escriba nada. Así que arreglar solo el núcleo
+dejaba el caso más torcido posible: la cifra contada se guardaba en el mes que se
+cierra —visible y correcta— y el mes siguiente arrancaba igual **con la deducción
+vieja**. El cierre ahora usa lo que se acaba de teclear, con su prueba de
+integración: se cierra con 1,450 en los saldos del servidor, se cuentan 990, y el
+mes siguiente arranca con 990.
+
+**294 pruebas · 20 de integración, en verde.**
+
+---
+
 ## v0.18.0 — Dar el mes por bueno
 
 *Abre la etapa 5.*

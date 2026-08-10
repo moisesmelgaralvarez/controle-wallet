@@ -403,6 +403,37 @@ test('no se cierra un mes si el siguiente ya está cerrado, y no queda nada a me
   assert.ok(!enero || enero.cerrado === false, 'enero quedó cerrado pese a que el cierre se rechazó');
 });
 
+test('el efectivo recién contado viaja a la apertura del mes siguiente', async () => {
+  /* El caso torcido que esto evita: `saldos` lo calculó el servidor al
+     ABRIR la pantalla, o sea antes de que nadie contara nada. Sin la
+     corrección, la cifra contada se guardaba en el mes que se cierra
+     —visible y correcta— y el mes siguiente arrancaba igual con la
+     deducción vieja. Aquí se cierra con 1,450 en `saldos` pero se
+     cuentan 990: el siguiente tiene que arrancar con 990. */
+  await cerrarMes(paraCerrar('2027-04', {
+    desdeSiguiente: '2027-05-07',
+    efectivoContado: 990
+  }));
+
+  const mes = await filaMes('2027-04');
+  assert.equal(Number(mes.efectivo_contado), 990, 'lo contado no se guardó en el mes que se cierra');
+
+  const sig = await filaMes('2027-05');
+  assert.equal(sig.apertura.efectivo, 990,
+    'el mes siguiente arrancó con la deducción vieja en vez de con lo que se contó');
+});
+
+test('sin contar nada, la apertura se queda con lo que calculó el servidor', async () => {
+  // Un efectivo sin declarar solo deja cerrar si alguien lo explicó con
+  // un ajuste. En ese caso la deducción del servidor es lo mejor que hay.
+  await cerrarMes(paraCerrar('2027-07', {
+    desdeSiguiente: '2027-08-07',
+    efectivoContado: null
+  }));
+  const sig = await filaMes('2027-08');
+  assert.equal(sig.apertura.efectivo, 1450, 'debía conservar el efectivo que traía `saldos`');
+});
+
 test('reabrir devuelve el mes a editable y le quita la fecha de cierre', async () => {
   const antes = await filaMes('2026-09');
   assert.equal(antes.cerrado, true, 'la prueba anterior debía dejarlo cerrado');

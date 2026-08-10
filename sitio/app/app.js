@@ -30,6 +30,7 @@ import { cargarHogar, datosDelHogar, mesDeHoy, olvidar } from './datos/hogar.js'
 import { olvidarHistorico } from './datos/historico.js';
 import * as A from './nucleo/index.js';
 import { $, esc, fijarMoneda, nombreMes, cerrarHoja } from './ui.js';
+import { limites, mover, esElActual } from './datos/periodos.js';
 import { resumen } from './vistas/resumen.js';
 import { movimientos } from './vistas/movimientos.js';
 import { presupuesto } from './vistas/presupuesto.js';
@@ -64,6 +65,10 @@ function marcarNavegacion() {
   for (const a of document.querySelectorAll('[data-ruta]')) {
     if (a.dataset.ruta === ruta) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
+    // El mes viaja con uno al cambiar de vista. Mirar julio en
+    // Movimientos y que Resumen salte a agosto sería perder el hilo a
+    // mitad de una pregunta.
+    a.setAttribute('href', enlace(a.dataset.ruta, elegido));
   }
 }
 
@@ -82,7 +87,62 @@ function marcar(estado) {
 
 let periodo = null;
 let hogar = null;
-let ruta = location.hash.replace('#/', '') || 'resumen';
+let limitesDeMes = null;
+
+/* ---------- la ruta y el mes viven en el hash ----------
+
+   `#/movimientos/2026-07`. El mes va en la dirección y no en una
+   variable suelta por tres razones: el enlace se puede compartir, el
+   botón de atrás del navegador hace lo que uno espera, y al recargar
+   la página se queda donde estaba en vez de saltar a hoy.
+
+   Sin período en el hash se entiende «el mes en curso», que es lo que
+   contestaba la app hasta ahora y lo que sigue contestando `/app/`. */
+
+function leerHash() {
+  const partes = location.hash.replace(/^#\/?/, '').split('/');
+  const mes = partes[1] || '';
+  return {
+    ruta: partes[0] || 'resumen',
+    elegido: /^\d{4}-\d{2}$/.test(mes) ? mes : null
+  };
+}
+
+let { ruta, elegido } = leerHash();
+
+/** Ir a una vista conservando el mes que se está mirando. */
+const enlace = (r, mes) => `#/${r}${mes ? '/' + mes : ''}`;
+
+function irAlMes(destino) {
+  // `null` llega cuando la flecha estaba apagada: no hay a dónde ir.
+  if (!destino) return;
+  location.hash = enlace(ruta, destino === (limitesDeMes && limitesDeMes.ultimo) ? null : destino);
+}
+
+/* ---------- el control del mes ---------- */
+
+function pintarMesNav() {
+  const nav = $('#mesNav');
+  nav.hidden = false;
+  $('#mes').textContent = nombreMes(periodo);
+
+  const atras = mover(periodo, -1, limitesDeMes);
+  const adelante = mover(periodo, 1, limitesDeMes);
+  $('#mesAnterior').disabled = !atras;
+  $('#mesSiguiente').disabled = !adelante;
+
+  /* Que se vea que NO es el mes en curso, y a lo grande. Cada cifra de
+     cada pantalla cambia de significado según el mes que se mira: leer
+     el disponible de julio creyendo que es el de agosto es el error más
+     caro que esta pantalla puede provocar. */
+  const enElActual = esElActual(periodo, limitesDeMes.ultimo);
+  $('#mesHoy').hidden = enElActual;
+  document.body.dataset.mesPasado = enElActual ? 'no' : 'si';
+}
+
+$('#mesAnterior').addEventListener('click', () => irAlMes(mover(periodo, -1, limitesDeMes)));
+$('#mesSiguiente').addEventListener('click', () => irAlMes(mover(periodo, 1, limitesDeMes)));
+$('#mesHoy').addEventListener('click', () => { location.hash = enlace(ruta, null); });
 
 function pintarError(err) {
   const sinRed = err instanceof ErrorDatos && err.sinConexion;
@@ -111,10 +171,23 @@ async function arrancar({ refrescar = false } = {}) {
   try {
     hogar = await datosDelHogar();
     fijarMoneda(hogar && hogar.moneda);
-    periodo = mesDeHoy((hogar && hogar.inicio_mes) || 1);
+    const actual = mesDeHoy((hogar && hogar.inicio_mes) || 1);
+    periodo = elegido || actual;
 
     const D = await cargarHogar(periodo, { refrescar });
     marcar('ok');
+
+    /* Los límites salen de las cuentas y tarjetas, que se traen
+       completas siempre, así que da igual con qué mes se cargó. */
+    limitesDeMes = limites(D, actual);
+
+    /* Un mes escrito a mano en la dirección puede caer fuera del
+       rango. Se corrige yendo al más cercano en vez de enseñar un mes
+       vacío: el hash cambiado dispara otra pasada, y esa ya entra. */
+    if (elegido && (elegido < limitesDeMes.primero || elegido > limitesDeMes.ultimo)) {
+      location.replace(enlace(ruta, elegido < limitesDeMes.primero ? limitesDeMes.primero : null));
+      return;
+    }
 
     // Un hogar sin personas, sin pagos o sin gastos no puede calcular
     // nada. En vez de enseñar una pantalla de ceros, se lleva a
@@ -123,7 +196,7 @@ async function arrancar({ refrescar = false } = {}) {
     if (A.faltantes(D).length) return abrirAsistente();
 
     document.body.dataset.asistente = 'no';
-    $('#mes').textContent = nombreMes(periodo);
+    pintarMesNav();
 
     const v = VISTAS[ruta] || VISTAS.resumen;
     $('#titulo').textContent = v.titulo;
@@ -141,7 +214,7 @@ function abrirAsistente() {
   // dónde navegar.
   document.body.dataset.asistente = 'si';
   $('#titulo').textContent = 'Armemos tu hogar';
-  $('#mes').textContent = '';
+  $('#mesNav').hidden = true;
   asistente({
     contenedor: vista,
     hogar,
@@ -152,7 +225,7 @@ function abrirAsistente() {
 /* ---------- navegación y ciclo de vida ---------- */
 
 window.addEventListener('hashchange', () => {
-  ruta = location.hash.replace('#/', '') || 'resumen';
+  ({ ruta, elegido } = leerHash());
   if (document.body.dataset.asistente === 'si') return;
   arrancar();
 });

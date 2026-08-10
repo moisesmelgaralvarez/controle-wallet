@@ -42,7 +42,7 @@ aplicar una migración donde no toca.
 
 ## 3. Qué ya está hecho
 
-`main` va en **v0.14.0**. Todo pasa por Pull Request; `main` está protegido y ni
+`main` va en **v0.15.0**. Todo pasa por Pull Request; `main` está protegido y ni
 el dueño puede escribirle directo (comprobado). Dos verificaciones obligatorias en
 CI.
 
@@ -68,7 +68,8 @@ recuperación funcionando en producción.
 **Etapa 4 · Interfaz.** Listos: el armazón con riel y barra de pestañas, el
 **asistente de arranque** (5 pasos), **Resumen**, **Movimientos**,
 **Presupuesto** —donde se edita todo lo que el asistente creó—, **Proyectos**
-con veredicto y prioridad por mérito, e **Historia** mes a mes.
+con veredicto y prioridad por mérito, e **Historia** mes a mes. El armazón
+tiene **selector de mes**: el período va en el hash y lo comparten todas.
 
 **Etapa 7 · Sitio público.** Seis páginas en `controlewallet.com`, con vitrina de
 dispositivos dibujada en HTML y CSS, y parallax solo con CSS.
@@ -76,7 +77,7 @@ dispositivos dibujada en HTML y CSS, y parallax solo con CSS.
 ### Las pruebas
 
 ```
-npm run pruebas               263 · núcleo, armador, equivalencia, filas, alcance y paginado
+npm run pruebas               274 · núcleo, armador, equivalencia, filas, alcance y paginado
 npm run pruebas:aislamiento    24 · ~55 intentos de violar el aislamiento
 npm run pruebas:integracion    12 · base → armador → núcleo, contra la base real
 ```
@@ -227,11 +228,8 @@ gh pr create
 - **Confirmar ingresos mes a mes** ← lo siguiente. La distinción estimado /
   confirmado. El editor del Presupuesto ya deja la plantilla —el mes típico— en
   su sitio; falta la pantalla que convierte esa estimación en hecho. Historia ya
-  marca los meses que usan el monto típico, así que se ve cuáles faltan.
-- **Ver un mes pasado.** Hoy la app siempre muestra el mes en curso: no hay forma
-  de cambiar de período desde ninguna pantalla. La app anterior dejaba tocar un
-  mes en Historia para abrirlo. Hace falta un selector de mes en el armazón, y de
-  ahí lo aprovechan todas las vistas.
+  marca los meses que usan el monto típico, y el selector de mes ya deja pararse
+  en el que toque.
 - **El saldo de las cuentas y el patrimonio**, que ya se calculan en el servidor
   pero todavía no los enseña ninguna pantalla. `historico` los devuelve; falta
   ponerlos en Resumen y donde toque.
@@ -268,7 +266,7 @@ gh pr create
 ## 10. Cómo empezar la sesión nueva
 
 1. Leé `README.md`, `CAMBIOS.md`, `VUELTA-ATRAS.md` y `SECRETOS.md`.
-2. Corré `npm run pruebas` — deben salir 263 en verde.
+2. Corré `npm run pruebas` — deben salir 274 en verde.
 3. Mirá `sitio/app/vistas/movimientos.js` como referencia del estilo, y
    `vistas/presupuesto.js` con `datos/filas.js` para lo que se edita: ahí está
    cómo se arma una fila, cómo se valida y por qué eso vive fuera de la pantalla.

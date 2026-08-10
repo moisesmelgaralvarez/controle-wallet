@@ -34,6 +34,7 @@ import { resumen } from './vistas/resumen.js';
 import { movimientos } from './vistas/movimientos.js';
 import { presupuesto } from './vistas/presupuesto.js';
 import { proyectos } from './vistas/proyectos.js';
+import { historia } from './vistas/historia.js';
 import { asistente } from './vistas/asistente.js';
 
 /* Primero lo que viene del correo: quien acaba de confirmar su cuenta
@@ -52,7 +53,8 @@ const VISTAS = {
   resumen:     { titulo: 'Resumen',     pintar: resumen },
   movimientos: { titulo: 'Movimientos', pintar: movimientos },
   presupuesto: { titulo: 'Presupuesto', pintar: presupuesto },
-  proyectos:   { titulo: 'Proyectos',   pintar: proyectos }
+  proyectos:   { titulo: 'Proyectos',   pintar: proyectos },
+  historia:    { titulo: 'Historia',    pintar: historia }
 };
 
 /* La sección activa se marca en los dos juegos de navegación —riel y

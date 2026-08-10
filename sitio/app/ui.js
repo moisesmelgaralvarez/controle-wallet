@@ -49,6 +49,9 @@ export const nombreMes = per => {
   return `${cap(MESES[+m - 1] || '')} ${y}`;
 };
 
+/** El mes en tres letras, para las marcas de una gráfica. */
+export const mesCorto = per => MES_CORTO[+String(per).split('-')[1] - 1] || '';
+
 export const diaCorto = f => {
   if (!f) return '';
   const [, m, d] = String(f).split('-');

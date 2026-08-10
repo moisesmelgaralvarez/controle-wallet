@@ -547,3 +547,89 @@ body[data-asistente="si"] .tope { display: none; }
 .alertas li[data-nivel="serious"]  { border-left-color: color-mix(in oklab, var(--alerta) 55%, transparent); }
 
 .proy__aportes { margin-top: var(--e1); border-top: 1px solid var(--borde); }
+
+/* ============================================================
+   Historia
+   ============================================================ */
+
+/* La cifra que contesta la pregunta de la pantalla, en el tamaño que
+   le toca a una respuesta. */
+.destacado { display: grid; gap: 0.35rem; }
+.destacado__t { font-size: var(--t-sm); color: var(--tenue); }
+.destacado__v {
+  font-size: clamp(2rem, 1.2rem + 3vw, 3.2rem); font-weight: 700;
+  letter-spacing: -0.04em; font-variant-numeric: tabular-nums;
+}
+.destacado__v.bien { color: var(--acento); }
+.destacado__v.mal  { color: var(--alerta); }
+.destacado__d { margin: 0; font-size: var(--t-sm); color: var(--tenue); max-width: 62ch; }
+.destacado__d b { color: var(--tinta); }
+
+/* ---------- la gráfica, en HTML y CSS ----------
+
+   Dibujada con elementos y no con SVG por lo mismo que la vitrina del
+   sitio público: sigue el modo claro u oscuro sin trabajo extra, se
+   lee con cualquier tamaño de letra y no pesa nada. Las alturas las
+   pone JavaScript por CSSOM, que la CSP sí permite — lo que prohíbe
+   es un atributo `style` escrito en el HTML. */
+
+.grafica {
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr);
+  gap: 0.3rem; align-items: end; margin-bottom: var(--e2);
+}
+.grafica__mes { display: grid; gap: 0.3rem; justify-items: center; min-width: 0; }
+
+/* La cifra de cada mes solo aparece cuando la columna le da. Con doce
+   meses en un teléfono, la columna mide 18 px y la cifra 71: se pisan
+   unas con otras y se salen del panel. La lista de «Cada mes» las
+   lleva todas completas, así que abajo de ese ancho la gráfica se
+   queda con lo suyo, que es enseñar la FORMA. Es el mismo principio
+   de los escalones al revés: en la pantalla chica se muestra menos,
+   no lo mismo apretado. */
+.grafica__quedo {
+  display: none;
+  font-size: var(--t-xs); font-weight: 650; font-variant-numeric: tabular-nums;
+  white-space: nowrap; color: var(--acento);
+}
+.grafica__quedo[data-tono="mal"]   { color: var(--alerta); }
+.grafica__quedo[data-tono="tenue"] { color: var(--tenue); font-weight: 550; }
+
+/* Va DESPUÉS de la regla que la esconde, no dentro del bloque de
+   arriba: un `@media` acota cuándo aplica una regla, no le sube la
+   prioridad, y con la misma especificidad gana la última del archivo.
+   Ese error ya se pagó una vez con la barra de pestañas. */
+@media (min-width: 1250px) { .grafica__quedo { display: block; } }
+
+.grafica__barras {
+  display: flex; align-items: flex-end; justify-content: center; gap: 2px;
+  height: 7rem; width: 100%;
+}
+@media (min-width: 900px) { .grafica__barras { height: 10rem; } }
+
+.grafica__b { display: block; width: 45%; max-width: 1.1rem; border-radius: 3px 3px 0 0; }
+.grafica__b--ingreso { background: var(--acento); }
+.grafica__b--gasto   { background: color-mix(in oklab, var(--acento) 32%, var(--elevado)); }
+
+/* El mes en curso va apagado: lleva unos días contra meses enteros y
+   no debe leerse como un resultado cerrado. */
+.grafica__mes[data-encurso="si"] .grafica__b { opacity: 0.45; }
+
+.grafica__etq { font-size: var(--t-xs); color: var(--tenue); white-space: nowrap; }
+
+/* Con doce meses en un teléfono las marcas se tocan entre sí. Se
+   muestra una de cada dos, contadas DESDE EL FINAL para que la del
+   mes en curso —la que más se busca— nunca sea la que se esconde. */
+@media (max-width: 599px) {
+  .grafica__mes:nth-last-child(even) .grafica__etq { visibility: hidden; }
+}
+
+.leyenda { display: flex; flex-wrap: wrap; gap: var(--e2); font-size: var(--t-xs); color: var(--tenue); }
+.leyenda span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.leyenda__m { width: 0.7rem; height: 0.7rem; border-radius: 3px; display: inline-block; }
+.leyenda__m--ingreso { background: var(--acento); }
+.leyenda__m--gasto   { background: color-mix(in oklab, var(--acento) 32%, var(--elevado)); }
+
+/* Una fila de lista que no se toca: misma forma que `.fila-cfg`, sin
+   la promesa de que al tocarla pasa algo. */
+.fila-cfg--quieta { cursor: default; }
+.fila-cfg--quieta:hover { background: transparent; }

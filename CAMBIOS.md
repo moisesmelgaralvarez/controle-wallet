@@ -4,6 +4,68 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.14.0 — Historia: cómo van los meses
+
+*Sigue la etapa 4.*
+
+**Qué se hizo**
+
+- **La pantalla de Historia.** El Resumen dice cómo va el mes; esta dice cómo van
+  los meses. Cuánto queda al mes en promedio, la gráfica de ingreso contra gasto
+  mes a mes, el mejor mes y el más apretado, y la lista completa con lo que quedó
+  y qué porcentaje del ingreso representa.
+- Se apoya en la Edge Function que entró en v0.13.0: el cálculo ya venía hecho,
+  faltaba la pantalla.
+- La gráfica está **dibujada en HTML y CSS**, no en SVG ni con una librería. Sigue
+  el modo claro u oscuro, se lee con cualquier tamaño de letra y no pesa nada.
+
+**Tres cosas que dice y no se calla**
+
+- **El mes en curso queda fuera del promedio y de los récords**, y se marca
+  apagado en la gráfica. Lleva unos días de gasto contra meses enteros: compararlo
+  sería darse una palmada en la espalda por no haber terminado el mes.
+- **Un mes sin ingreso confirmado usa el monto típico**, y la pantalla lo advierte:
+  el gasto es real, el ingreso contra el que se resta no.
+- **Solo aparecen los meses con algo registrado.** Lo que no se anotó no se
+  inventa.
+
+**Por qué esta pantalla sí espera al servidor**
+
+Proyectos pinta de inmediato y sube el veredicto cuando llega la respuesta, porque
+lo que dibuja de entrada ya es cierto. Aquí no hay equivalente: la historia **es**
+el histórico. Un «promedio» calculado con un mes sería inventado, y se leería como
+un hecho. Así que se espera, se dice que se está esperando, y si falla se ofrece
+reintentar.
+
+**Un error que se tragaba lo importante**
+
+La Edge Function se niega a calcular con historia incompleta y dice por qué —
+«faltaron 412 filas de movimientos»—, pero la pantalla mostraba **«Falló el
+servidor. Intentá de nuevo»**: el mensaje genérico del código 500 le ganaba al
+motivo real. Es la misma familia del error de entrada que decía «los datos
+enviados no son válidos» a quien tenía el correo sin confirmar.
+
+Ahora las funciones marcan sus errores con `propio`, y esos pasan tal cual. La
+marca es explícita en vez de una lista de patrones: una lista hay que mantenerla
+al día, y se queda vieja el día que alguien agrega un mensaje.
+
+**Dos arreglos encontrados midiendo**
+
+- En teléfono, la columna de cada mes mide **18 px** y la cifra que iba encima
+  mide **71**: se pisaban entre sí y se salían del panel. Ahora la cifra aparece
+  solo cuando la columna le da, y la lista de abajo las lleva todas. Es el
+  principio de los escalones al revés: en la pantalla chica se muestra **menos**,
+  no lo mismo apretado.
+- Las marcas de mes también se tocaban. Se muestra una de cada dos, contadas
+  **desde el final**, para que la del mes en curso nunca sea la que se esconde.
+
+Medido en los dos modos componiendo capas: 91 elementos, mínimo **5.7** en claro y
+**7.42** en oscuro. Las dos series de la gráfica se distinguen entre sí con 3.55 y
+4.17, por encima del 3:1 que pide la norma para un gráfico. Sin desbordes a 360,
+768, 1440 ni 2000 px. **263 pruebas en verde.**
+
+---
+
 ## v0.13.0 — El histórico, calculado donde sí cabe
 
 *Cierra el hueco que dejó Proyectos.*

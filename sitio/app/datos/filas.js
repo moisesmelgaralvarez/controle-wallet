@@ -198,5 +198,64 @@ export const FILAS = {
     fecha: d.fecha,
     monto: noNeg(d.monto),
     nota: d.nota || null
+  }),
+
+  /**
+   * El mes en cierre: el plan congelado y la cuadratura que lo respalda.
+   *
+   * La misma fila sirve para guardar a medias y para cerrar, y esa es
+   * la razón de que exista `ctx.cerrar`. Poder guardar sin cerrar no es
+   * una comodidad: las justificaciones de los excesos se teclean
+   * mientras se revisa, y perderlas porque una conciliación todavía no
+   * cuadra haría que a la segunda vez nadie las escriba.
+   *
+   * `montos` es la foto del plan que rigió ESE mes. Si ya estaba
+   * congelado se respeta la que tenía: cerrar cuadra las cuentas, no
+   * cambia el plan que estuvo vigente.
+   */
+  presupuesto_mes: (d, ctx) => ({
+    hogar_id: ctx.hogarId,
+    periodo: ctx.periodo,
+    montos: d.montos || {},
+    notas: d.notas || {},
+    ajustes: d.ajustes || {},
+    // El cero es un dato: «conté y no había nada». Vacío es «nadie
+    // contó», y eso deja la conciliación sin resolver a propósito.
+    efectivo_contado: dijoAlgo(d.efectivoContado) ? noNeg(d.efectivoContado) : null,
+    cerrado: Boolean(ctx.cerrar),
+    // Solo al cerrar. Guardar a medias no puede escribir una fecha de
+    // cierre: sería decir que pasó algo que no pasó.
+    ...(ctx.cerrar ? { cerrado_el: ctx.cerradoEl || new Date().toISOString() } : {})
   })
 };
+
+/**
+ * La apertura que el cierre de un mes le siembra al siguiente.
+ *
+ * Va aparte del armador de arriba porque escribe OTRA fila: la del mes
+ * que viene. Y lleva solo tres columnas a propósito — `hogar_id`,
+ * `periodo` y `apertura`— porque el upsert actualiza únicamente las
+ * columnas que van en el cuerpo. Mandar la fila entera le borraría al
+ * mes siguiente lo que ya tuviera guardado.
+ *
+ * `derivada` no se guarda: que esté escrita en la base ES lo que la
+ * hace no derivada. Guardar un `false` sería dejar que alguien lo
+ * ponga en `true` y convierta un hecho en una deducción.
+ */
+export const filaApertura = (saldos, ctx) => ({
+  hogar_id: ctx.hogarId,
+  periodo: ctx.periodo,
+  apertura: {
+    fecha: saldos.fecha,
+    cuentas: saldos.cuentas || {},
+    tarjetas: saldos.tarjetas || {},
+    financiamientos: saldos.financiamientos || {},
+    // Sin recortar a cero. Un efectivo negativo es imposible en la
+    // vida real, y justo por eso hay que dejarlo pasar: recortarlo
+    // escondería el error —un retiro sin anotar, un gasto marcado como
+    // efectivo cuando fue con tarjeta— convirtiéndolo en un arranque
+    // creíble. El núcleo ya lo marca `imposible` y el cierre no deja
+    // pasar una conciliación sin resolver.
+    efectivo: Number(saldos.efectivo) || 0
+  }
+});

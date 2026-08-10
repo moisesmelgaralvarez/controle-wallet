@@ -36,7 +36,15 @@ import { saldoFinanciamiento } from './financiamientos.js';
  */
 const montosDeMes = (D, per) => {
   const m = D.presupuestoMes && D.presupuestoMes[per];
-  return m && m.montos ? m.montos : null;
+  // Una foto VACÍA no es una foto. Parece una distinción de abogado y
+  // no lo es: la columna `montos` es `not null default '{}'`, así que
+  // toda fila de `presupuesto_mes` trae `{}` aunque nadie haya
+  // congelado nada — y cerrar un mes crea la fila del SIGUIENTE para
+  // sembrarle la apertura. Leyendo `{}` como foto, ese mes saldría con
+  // todos sus rubros en cero: presupuesto de comida cero, de servicios
+  // cero, y la app diciendo que se pasaron en todo. En la app anterior
+  // no podía pasar porque ahí la propiedad simplemente no existía.
+  return m && m.montos && Object.keys(m.montos).length ? m.montos : null;
 };
 
 const mesCongelado = (D, per) => Boolean(montosDeMes(D, per));

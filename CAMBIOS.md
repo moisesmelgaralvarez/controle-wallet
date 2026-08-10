@@ -4,6 +4,66 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.17.0 — El capital, y qué conviene hacer primero
+
+*Cierra la etapa 4.*
+
+**Qué se hizo**
+
+- **El capital**, en el Resumen: lo que tienen menos lo que deben, con la
+  composición completa — banco, efectivo en mano, lo autorizado en tarjeta que
+  todavía no sale en el corte, lo que se paga este mes sin intereses, lo que
+  revuelve y sí los genera, y los financiamientos.
+- **El saldo de cada cuenta**, que hasta ahora no se enseñaba en ninguna parte.
+- **El diagnóstico**: el colchón de emergencia contra los tres meses que
+  recomienda cualquier manual, lo que cuesta la deuda al mes y al año, y **los
+  pasos en orden**.
+
+**El orden ES el consejo**
+
+Un asesor no da consejos sueltos: dice qué va primero. Apartar para un proyecto
+mientras se revuelve una tarjeta al 50% anual es perder dinero todos los meses, por
+disciplinado que se sienta. Por eso los pasos van numerados y con el color de su
+urgencia, no como una lista de sugerencias.
+
+**El capital es la cifra que no se puede maquillar.** El disponible del mes sube y
+baja; el saldo de una cuenta puede verse bien con la tarjeta reventada. Esto junta
+las dos caras y dice si el hogar avanza o retrocede.
+
+**Sin bloquear la pantalla**
+
+Los tres bloques vienen de la Edge Function, que recorre toda la vida del hogar. El
+Resumen dibuja el mes de inmediato —que ya es cierto con lo que hay— y agrega el
+resto cuando la respuesta llega. Si el viaje falla, se queda el mes, que nunca fue
+mentira.
+
+**Un defecto que escondía media pantalla**
+
+`hidden` no estaba escondiendo nada. La regla del navegador —`[hidden] { display:
+none }`— vale (0,1,0) de especificidad, **lo mismo** que `.boton { display:
+inline-flex }` o `.mes-nav { display: flex }`, y entre una regla del autor y una
+del navegador, con igual especificidad, **gana el autor**.
+
+Se veía: el botón «Volver a hoy» seguía en pantalla estando en el mes actual, y el
+selector de mes no se escondía durante el asistente. Es la misma familia del
+`@media` que acota pero no sube la prioridad, y del botón gris sobre verde. Ahora
+hay una sola regla, con `!important` y a propósito: `hidden` significa «esto no
+está», y ninguna clase debería poder discutirlo.
+
+**Una prueba de contrato**
+
+Tres vistas leen campos de la respuesta del servidor. Si alguien renombra uno,
+nada se rompe de forma visible: el campo llega `undefined`, la vista hace su
+`if (!pat) return ''` y el bloque **simplemente no aparece**. Ahora el contrato se
+lee del código de la función y se compara contra lo que cada pantalla consume.
+Encontró un error en sí misma la primera vez que corrió: `periodo` va como
+propiedad abreviada, sin dos puntos, y el lector no la veía.
+
+Medido: 24 elementos en oscuro con mínimo **7.42**, 22 en claro con mínimo
+**6.52**, ninguno bajo AA. Sin desbordes a 360 ni 1440. **282 pruebas en verde.**
+
+---
+
 ## v0.16.0 — Confirmar lo que de verdad entró
 
 *Cierra la etapa 4.*

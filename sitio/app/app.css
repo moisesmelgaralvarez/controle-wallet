@@ -18,6 +18,22 @@
    un bloque necesita límite de lectura, se lo pone ese bloque.
    ============================================================ */
 
+/* ---------- que `hidden` esconda ----------
+
+   La regla del navegador es `[hidden] { display: none }` y vale
+   (0,1,0) de especificidad: lo mismo que `.boton { display:
+   inline-flex }` o `.mes-nav { display: flex }`. Y entre una regla del
+   autor y una del navegador, con igual especificidad, gana el autor.
+
+   Resultado: el botón «Volver a hoy» seguía en pantalla con el
+   atributo puesto, y el selector de mes no se escondía durante el
+   asistente. Es la misma familia del `@media` que acota pero no sube
+   la prioridad, y del botón gris sobre verde.
+
+   `!important` aquí es deliberado y va una sola vez: `hidden` significa
+   «esto no está», y ninguna clase debería poder discutirlo. */
+[hidden] { display: none !important; }
+
 /* ---------- estructura ---------- */
 
 .app {
@@ -684,3 +700,40 @@ body[data-mes-pasado="si"] .mes-nav .tope__mes {
   color: var(--tinta);
 }
 .hoja__nota.ojo strong { color: var(--alerta); }
+
+/* ============================================================
+   Capital y diagnóstico
+   ============================================================ */
+
+.colchon { display: grid; gap: 0.5rem; }
+.colchon__t { display: flex; justify-content: space-between; align-items: baseline; gap: var(--e2); }
+.colchon__t span { font-size: var(--t-sm); font-weight: 600; }
+.colchon__t strong {
+  font-size: var(--t-md); font-weight: 750; letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.colchon__t strong.bien { color: var(--acento); }
+.colchon__t strong.mal  { color: var(--alerta); }
+
+/* Los pasos del diagnóstico van NUMERADOS y en orden. El orden es el
+   consejo: abonar a una tarjeta al 50% antes que apartar para una
+   meta no es una opinión, es aritmética. Una lista suelta de consejos
+   perdería justo eso. */
+.pasos {
+  list-style: none; counter-reset: paso; padding: 0;
+  margin: var(--e3) 0 0; display: grid; gap: var(--e2);
+}
+.pasos li {
+  counter-increment: paso;
+  border-left: 3px solid var(--borde); padding: 0 0 0 var(--e2);
+}
+.pasos li[data-nivel="critical"] { border-left-color: var(--alerta); }
+.pasos li[data-nivel="serious"]  { border-left-color: color-mix(in oklab, var(--alerta) 55%, transparent); }
+.pasos li[data-nivel="good"]     { border-left-color: var(--acento); }
+
+.pasos strong { display: block; font-size: var(--t-sm); margin-bottom: 0.25rem; }
+.pasos strong::before { content: counter(paso) '. '; color: var(--tenue); font-weight: 650; }
+.pasos p { margin: 0; font-size: var(--t-sm); color: var(--tenue); }
+
+/* Un enlace dentro de una nota de aviso tiene que verse como enlace. */
+.panel__nota a { color: var(--acento); }

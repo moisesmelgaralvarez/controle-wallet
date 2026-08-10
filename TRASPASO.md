@@ -42,7 +42,7 @@ aplicar una migración donde no toca.
 
 ## 3. Qué ya está hecho
 
-`main` va en **v0.16.0**. Todo pasa por Pull Request; `main` está protegido y ni
+`main` va en **v0.17.0**. Todo pasa por Pull Request; `main` está protegido y ni
 el dueño puede escribirle directo (comprobado). Dos verificaciones obligatorias en
 CI.
 
@@ -77,7 +77,7 @@ dispositivos dibujada en HTML y CSS, y parallax solo con CSS.
 ### Las pruebas
 
 ```
-npm run pruebas               277 · núcleo, armador, equivalencia, filas, alcance y paginado
+npm run pruebas               282 · núcleo, armador, equivalencia, filas, alcance y paginado
 npm run pruebas:aislamiento    24 · ~55 intentos de violar el aislamiento
 npm run pruebas:integracion    12 · base → armador → núcleo, contra la base real
 ```
@@ -164,6 +164,11 @@ El campo «desde qué mes» de la tarjeta se rellenaba con el mes de hoy al edit
 y eso le borraba de la deuda todo lo anterior. Los valores por omisión son para
 CREAR; al editar, lo que estaba vacío se queda vacío.
 
+**`hidden` no esconde si una clase pone `display`.** La regla del navegador vale
+(0,1,0), lo mismo que `.boton` o `.mes-nav`, y entre autor y navegador gana el
+autor. El botón «Volver a hoy» seguía en pantalla. Hay una sola regla con
+`!important` en `app.css` que lo resuelve para toda la app.
+
 **PostgREST devuelve las columnas `numeric` como TEXTO.** Un `"8000.00"` sin
 convertir no revienta: se concatena, y el número absurdo aparece tres pantallas
 después. Todo pasa por `num()` en el armador, y hay una prueba dedicada.
@@ -224,10 +229,8 @@ gh pr create
 
 ## 8. Lo que falta, en orden
 
-**Etapa 4 — completar la interfaz** · queda una sola cosa
-- **El saldo de las cuentas y el patrimonio**, que ya se calculan en el servidor
-  pero todavía no los enseña ninguna pantalla. `historico` los devuelve; falta
-  ponerlos en Resumen y donde toque.
+**Etapa 4 — completa.** Resumen, Movimientos, Presupuesto con confirmación de
+ingresos, Proyectos, Historia, capital y diagnóstico, y selector de mes.
 
 **Etapa 5 — funciones pesadas**
 - Importar estados de cuenta (BAC, Ficohsa, CSV, PDF) con conciliación. El
@@ -261,7 +264,7 @@ gh pr create
 ## 10. Cómo empezar la sesión nueva
 
 1. Leé `README.md`, `CAMBIOS.md`, `VUELTA-ATRAS.md` y `SECRETOS.md`.
-2. Corré `npm run pruebas` — deben salir 277 en verde.
+2. Corré `npm run pruebas` — deben salir 282 en verde.
 3. Mirá `sitio/app/vistas/movimientos.js` como referencia del estilo, y
    `vistas/presupuesto.js` con `datos/filas.js` para lo que se edita: ahí está
    cómo se arma una fila, cómo se valida y por qué eso vive fuera de la pantalla.

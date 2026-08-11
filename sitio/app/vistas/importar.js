@@ -51,10 +51,26 @@ export function importar({ contenedor, D, hogar, recargar }) {
   const tarjetas = (D.tarjetas || []).filter(t => (t.tipo || 'credito') === 'credito');
   const gastos = D.gastos || [];
 
-  const destinos = [
-    ...cuentas.map(c => ({ valor: 'cuenta:' + c.id, texto: `${c.nombre} (cuenta)` })),
-    ...tarjetas.map(t => ({ valor: 'tarjeta:' + t.id, texto: `${t.nombre} (tarjeta)` }))
-  ];
+  /* Los destinos POSIBLES para este archivo, y solo esos.
+     Un estado de cuenta y el de una tarjeta no son intercambiables: en
+     la cuenta un cargo resta y en la tarjeta suma a lo que se debe, y
+     los pagos de tarjeta se registran desde la cuenta y no al revés.
+     Ofrecer los dos juntos deja elegir el equivocado con un clic, y el
+     error no da ningún aviso: entra completo y descuadra el mes.
+     Apareció con un CSV de cuenta cuyo único destino ofrecido era una
+     tarjeta. */
+  const posibles = lote => lote && lote.tipo === 'tarjeta'
+    ? tarjetas.map(t => ({ valor: 'tarjeta:' + t.id, texto: `${t.nombre} (tarjeta)` }))
+    : cuentas.map(c => ({ valor: 'cuenta:' + c.id, texto: `${c.nombre} (cuenta)` }));
+
+  const hayAlguno = cuentas.length + tarjetas.length > 0;
+
+  /** El número registrado del destino elegido, si tiene alguno. */
+  const numeroDe = d => {
+    if (!d) return '';
+    const lista = d.clase === 'cuenta' ? cuentas : tarjetas;
+    return (lista.find(x => x.id === d.id) || {}).numero || '';
+  };
 
   const nombreRubro = id => {
     if (!id || id === 'otros') return 'Sin clasificar';
@@ -168,7 +184,8 @@ export function importar({ contenedor, D, hogar, recargar }) {
   /* ---------- pintar ---------- */
 
   function pintar() {
-    const sinDestinos = !destinos.length;
+    const sinDestinos = !hayAlguno;
+    const destinos = posibles(lote);
     /* El saldo declarado NO se llama igual en los dos casos: una cuenta
        trae `saldoFin` y una tarjeta `saldoCorte`. Mismo criterio que en
        `datos/importar.js`, que es quien lo escribe. */
@@ -244,9 +261,26 @@ export function importar({ contenedor, D, hogar, recargar }) {
                      registradas coincide. Elegila a mano, o corregí el número en
                      Presupuesto para que la próxima vez se reconozca sola.</p>
                 </div>`}
-              ${selector('destino', 'Cuenta o tarjeta',
-                [{ valor: '', texto: '— elegir —' }, ...destinos],
-                destino ? destino.clase + ':' + destino.id : '')}
+              ${destinos.length
+                ? selector('destino', lote.tipo === 'tarjeta' ? 'Tarjeta' : 'Cuenta',
+                    [{ valor: '', texto: '— elegir —' }, ...destinos],
+                    destino ? destino.clase + ':' + destino.id : '')
+                : `<div class="aviso aviso--error">
+                     <strong>No hay ${lote.tipo === 'tarjeta' ? 'ninguna tarjeta' : 'ninguna cuenta'} registrada</strong>
+                     <p>Este archivo es el estado de ${lote.tipo === 'tarjeta' ? 'una tarjeta' : 'una cuenta'},
+                        y no hay ${lote.tipo === 'tarjeta' ? 'tarjetas' : 'cuentas'} donde ponerlo.
+                        Agregala en Presupuesto —con su número, para que la próxima vez se
+                        reconozca sola— y volvé.</p>
+                   </div>
+                   <button class="boton boton--borde" type="button" data-ir-presupuesto>Ir a Presupuesto</button>`}
+              ${destino && lote.cuenta && !numeroDe(destino) ? `
+                <p class="panel__nota">
+                  <label class="campo campo--pegado">
+                    <span>Guardar <b>${esc(lote.cuenta)}</b> como su número</span>
+                    <input type="checkbox" data-aprender-numero checked>
+                    <small class="campo__ayuda">Así la próxima vez se reconoce sola y no hay que elegirla a mano.</small>
+                  </label>
+                </p>` : ''}
             </section>` : ''}
 
           ${plan ? `
@@ -355,7 +389,11 @@ export function importar({ contenedor, D, hogar, recargar }) {
       const antes = b.textContent;
       b.textContent = 'Importando…';
       try {
-        const hecho = await aplicar({ plan, lote, destino, hogarId: hogar.id });
+        const aprender = $('[data-aprender-numero]', contenedor);
+        const hecho = await aplicar({
+          plan, lote, destino, hogarId: hogar.id,
+          aprenderNumero: Boolean(aprender && aprender.checked)
+        });
         // Lo que dice la BASE que pasó, no lo que el navegador creía.
         avisar(`Listo: ${hecho.movimientos} gastos, ${hecho.retiros} retiros y ` +
                `${hecho.pagos} pagos${hecho.borrados ? `, reemplazando ${hecho.borrados}` : ''}.`);

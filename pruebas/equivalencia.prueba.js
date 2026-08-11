@@ -30,7 +30,19 @@ function nucleoViejo() {
   return ventana.Asesor;
 }
 
-const viejo = nucleoViejo();
+/* El importador viejo vive en OTRO archivo y cuelga de
+   `window.Importar`. Cuando se portó, sus funciones entraron al mismo
+   `nucleo/index.js` que el resto — así que para esta comparación las
+   dos superficies viejas se juntan en una. Sin esto, cada función del
+   importador aparecería como «inventada». */
+function importadorViejo() {
+  const src = readFileSync(new URL('../heredado/importar.js', import.meta.url), 'utf8');
+  const ventana = {};
+  new Function('window', src)(ventana);
+  return ventana.Importar || {};
+}
+
+const viejo = { ...nucleoViejo(), ...importadorViejo() };
 
 test('la API nueva expone todo lo que exponía la vieja', () => {
   const faltan = Object.keys(viejo).filter(k => !(k in nuevo));

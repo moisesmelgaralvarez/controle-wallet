@@ -379,7 +379,32 @@ function decodificar(buffer) {
   return new TextDecoder('iso-8859-1').decode(buffer);
 }
 
-function filasCsv(texto) {
+/**
+ * Con qué está separado este archivo.
+ *
+ * La coma no es universal, y en Honduras casi nunca lo es: donde el
+ * decimal se escribe con coma, los bancos exportan con punto y coma
+ * para no chocar consigo mismos. También aparece el tabulador, que es
+ * lo que sale al copiar de Excel.
+ *
+ * Se decide contando fuera de comillas y quedándose con el que más
+ * aparece. Suponer la coma dejaba el archivo entero en UNA columna, y
+ * entonces no se encontraba el encabezado y el banco parecía
+ * ilegible — cuando el único problema era un punto y coma.
+ */
+function separadorDe(texto) {
+  const muestra = texto.slice(0, 8000);
+  let entre = false;
+  const cuenta = { ',': 0, ';': 0, '\t': 0, '|': 0 };
+  for (const c of muestra) {
+    if (c === '"') entre = !entre;
+    else if (!entre && c in cuenta) cuenta[c]++;
+  }
+  return Object.keys(cuenta).reduce((a, b) => cuenta[b] > cuenta[a] ? b : a, ',');
+}
+
+function filasCsv(texto, sep) {
+  const separador = sep || separadorDe(texto);
   const filas = [];
   let campo = '', fila = [], entre = false;
   for (let i = 0; i < texto.length; i++) {
@@ -388,7 +413,7 @@ function filasCsv(texto) {
       if (c === '"') { if (texto[i + 1] === '"') { campo += '"'; i++; } else entre = false; }
       else campo += c;
     } else if (c === '"') entre = true;
-    else if (c === ',') { fila.push(campo); campo = ''; }
+    else if (c === separador) { fila.push(campo); campo = ''; }
     else if (c === '\n') { fila.push(campo); filas.push(fila); fila = []; campo = ''; }
     else if (c !== '\r') campo += c;
   }
@@ -431,7 +456,15 @@ function mapearColumnas(filas) {
    ============================================================ */
 
 const numero = s => {
-  const t = String(s || '').replace(/[^\d.,-]/g, '').replace(/,/g, '');
+  let t = String(s || '').replace(/[^\d.,-]/g, '');
+  /* «1.250,75» y «1,250.75» son el mismo dinero escrito de dos maneras,
+     y quitar las comas a ciegas convierte el primero en 1250075 —mil
+     veces más— sin dar ningún error. Manda el ÚLTIMO separador: el que
+     está más a la derecha es el decimal, porque los miles nunca van al
+     final. */
+  const coma = t.lastIndexOf(','), punto = t.lastIndexOf('.');
+  if (coma > punto) t = t.replace(/\./g, '').replace(',', '.');
+  else t = t.replace(/,/g, '');
   const v = parseFloat(t);
   return isNaN(v) ? 0 : v;
 };
@@ -612,6 +645,19 @@ function adaptadorCsv(texto) {
   const saldoFin = numero((filas.map(f => f.join(' ')).join('\n')
                     .match(/Saldo final:?\s*([\d.,-]+)/i) || [])[1]);
 
+  return { banco: 'CSV', tipo: 'cuenta', cuenta, titular, saldoIni, saldoFin,
+           movs: movsDeTabla(filas, cab) };
+}
+
+/**
+ * De una tabla con encabezado a la lista de movimientos.
+ *
+ * Vive aparte porque lo usan dos caminos: el CSV y el lector genérico
+ * de PDF. Son el mismo problema —hay columnas rotuladas y hay que
+ * leerlas— y tener dos copias significaría que un banco raro se
+ * arregla en una y sigue roto en la otra.
+ */
+function movsDeTabla(filas, cab) {
   const m = cab.mapa;
   const movs = [];
   for (let i = cab.fila + 1; i < filas.length; i++) {
@@ -628,9 +674,9 @@ function adaptadorCsv(texto) {
       balance: m.balance != null ? numero(f[m.balance]) : null
     });
   }
-
-  return { banco: 'CSV', tipo: 'cuenta', cuenta, titular, saldoIni, saldoFin, movs };
+  return movs;
 }
+
 
 /* ============================================================
    6. Clasificación
@@ -810,7 +856,18 @@ async function leerArchivo(archivo, D) {
   if (esPdf) {
     const rs = await renglonesPdf(buf);
     lote = adaptadorBac(rs) || adaptadorFicohsa(rs);
-    if (!lote) throw new Error('No reconozco el formato de ese PDF.');
+    if (!lote) {
+      /* No se intenta leer un PDF desconocido a la brava. El texto de
+         un PDF pierde la estructura de columnas: cuando una celda va
+         vacía DESAPARECE y las de la derecha se corren, así que el
+         saldo se lee como si fuera el crédito. Está medido. Un número
+         creíble y falso es peor que no leer el archivo, y el CSV o
+         Excel del mismo banco sí conserva las columnas vacías. */
+      throw new Error(
+        'No reconozco ese PDF. Descargá el mismo movimiento en CSV o Excel desde ' +
+        'la banca en línea: ese formato se lee de cualquier banco, porque conserva ' +
+        'las columnas. De un PDF solo puedo leer BAC y Ficohsa, que tienen lector propio.');
+    }
   } else {
     lote = adaptadorCsv(decodificar(buf));
     if (!lote) throw new Error('No encuentro las columnas de fecha, descripción y monto en ese archivo.');

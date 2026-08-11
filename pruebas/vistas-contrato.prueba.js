@@ -97,8 +97,12 @@ test('el destino ofrecido es de la misma clase que el archivo', () => {
 
   assert.match(vista, /lote\.tipo === 'tarjeta'\s*\n?\s*\?\s*tarjetas\.map/,
     'el desplegable volvió a mezclar cuentas y tarjetas');
-  assert.match(vista, /No hay \$\{lote\.tipo === 'tarjeta' \? 'ninguna tarjeta' : 'ninguna cuenta'\} registrada/,
-    'no avisa cuando no hay ningún destino de la clase que hace falta');
+  // Y cuando no hay ninguno de esa clase, se ofrece registrarlo ahí
+  // mismo en vez de mandar a otra pantalla y perder el archivo leído.
+  assert.match(vista, /data-registrar/,
+    'no se puede registrar la cuenta o tarjeta desde la pantalla de importar');
+  assert.match(vista, /nuevoCorte/,
+    'una tarjeta sin día de corte no se puede guardar: la base lo exige');
 });
 
 test('elegir el destino a mano se hace una sola vez', () => {

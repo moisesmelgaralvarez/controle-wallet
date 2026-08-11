@@ -46,6 +46,27 @@ const par = (monto, fecha) =>
 /** Ordena por el campo `orden` y, a igualdad, por antigüedad. */
 const porOrden = (a, b) => (a.orden - b.orden) || String(a.creado_en).localeCompare(String(b.creado_en));
 
+/**
+ * De dónde salió un registro, para las tres tablas que puede escribir
+ * el importador.
+ *
+ * De aquí cuelga la única regla que impide duplicar al reimportar: el
+ * archivo manda sobre su propio rango, y para acotar ese rango hace
+ * falta saber qué es importado (`origen`), de qué cuenta vino
+ * (`fuente`) y de qué archivo (`lote`). Lo tecleado a mano se queda
+ * en 'manual' y no se toca nunca.
+ *
+ * Va en una función y no repetido en cada mapeo porque el día que las
+ * tres dejen de coincidir, el borrado acotado empieza a fallar en una
+ * sola de ellas — y un retiro duplicado no da error: se resta dos
+ * veces y el descuadre aparece en el cierre del mes.
+ */
+const procedencia = x => ({
+  origen: x.origen || 'manual',
+  fuente: x.fuente || '',
+  lote: x.lote || ''
+});
+
 /** Cada valor de un mapa id → monto, convertido a número. */
 const mapaDeMontos = m => {
   const r = {};
@@ -243,8 +264,7 @@ export function armar(filas) {
     personaId: m.persona_id || null,
     medioPago: m.medio_pago || 'tarjeta',
     tarjetaId: m.tarjeta_id || null,
-    origen: m.origen || 'manual',
-    fuente: m.fuente || ''
+    ...procedencia(m)
   }));
 
   const retiros = f('retiros').map(r => ({
@@ -254,7 +274,8 @@ export function armar(filas) {
     monto: num(r.monto),
     cuentaId: r.cuenta_id || null,
     personaId: r.persona_id || null,
-    nota: r.nota || ''
+    nota: r.nota || '',
+    ...procedencia(r)
   }));
 
   const pagosTarjeta = f('pagos_tarjeta').map(p => ({
@@ -264,7 +285,8 @@ export function armar(filas) {
     monto: num(p.monto),
     tarjetaId: p.tarjeta_id || null,
     cuentaId: p.cuenta_id || null,
-    nota: p.nota || ''
+    nota: p.nota || '',
+    ...procedencia(p)
   }));
 
   /* ---------- el plan congelado de cada mes ---------- */

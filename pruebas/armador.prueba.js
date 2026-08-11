@@ -323,3 +323,51 @@ test('la marca de «copiado, sin revisar» llega al documento', () => {
   });
   assert.deepEqual(aMano.ingresosMes['2026-08'].copiado, {});
 });
+
+/* ------------------------------------------------------------
+   La procedencia de lo importado
+   ------------------------------------------------------------ */
+
+test('las tres tablas traen de dónde vino cada fila, y lo tecleado se queda en manual', () => {
+  /* La regla que impide duplicar al reimportar acota el borrado por
+     `origen`, `fuente` y el rango de fechas. Si el armador perdiera
+     esos campos en una sola de las tres tablas, el núcleo no podría
+     distinguir ahí lo importado de lo escrito a mano — y borraría de
+     más o duplicaría, las dos en silencio. */
+  const D = armar({
+    hogar: { inicio_mes: 1 },
+    movimientos: [
+      { id: 'm1', fecha: '2026-08-03', periodo: '2026-08', monto: '400.00',
+        origen: 'import', fuente: 'cuenta:c1', lote: 'agosto.pdf' }
+    ],
+    retiros: [
+      { id: 'r1', fecha: '2026-08-04', periodo: '2026-08', monto: '2000.00',
+        origen: 'import', fuente: 'cuenta:c1', lote: 'agosto.pdf' }
+    ],
+    pagos_tarjeta: [
+      { id: 'pt1', fecha: '2026-08-05', periodo: '2026-08', monto: '5000.00',
+        origen: 'import', fuente: 'cuenta:c1', lote: 'agosto.pdf' }
+    ]
+  });
+
+  for (const [nombre, fila] of [['movimiento', D.movimientos[0]],
+                                ['retiro', D.retiros[0]],
+                                ['pago de tarjeta', D.pagosTarjeta[0]]]) {
+    assert.equal(fila.origen, 'import', `el ${nombre} perdió su origen`);
+    assert.equal(fila.fuente, 'cuenta:c1', `el ${nombre} perdió su fuente`);
+    assert.equal(fila.lote, 'agosto.pdf', `el ${nombre} perdió su lote`);
+  }
+});
+
+test('sin columnas de procedencia, una fila vieja se lee como manual', () => {
+  // Todo lo que existe hoy se escribió a mano. Leerlo como importado
+  // lo pondría a merced del borrado de la próxima importación.
+  const D = armar({
+    hogar: { inicio_mes: 1 },
+    retiros: [{ id: 'r1', fecha: '2026-08-04', periodo: '2026-08', monto: '2000.00' }],
+    pagos_tarjeta: [{ id: 'pt1', fecha: '2026-08-05', periodo: '2026-08', monto: '5000.00' }]
+  });
+  assert.equal(D.retiros[0].origen, 'manual');
+  assert.equal(D.pagosTarjeta[0].origen, 'manual');
+  assert.equal(D.retiros[0].fuente, '');
+});

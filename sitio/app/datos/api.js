@@ -304,3 +304,18 @@ export async function salirDeTodos() {
 /** Llama a una Edge Function, que es donde viven los secretos. */
 export const invocar = (nombre, cuerpo) =>
   pedir(`/functions/v1/${nombre}`, { method: 'POST', body: JSON.stringify(cuerpo || {}) });
+
+/**
+ * Llama a una función de la base.
+ *
+ * Existe para lo que no se puede hacer en varios viajes sin dejar un
+ * estado a medias. Importar un estado de cuenta borra antes de
+ * insertar —el orden es obligado— así que partido en dos peticiones,
+ * una caída de red entre ellas deja el mes con un hueco que nadie ve.
+ * Dentro de una función es una sola transacción.
+ *
+ * Las funciones van `security invoker`: RLS sigue decidiendo, igual
+ * que en cualquier tabla.
+ */
+export const llamar = (nombre, argumentos) =>
+  pedir(`/rest/v1/rpc/${nombre}`, { method: 'POST', body: JSON.stringify(argumentos || {}) });

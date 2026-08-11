@@ -116,7 +116,15 @@ export function preparar({ D, lote, destino }) {
    función de la base recibe las columnas tal como se llaman. */
 const filaMovimiento = m => ({
   fecha: m.fecha, periodo: m.periodo, monto: m.monto, concepto: m.concepto || '',
-  gasto_id: m.gastoId || null, persona_id: m.personaId || null,
+  /* `'otros'` NO es un rubro: es lo que el motor devuelve cuando no
+     supo clasificar. En la app anterior vivía como texto dentro del
+     documento y no molestaba; aquí la columna es una clave foránea y
+     mandar la palabra reventaría el INSERT entero — o sea la
+     importación completa, por un solo renglón que el banco escribió
+     raro. Sin rubro es NULO, y el cierre de mes ya lo vuelve a leer
+     como «Sin clasificar». */
+  gasto_id: (m.gastoId && m.gastoId !== 'otros') ? m.gastoId : null,
+  persona_id: m.personaId || null,
   medio_pago: m.medioPago || 'tarjeta', tarjeta_id: m.tarjetaId || null
 });
 

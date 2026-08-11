@@ -106,6 +106,19 @@ export function importar({ contenedor, D, hogar, recargar }) {
     archivo = f; lote = null; plan = null; fallo = null; leyendo = true;
     pintar();
     try {
+      /* Un Excel de verdad es un formato binario, no un texto con
+         columnas: leerlo pide un descompresor y un intérprete que la
+         app no puede cargar sin abrirle la mano a la política de
+         seguridad. Antes el selector simplemente no dejaba elegirlo, y
+         eso no explica nada — parecía que la app estaba rota. Ahora se
+         puede elegir y se dice qué hacer, que es lo único útil. */
+      if (/\.(xls|xlsx)$/i.test(f.name || '')) {
+        throw new Error(
+          'Los archivos de Excel (.xls y .xlsx) todavía no se pueden leer: son un ' +
+          'formato binario, no una tabla de texto. En la misma pantalla del banco, ' +
+          'descargá el CSV o el PDF de esos mismos movimientos — los dos se leen.');
+      }
+
       lote = await A.leerArchivo(f, D);
       destino = A.destinoDe(lote, D);
       if (destino) rehacerPlan();
@@ -227,7 +240,7 @@ export function importar({ contenedor, D, hogar, recargar }) {
                 lo revises y lo apruebes — leer el archivo no toca tus datos.</p>
               <label class="campo campo--pegado">
                 <span>Archivo</span>
-                <input type="file" accept=".pdf,.csv,.txt" data-archivo>
+                <input type="file" accept=".pdf,.csv,.txt,.tsv,.xls,.xlsx" data-archivo>
               </label>
               ${archivo ? `<p class="panel__nota">Leyendo <b>${esc(archivo.name)}</b>.</p>` : ''}
             `}

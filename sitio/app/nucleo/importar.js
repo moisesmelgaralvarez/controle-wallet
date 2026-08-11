@@ -990,10 +990,16 @@ async function leerArchivo(archivo, D) {
          saldo se lee como si fuera el crédito. Está medido. Un número
          creíble y falso es peor que no leer el archivo, y el CSV o
          Excel del mismo banco sí conserva las columnas vacías. */
+      /* Se dice QUÉ hace falta, no solo que no se pudo. Un PDF sirve
+         si trae, renglón por renglón, la fecha, el concepto y el saldo
+         que queda después del movimiento: de ahí sale todo lo demás.
+         Una impresión de pantalla o un resumen sin saldos no alcanza,
+         por mucho que sea del banco. */
       throw new Error(
-        'No reconozco ese PDF. Descargá el mismo movimiento en CSV o Excel desde ' +
-        'la banca en línea: ese formato se lee de cualquier banco, porque conserva ' +
-        'las columnas. De un PDF solo puedo leer BAC y Ficohsa, que tienen lector propio.');
+        'No encuentro movimientos en ese PDF. Para poder leerlo hace falta que cada ' +
+        'renglón traiga la fecha, el concepto y el SALDO que queda después — así se ' +
+        'saca el monto sin adivinar. Si es un resumen o una impresión de pantalla, no ' +
+        'alcanza. Probá con el estado de cuenta completo, o con el CSV.');
     }
   } else {
     lote = adaptadorCsv(decodificar(buf));

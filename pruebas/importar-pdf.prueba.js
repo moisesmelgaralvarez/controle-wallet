@@ -20,6 +20,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import * as A from '../sitio/app/nucleo/index.js';
 
 /* Un PDF ya convertido a renglones, con la celda de crédito VACÍA en
@@ -110,4 +111,34 @@ test('sin saldo de arranque, el primer movimiento no se inventa', () => {
 
 test('un documento sin saldos no se fuerza: se deja para otro lector', () => {
   assert.equal(A.adaptadorSaldos(['hola', 'que tal', '05/08/2026 algo']), null);
+});
+
+/* ------------------------------------------------------------
+   Lo que NO se puede leer, dicho con claridad
+   ------------------------------------------------------------ */
+
+test('un Excel se puede elegir, y se explica por qué no se lee', () => {
+  /* Antes el selector de archivos simplemente no dejaba elegirlo, y eso
+     no explica nada: parecía que la app estaba rota. Un `.xls` es un
+     formato binario —comprobado: OLE2, no una tabla de texto— y leerlo
+     pediría un intérprete que la app no puede cargar sin abrirle la
+     mano a la política de seguridad. Lo útil es decir qué hacer. */
+  const vista = readFileSync(
+    new URL('../sitio/app/vistas/importar.js', import.meta.url), 'utf8');
+
+  assert.ok(vista.includes('.xls,.xlsx'),
+    'el selector volvió a bloquear los Excel sin explicar nada');
+  assert.ok(vista.includes('(xls|xlsx)'),
+    'no se detecta el Excel para poder explicarlo');
+  assert.ok(vista.includes('descargá el CSV o el PDF'),
+    'el mensaje no dice qué hacer en su lugar');
+});
+
+test('el mensaje de un PDF ilegible dice QUÉ hace falta', () => {
+  // Salió con tres PDF que resultaron ser impresiones de la propia
+  // pantalla. Rechazarlos es correcto; no decir por qué, no.
+  const motor = readFileSync(
+    new URL('../sitio/app/nucleo/importar.js', import.meta.url), 'utf8');
+  assert.ok(motor.includes('la fecha, el concepto y el SALDO que queda después'),
+    'el mensaje no dice qué necesita un PDF para poder leerse');
 });

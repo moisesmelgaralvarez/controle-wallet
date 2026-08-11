@@ -95,7 +95,19 @@ export function importar({ contenedor, D, hogar, recargar }) {
 
   /** El archivo contra sí mismo: saldo inicial + movimientos = saldo final. */
   function control(c) {
-    if (!c) return '';
+    /* Que la comprobación NO se pueda hacer hay que decirlo. Callarlo
+       deja creer que el archivo se revisó y salió bien, cuando lo que
+       pasó es que no se revisó — y esta es justo la comprobación que
+       atrapa un PDF mal interpretado antes de que entre. Apareció con
+       un estado de cuenta real: la tarjeta no traía saldo de corte, no
+       se dijo nada, y la pantalla se veía perfecta. */
+    if (!c) return `
+      <div class="aviso aviso--ojo">
+        <strong>No se pudo comprobar que el archivo cuadre</strong>
+        <p>Este archivo no trae el saldo anterior y el del corte, así que no hay
+           contra qué sumar los movimientos. Puede estar bien, pero <b>nadie lo
+           verificó</b>: revisá la lista de abajo antes de aplicar.</p>
+      </div>`;
     return `
       <div class="aviso ${c.cuadra ? 'aviso--ok' : 'aviso--error'}">
         <strong>${c.cuadra ? 'El archivo cuadra consigo mismo' : 'El archivo NO cuadra'}</strong>
@@ -125,7 +137,12 @@ export function importar({ contenedor, D, hogar, recargar }) {
       </ul>
       <p class="panel__nota">Solo entran gastos, retiros y pagos de tarjeta. Los
         traslados entre cuentas propias, las cuotas y los reversos se leen para
-        que el archivo cuadre, pero no se registran: contarlos sería duplicar.</p>`;
+        que el archivo cuadre, pero no se registran: contarlos sería duplicar.</p>
+      ${lote.tipo === 'tarjeta' && (lote.resumen || {}).pagoTarjeta ? `
+        <p class="panel__nota">Los ${esc(lote.resumen.pagoTarjeta.n)} pagos que aparecen
+          aquí <b>no se registran desde la tarjeta</b>. El dinero sale de la cuenta, no
+          de la tarjeta: se anotan al importar el estado de esa cuenta. Registrarlos
+          de los dos lados los contaría dos veces.</p>` : ''}`;
   }
 
   /** Un gasto del lote, con el rubro que el motor le puso y opción de cambiarlo. */
@@ -152,6 +169,10 @@ export function importar({ contenedor, D, hogar, recargar }) {
 
   function pintar() {
     const sinDestinos = !destinos.length;
+    /* El saldo declarado NO se llama igual en los dos casos: una cuenta
+       trae `saldoFin` y una tarjeta `saldoCorte`. Mismo criterio que en
+       `datos/importar.js`, que es quien lo escribe. */
+    const ancla = lote ? ((lote.tipo === 'tarjeta' ? lote.saldoCorte : lote.saldoFin) ?? null) : null;
 
     contenedor.innerHTML = `
       <div class="zonas">
@@ -266,11 +287,15 @@ export function importar({ contenedor, D, hogar, recargar }) {
                      <b>Lo que escribiste a mano no se toca.</b></p>
                 </div>` : ''}
 
-              ${lote.saldoFin != null ? `
+              ${ancla != null ? `
                 <p class="panel__nota">El saldo que declara el banco
-                  —<b>${esc(dinero(lote.saldoFin))}</b> al ${esc(diaCorto(lote.hasta))}—
+                  —<b>${esc(dinero(ancla))}</b> al ${esc(diaCorto(lote.hasta))}—
                   queda anotado como la verdad de esa fecha. Es contra eso que cuadra
-                  el cierre del mes.</p>` : ''}
+                  el cierre del mes.</p>` : `
+                <p class="panel__nota ojo">Este archivo no trae el saldo declarado, así
+                  que ${esc(destino.nombre)} se queda sin ancla. Los movimientos entran
+                  igual, pero vas a tener que escribir el saldo a mano en Presupuesto
+                  para que el cierre del mes pueda cuadrar.</p>`}
 
               <button class="boton boton--principal" type="button" data-aplicar>
                 Importar ${esc(plan.movimientos.length + plan.retiros.length + plan.pagos.length)} registros

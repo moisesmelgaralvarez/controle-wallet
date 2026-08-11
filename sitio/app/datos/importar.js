@@ -38,7 +38,7 @@ import * as A from '../nucleo/index.js';
 import { periodoDe } from '../nucleo/fechas.js';
 import { FILAS } from './filas.js';
 import * as api from './api.js';
-import { crearVarias, fusionar } from './escribir.js';
+import { crearVarias, fusionar, actualizar } from './escribir.js';
 import { invalidarConfiguracion } from './hogar.js';
 import { olvidarHistorico } from './historico.js';
 
@@ -159,7 +159,16 @@ const anclaDe = lote =>
  * que iba a pasar: cuántas filas se reemplazaron de verdad y cuántas
  * entraron. Si algo no coincide, se ve.
  */
-export async function aplicar({ plan, lote, destino, hogarId }) {
+export async function aplicar({ plan, lote, destino, hogarId, aprenderNumero }) {
+  /* Si el destino se eligió a mano porque no se reconoció solo, se le
+     guarda el número que trae el archivo. Es lo que convierte «elegila
+     a mano» en algo que se hace UNA vez: la próxima importación del
+     mismo banco se reconoce sola. */
+  if (aprenderNumero && lote.cuenta) {
+    const tabla = destino.clase === 'cuenta' ? 'cuentas' : 'tarjetas';
+    await actualizar(tabla, destino.id, { numero: String(lote.cuenta) });
+  }
+
   if (plan.rubrosNuevos.length) {
     await crearVarias('gastos', plan.rubrosNuevos.map((g, i) =>
       FILAS.gastos(g, { hogarId, orden: 900 + i })));

@@ -82,3 +82,30 @@ test('la pantalla dice cuándo NO pudo comprobar que el archivo cuadre', () => {
   assert.match(vista, /No se pudo comprobar que el archivo cuadre/,
     'la ausencia de la comprobación volvió a ser silenciosa');
 });
+
+test('el destino ofrecido es de la misma clase que el archivo', () => {
+  /* Un estado de cuenta y el de una tarjeta no son intercambiables: en
+     la cuenta un cargo resta y en la tarjeta suma a lo que se debe, y
+     los pagos se registran desde la cuenta y no al revés. Ofrecer los
+     dos juntos deja elegir el equivocado con un clic, y el error no da
+     ningún aviso: entra completo y descuadra el mes.
+
+     Salió con un CSV de cuenta cuyo ÚNICO destino ofrecido era una
+     tarjeta, porque el hogar no tenía cuentas registradas. */
+  const vista = readFileSync(
+    new URL('../sitio/app/vistas/importar.js', import.meta.url), 'utf8');
+
+  assert.match(vista, /lote\.tipo === 'tarjeta'\s*\n?\s*\?\s*tarjetas\.map/,
+    'el desplegable volvió a mezclar cuentas y tarjetas');
+  assert.match(vista, /No hay \$\{lote\.tipo === 'tarjeta' \? 'ninguna tarjeta' : 'ninguna cuenta'\} registrada/,
+    'no avisa cuando no hay ningún destino de la clase que hace falta');
+});
+
+test('elegir el destino a mano se hace una sola vez', () => {
+  // Sin esto, «elegila a mano» es para siempre: el archivo del mes que
+  // viene tampoco se va a reconocer.
+  const datos = readFileSync(
+    new URL('../sitio/app/datos/importar.js', import.meta.url), 'utf8');
+  assert.match(datos, /aprenderNumero/,
+    'no se guarda el número del archivo en el destino elegido a mano');
+});

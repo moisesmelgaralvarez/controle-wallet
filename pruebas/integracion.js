@@ -434,6 +434,146 @@ test('sin contar nada, la apertura se queda con lo que calculó el servidor', as
   assert.equal(sig.apertura.efectivo, 1450, 'debía conservar el efectivo que traía `saldos`');
 });
 
+/* ============================================================
+   Importar un estado de cuenta
+
+   Lo que hay que demostrar no es que inserte —eso lo hace cualquier
+   INSERT— sino las tres cosas de las que depende que se pueda confiar:
+   que reimportar no duplique, que no toque lo tecleado a mano, y que
+   si algo falla NO SE HAYA BORRADO NADA.
+   ============================================================ */
+
+const importar = async (cuerpo) => {
+  const r = await api('/rpc/importar_lote', { method: 'POST', body: JSON.stringify(cuerpo) });
+  return { ok: r.ok, cuerpo: await json(r) };
+};
+
+const retirosDe = async fuente => json(await admin(
+  `/rest/v1/retiros?hogar_id=eq.${hogar.id}&select=id,monto,origen,fuente,lote,fecha&order=fecha`));
+
+let cuentaImport;
+
+test('una importación entra entera, con su procedencia puesta por la base', async () => {
+  cuentaImport = await meter('cuentas', {
+    hogar_id: hogar.id, nombre: 'Cuenta del importador', saldo_inicial: 10000, desde_mes: '2026-06'
+  });
+
+  const r = await importar({
+    p_destino_clase: 'cuenta', p_destino_id: cuentaImport.id,
+    p_desde: '2027-10-01', p_hasta: '2027-10-31', p_lote: 'octubre.pdf',
+    p_retiros: [
+      { fecha: '2027-10-05', periodo: '2027-10', monto: 500, nota: 'Cajero' },
+      { fecha: '2027-10-20', periodo: '2027-10', monto: 800, nota: 'Cajero' }
+    ],
+    p_saldo_banco: 24500.75
+  });
+  assert.ok(r.ok, JSON.stringify(r.cuerpo));
+  assert.equal(r.cuerpo.retiros, 2);
+  assert.equal(r.cuerpo.retiros_borrados, 0);
+
+  const filas = (await retirosDe()).filter(x => x.lote === 'octubre.pdf');
+  assert.equal(filas.length, 2);
+  assert.equal(filas[0].origen, 'import');
+  assert.equal(filas[0].fuente, `cuenta:${cuentaImport.id}`);
+
+  // El banco manda sobre el saldo: el ancla se puso sola con la fecha
+  // de corte, en vez de tecleada y desfasada.
+  const c = (await json(await admin(`/rest/v1/cuentas?id=eq.${cuentaImport.id}&select=saldo_banco_monto,saldo_banco_fecha`)))[0];
+  assert.equal(Number(c.saldo_banco_monto), 24500.75);
+  assert.equal(c.saldo_banco_fecha, '2027-10-31');
+});
+
+test('reimportar el mismo rango reemplaza en vez de duplicar', async () => {
+  /* El exportado nuevo contiene íntegro el anterior, así que
+     sustituirlo es exacto por definición. Aquí el archivo trae los dos
+     retiros de antes MÁS uno nuevo: tienen que quedar tres, no cinco.
+     Y el que el banco reversó —los 800— desaparece solo por no venir. */
+  const r = await importar({
+    p_destino_clase: 'cuenta', p_destino_id: cuentaImport.id,
+    p_desde: '2027-10-01', p_hasta: '2027-10-31', p_lote: 'octubre-v2.pdf',
+    p_retiros: [
+      { fecha: '2027-10-05', periodo: '2027-10', monto: 500, nota: 'Cajero' },
+      { fecha: '2027-10-25', periodo: '2027-10', monto: 300, nota: 'Cajero' }
+    ]
+  });
+  assert.ok(r.ok, JSON.stringify(r.cuerpo));
+  assert.equal(r.cuerpo.retiros_borrados, 2, 'no borró lo que había importado antes');
+  assert.equal(r.cuerpo.retiros, 2);
+
+  const filas = await retirosDe();
+  const delImport = filas.filter(x => x.origen === 'import');
+  assert.equal(delImport.length, 2, 'quedaron duplicados al reimportar');
+  assert.ok(!delImport.some(x => Number(x.monto) === 800), 'el retiro reversado sobrevivió');
+  assert.ok(delImport.every(x => x.lote === 'octubre-v2.pdf'));
+});
+
+test('lo tecleado a mano no lo toca ninguna importación', async () => {
+  const aMano = await meter('retiros', {
+    hogar_id: hogar.id, fecha: '2027-10-15', periodo: '2027-10', monto: 111,
+    cuenta_id: cuentaImport.id, nota: 'Este lo escribí yo'
+  });
+
+  const r = await importar({
+    p_destino_clase: 'cuenta', p_destino_id: cuentaImport.id,
+    p_desde: '2027-10-01', p_hasta: '2027-10-31', p_lote: 'octubre-v3.pdf',
+    p_retiros: [{ fecha: '2027-10-05', periodo: '2027-10', monto: 500, nota: 'Cajero' }]
+  });
+  assert.ok(r.ok, JSON.stringify(r.cuerpo));
+
+  const sigue = await json(await admin(`/rest/v1/retiros?id=eq.${aMano.id}&select=id,origen`));
+  assert.equal(sigue.length, 1, 'la importación se llevó un retiro escrito a mano');
+  assert.equal(sigue[0].origen, 'manual');
+});
+
+test('si la inserción falla, NO se borró nada: entra todo o no entra', async () => {
+  /* Esta es la prueba por la que esto es una función de la base y no
+     dos viajes desde el navegador. El borrado va ANTES por necesidad
+     —hay que quitar lo viejo para que lo nuevo no duplique— así que
+     partido en dos peticiones, una caída entre ellas deja el mes con
+     un hueco: menos gastos de los que hubo, el mes parece barato, y el
+     error se descubre semanas después cuando el banco no cuadra. */
+  const antes = await retirosDe();
+  const importadosAntes = antes.filter(x => x.origen === 'import').length;
+  assert.ok(importadosAntes > 0, 'hacía falta algo importado para poder perderlo');
+
+  // Un `gasto_id` que no existe: la clave foránea revienta DESPUÉS de
+  // que el borrado ya ocurrió dentro de la transacción.
+  const r = await importar({
+    p_destino_clase: 'cuenta', p_destino_id: cuentaImport.id,
+    p_desde: '2027-10-01', p_hasta: '2027-10-31', p_lote: 'roto.pdf',
+    p_retiros: [{ fecha: '2027-10-05', periodo: '2027-10', monto: 500, nota: 'Cajero' }],
+    p_movimientos: [{ fecha: '2027-10-06', periodo: '2027-10', monto: 90,
+                      concepto: 'Con rubro inexistente',
+                      gasto_id: '00000000-0000-0000-0000-000000000000' }]
+  });
+  assert.ok(!r.ok, 'la importación rota entró igual');
+
+  const despues = await retirosDe();
+  assert.equal(despues.filter(x => x.origen === 'import').length, importadosAntes,
+    'el borrado se aplicó aunque la inserción falló: quedó un hueco');
+  assert.deepEqual(despues.map(x => x.id).sort(), antes.map(x => x.id).sort(),
+    'las filas no son las mismas de antes del intento fallido');
+});
+
+test('un mes cerrado rechaza la importación entera, y se dice por qué', async () => {
+  // No hace falta comprobarlo en la función: el disparador vive en las
+  // tres tablas y aborta la transacción. Que falle completa es lo
+  // correcto — media importación sobre un mes cerrado sería peor.
+  await meter('presupuesto_mes', {
+    hogar_id: hogar.id, periodo: '2027-11',
+    montos: { g1: 1 }, cerrado: true, cerrado_el: new Date().toISOString()
+  });
+
+  const r = await importar({
+    p_destino_clase: 'cuenta', p_destino_id: cuentaImport.id,
+    p_desde: '2027-11-01', p_hasta: '2027-11-30', p_lote: 'noviembre.pdf',
+    p_retiros: [{ fecha: '2027-11-05', periodo: '2027-11', monto: 500, nota: 'Cajero' }]
+  });
+  assert.ok(!r.ok, 'entró una importación en un mes cerrado');
+  assert.match(JSON.stringify(r.cuerpo), /cerrado/i,
+    'el mensaje no dice que el mes está cerrado');
+});
+
 test('reabrir devuelve el mes a editable y le quita la fecha de cierre', async () => {
   const antes = await filaMes('2026-09');
   assert.equal(antes.cerrado, true, 'la prueba anterior debía dejarlo cerrado');

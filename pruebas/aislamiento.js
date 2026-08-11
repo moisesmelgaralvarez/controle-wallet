@@ -461,3 +461,83 @@ test('sacar a un miembro de un hogar compartido NO borra el hogar', async () => 
   const gasto = await json(await como(sesionB, `/gastos?id=eq.${gastoB.id}&select=id`));
   assert.equal(gasto.length, 1, 'se perdieron los datos del hogar');
 });
+
+/* ------------------------------------------------------------
+   Importar estados de cuenta
+   ------------------------------------------------------------ */
+
+/** Crea una fila con la sesión de alguien y revienta con el motivo si no entra. */
+async function crearComo(sesion, tabla, fila) {
+  const r = await como(sesion, `/${tabla}`, { method: 'POST', body: JSON.stringify(fila) });
+  const cuerpo = await json(r);
+  if (!r.ok) throw new Error(`crear ${tabla}: ${JSON.stringify(cuerpo)}`);
+  return Array.isArray(cuerpo) ? cuerpo[0] : cuerpo;
+}
+
+const importarComo = (sesion, cuerpo) =>
+  como(sesion, '/rpc/importar_lote', { method: 'POST', body: JSON.stringify(cuerpo) });
+
+let cuentaDeA;
+
+test('A no puede importar un estado de cuenta sobre una cuenta de B', async () => {
+  /* `importar_lote` va `security invoker` justo para esto: no filtra
+     por hogar en ninguna línea, y no hace falta. El hogar lo deduce de
+     la cuenta de destino, y esa cuenta está detrás de RLS — para A
+     simplemente no existe. Filtrar dentro de la función sería teatro:
+     el día que alguien borre esa línea se lleva el aislamiento. */
+  const cuentaB = await crearComo(sesionB, 'cuentas',
+    { hogar_id: hogarB, nombre: 'Ficohsa de B', saldo_inicial: 1000, desde_mes: '2026-08' });
+
+  const r = await importarComo(sesionA, {
+    p_destino_clase: 'cuenta', p_destino_id: cuentaB.id,
+    p_desde: '2026-08-01', p_hasta: '2026-08-31', p_lote: 'ajeno.pdf',
+    p_movimientos: [{ fecha: '2026-08-10', periodo: '2026-08', monto: 999, concepto: 'colado' }]
+  });
+
+  assert.ok(!r.ok, 'A logró importar sobre una cuenta que no es suya');
+
+  const colados = await json(await como(sesionB,
+    `/movimientos?hogar_id=eq.${hogarB}&concepto=eq.colado&select=id`));
+  assert.deepEqual(colados, [], 'entró un movimiento de A en el hogar de B');
+});
+
+test('importar en el hogar propio no puede marcar filas como manuales', async () => {
+  // `origen`, `fuente` y `lote` los pone la función, no el cuerpo. Si
+  // el navegador pudiera mandarlos, insertaría filas 'manual' que
+  // ninguna importación futura borraría, y el reemplazo por rango
+  // dejaría de ser exacto.
+  cuentaDeA = await crearComo(sesionA, 'cuentas',
+    { hogar_id: hogarA, nombre: 'Ficohsa de A', saldo_inicial: 1000, desde_mes: '2026-08' });
+
+  const r = await importarComo(sesionA, {
+    p_destino_clase: 'cuenta', p_destino_id: cuentaDeA.id,
+    p_desde: '2026-08-01', p_hasta: '2026-08-31', p_lote: 'mio.pdf',
+    p_retiros: [{ fecha: '2026-08-10', periodo: '2026-08', monto: 500,
+                  origen: 'manual', fuente: 'cuenta:otra', lote: 'mentira.pdf' }]
+  });
+  assert.ok(r.ok, 'no se pudo importar en el hogar propio: ' + JSON.stringify(await json(r)));
+
+  const filas = await json(await como(sesionA,
+    `/retiros?hogar_id=eq.${hogarA}&select=origen,fuente,lote`));
+  assert.equal(filas.length, 1);
+  assert.equal(filas[0].origen, 'import', 'el cuerpo logró marcar la fila como manual');
+  assert.equal(filas[0].fuente, `cuenta:${cuentaDeA.id}`, 'el cuerpo logró falsear la fuente');
+  assert.equal(filas[0].lote, 'mio.pdf', 'el cuerpo logró falsear el lote');
+});
+
+test('un rango de fechas abierto no borra todo lo importado', async () => {
+  // Es el parámetro más peligroso de la función: sin rango, el borrado
+  // se llevaría por delante todo lo que esa cuenta hubiera importado.
+  for (const rango of [{ p_desde: null, p_hasta: '2026-08-31' },
+                       { p_desde: '2026-08-01', p_hasta: null },
+                       { p_desde: '2026-09-01', p_hasta: '2026-08-01' }]) {
+    const r = await importarComo(sesionA, {
+      p_destino_clase: 'cuenta', p_destino_id: cuentaDeA.id,
+      p_lote: 'x.pdf', ...rango
+    });
+    assert.ok(!r.ok, `pasó un rango inválido: ${JSON.stringify(rango)}`);
+  }
+
+  const filas = await json(await como(sesionA, `/retiros?hogar_id=eq.${hogarA}&select=id`));
+  assert.equal(filas.length, 1, 'un rango inválido se llevó lo ya importado');
+});

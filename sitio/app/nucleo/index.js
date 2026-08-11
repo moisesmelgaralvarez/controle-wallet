@@ -59,6 +59,23 @@ export { diasHasta, pulso, historia, porCategoria } from './pulso.js';
 
 export { patrimonio, saludFinanciera, MESES_COLCHON, planIncompleto } from './patrimonio.js';
 
+/* El importador de estados de cuenta. Se reexporta aquí como todo lo
+   demás: `index.js` es la puerta del núcleo, y una pieza que no pase
+   por ella obliga a cada pantalla a saber en qué archivo vive cada
+   función. Faltaba, y el fallo no se vio hasta tener la pantalla
+   delante — `A.leerArchivo is not a function`, en producción. */
+export {
+  leerArchivo, aplicarLote, destinoDe, claveComercio, reglaDe, rubroPara,
+  REGLAS, TIPOS, verificarTarjeta, conciliarConApp,
+  // Y los internos, que el `window.Importar` de la app anterior también
+  // exponía. Van completos por la misma regla que el resto del núcleo:
+  // nada de lo que existía se pierde en la mudanza. Hay una prueba que
+  // compara las dos superficies nombre por nombre.
+  md5, rc4, filasCsv, mapearColumnas, decodificar, fechaIso, numero,
+  adaptadorBac, adaptadorCsv, adaptadorFicohsa, esPagoDeTarjeta,
+  clasificar, verificar, renglonesPdf
+} from './importar.js';
+
 export {
   priorizar, evaluarCartera, fugasRecurrentes,
   TIPOS_PROYECTO, URGENCIAS, VEREDICTOS, ETIQUETA_URGENCIA, tipoDe, urgenciaDe

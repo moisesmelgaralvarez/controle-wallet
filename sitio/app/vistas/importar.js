@@ -31,9 +31,11 @@
 
 import * as A from '../nucleo/index.js';
 import {
-  $, $$, esc, dinero, diaCorto, cargando, avisar, selector
+  $, $$, esc, dinero, diaCorto, cargando, avisar, selector, campo, datosDeForma
 } from '../ui.js';
 import { preparar, aplicar } from '../datos/importar.js';
+import { crear } from '../datos/escribir.js';
+import { FILAS } from '../datos/filas.js';
 
 /** Cuántos renglones se listan sin pedirlo. Con 300 movimientos, la
     pantalla no ayuda: abruma. */
@@ -64,6 +66,17 @@ export function importar({ contenedor, D, hogar, recargar }) {
     : cuentas.map(c => ({ valor: 'cuenta:' + c.id, texto: `${c.nombre} (cuenta)` }));
 
   const hayAlguno = cuentas.length + tarjetas.length > 0;
+
+  /* Lo que el archivo ya sabe, para no preguntarlo. */
+  const sugerirNombre = l => l.banco && l.banco !== 'CSV' ? l.banco : '';
+  const diaDeCorte = l => {
+    // El estado de una tarjeta trae su fecha de corte; de ahí sale el
+    // día, que es el único campo que la base exige y el archivo no
+    // enseña rotulado.
+    const f = l.corte || l.hasta || '';
+    const d = /^\d{4}-\d{2}-(\d{2})$/.exec(f);
+    return d ? String(Number(d[1])) : '';
+  };
 
   /** El número registrado del destino elegido, si tiene alguno. */
   const numeroDe = d => {
@@ -265,14 +278,26 @@ export function importar({ contenedor, D, hogar, recargar }) {
                 ? selector('destino', lote.tipo === 'tarjeta' ? 'Tarjeta' : 'Cuenta',
                     [{ valor: '', texto: '— elegir —' }, ...destinos],
                     destino ? destino.clase + ':' + destino.id : '')
-                : `<div class="aviso aviso--error">
-                     <strong>No hay ${lote.tipo === 'tarjeta' ? 'ninguna tarjeta' : 'ninguna cuenta'} registrada</strong>
-                     <p>Este archivo es el estado de ${lote.tipo === 'tarjeta' ? 'una tarjeta' : 'una cuenta'},
-                        y no hay ${lote.tipo === 'tarjeta' ? 'tarjetas' : 'cuentas'} donde ponerlo.
-                        Agregala en Presupuesto —con su número, para que la próxima vez se
-                        reconozca sola— y volvé.</p>
+                : `<div class="aviso aviso--ojo">
+                     <strong>Todavía no tenés ${lote.tipo === 'tarjeta' ? 'esta tarjeta' : 'esta cuenta'} registrada</strong>
+                     <p>El archivo ya dice casi todo lo que hace falta. Registrala aquí y
+                        seguimos, sin perder lo que ya se leyó.</p>
                    </div>
-                   <button class="boton boton--borde" type="button" data-ir-presupuesto>Ir a Presupuesto</button>`}
+                   ${campo('nuevoNombre', lote.tipo === 'tarjeta' ? 'Nombre de la tarjeta' : 'Nombre de la cuenta',
+                     `value="${esc(sugerirNombre(lote))}"`,
+                     'Como la llamás vos, no como la llama el banco.')}
+                   ${campo('nuevoNumero', 'Número',
+                     `value="${esc(lote.cuenta || '')}" inputmode="numeric"`,
+                     'Viene del archivo. Es lo que hace que la próxima vez se reconozca sola.')}
+                   ${lote.tipo === 'tarjeta' ? campo('nuevoCorte', 'Día de corte',
+                     `type="number" inputmode="numeric" min="1" max="31" value="${esc(diaDeCorte(lote))}"`,
+                     'El día que la tarjeta cierra su ciclo. Sin esto no se puede calcular el ciclo ni el pago.') : ''}
+                   <button class="boton boton--principal" type="button" data-registrar>
+                     Registrar y seguir
+                   </button>
+                   <p class="panel__nota">Entra con saldo en cero y sin presupuesto. Lo demás
+                     —el día de pago, con qué ingreso se paga, la tasa— lo completás después en
+                     Presupuesto, y no hace falta para importar.</p>`}
               ${destino && lote.cuenta && !numeroDe(destino) ? `
                 <p class="panel__nota">
                   <label class="campo campo--pegado">
@@ -355,6 +380,42 @@ export function importar({ contenedor, D, hogar, recargar }) {
 
     const ir = $('[data-ir-presupuesto]', contenedor);
     if (ir) ir.addEventListener('click', () => { location.hash = '#/presupuesto'; });
+
+    /* Registrar la cuenta o la tarjeta sin salir de aquí. Mandar a otra
+       pantalla y volver significaba perder el archivo ya leído, y
+       elegirlo otra vez. */
+    const reg = $('[data-registrar]', contenedor);
+    if (reg) reg.addEventListener('click', async () => {
+      const nombre = ($('[name="nuevoNombre"]', contenedor) || {}).value?.trim();
+      const numero = ($('[name="nuevoNumero"]', contenedor) || {}).value?.trim();
+      const corte  = ($('[name="nuevoCorte"]', contenedor) || {}).value;
+
+      if (!nombre) return avisar('Ponele un nombre para reconocerla.', 'mal');
+      if (lote.tipo === 'tarjeta' && !(Number(corte) >= 1 && Number(corte) <= 31)) {
+        return avisar('El día de corte hace falta: sin él no se puede calcular el ciclo.', 'mal');
+      }
+
+      reg.disabled = true;
+      const antes = reg.textContent;
+      reg.textContent = 'Registrando…';
+      try {
+        const esTarjeta = lote.tipo === 'tarjeta';
+        const fila = esTarjeta
+          ? FILAS.tarjetas({ nombre, numero, tipo: 'credito', diaCorte: corte,
+                             saldoInicial: 0, desdeMes: (lote.desde || '').slice(0, 7),
+                             pagaTotal: 'si' }, { hogarId: hogar.id })
+          : FILAS.cuentas({ nombre, numero, saldoInicial: 0,
+                            desdeMes: (lote.desde || '').slice(0, 7) }, { hogarId: hogar.id });
+
+        await crear(esTarjeta ? 'tarjetas' : 'cuentas', fila);
+        avisar(`${nombre} quedó registrada. Volvé a elegir el archivo para seguir.`);
+        recargar();
+      } catch (e) {
+        avisar(e.message || 'No se pudo registrar.', 'mal');
+        reg.disabled = false;
+        reg.textContent = antes;
+      }
+    });
 
     const sel = $('select[name="destino"]', contenedor);
     if (sel) sel.addEventListener('change', () => {

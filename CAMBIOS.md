@@ -4,6 +4,50 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.20.0 — El CSV de cualquier banco, y registrar sin salir
+
+**Qué se hizo**
+
+- **El CSV o Excel de cualquier banco se lee.** Ya no hace falta que alguien
+  programe un lector por entidad.
+- **Registrar la cuenta o la tarjeta desde la pantalla de importar**, sin ir a
+  Presupuesto y volver perdiendo el archivo que ya se leyó.
+
+**Lo que faltaba no era un lector por banco: eran dos suposiciones**
+
+La coma como separador y el punto como decimal. En Honduras casi ningún banco
+exporta así — donde el decimal lleva coma, el separador es punto y coma, y de
+Excel sale con tabulador. Con la suposición vieja el archivo entero caía en una
+sola columna, no se encontraba el encabezado, y el banco parecía ilegible cuando
+el único problema era un punto y coma.
+
+Ahora se detectan los dos. Y **«1.250,75» y «1,250.75» son el mismo dinero**:
+quitar las comas a ciegas convertía el primero en 1250075 —mil veces más— sin
+dar ningún error.
+
+**Por qué NO se lee cualquier PDF, y está medido**
+
+Se probó un lector genérico de PDF y se descartó. El texto de un PDF **pierde la
+estructura de columnas**: cuando una celda va vacía desaparece y las de la
+derecha se corren. El lector leyó el saldo como si fuera el crédito —L 8,749.25
+donde iban −1,250.75— sin dar ningún error.
+
+Un número creíble y falso es peor que no leer el archivo. Así que un PDF
+desconocido se rechaza diciendo qué hacer: descargar el mismo movimiento en CSV
+o Excel, que sí conserva las columnas vacías. Por PDF siguen BAC y Ficohsa, que
+tienen lector propio.
+
+**Registrar sin perder el archivo**
+
+Si el estado de cuenta es de una cuenta o tarjeta que todavía no existe, se
+registra ahí mismo: el archivo ya trae el número y, en una tarjeta, la fecha de
+corte. Entra con saldo en cero; lo demás se completa después en Presupuesto y no
+hace falta para importar.
+
+**315 pruebas en verde.**
+
+---
+
 ## v0.19.0 — Importar el estado de cuenta
 
 **Qué se hizo**

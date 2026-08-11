@@ -377,6 +377,34 @@ export function importar({ contenedor, D, hogar, recargar }) {
                   sin clasificar. Cuentan en el total del mes, pero no contra ningún
                   rubro del plan.</p>` : ''}
 
+              ${plan.duplicados.length ? `
+                <div class="aviso aviso--error">
+                  <strong>${esc(plan.duplicados.length)}
+                    ${plan.duplicados.length === 1 ? 'movimiento ya lo tenías anotado' : 'movimientos ya los tenías anotados'} a mano</strong>
+                  <p>El mismo día y el mismo monto, así que son los mismos. Lo que se anota
+                     a mano no lo toca ninguna importación —a propósito— pero entonces
+                     <b>quedarían dos veces</b>, y lo que diga la app del banco dejaría de
+                     coincidir con lo que dice acá.</p>
+                  <ul class="lista-conc">
+                    ${plan.duplicados.map(d => `
+                      <li class="conc" data-estado="mal">
+                        <div class="conc__tope">
+                          <span class="conc__t">
+                            <strong>${esc(d.concepto || 'Sin concepto')}</strong>
+                            <small>${esc(diaCorto(d.fecha))} · el banco lo llama «${esc(d.delBanco)}»</small>
+                          </span>
+                          <span class="conc__v">${esc(dinero(d.monto))}</span>
+                        </div>
+                      </li>`).join('')}
+                  </ul>
+                  <label class="campo campo--pegado">
+                    <span>Quitar los que anoté a mano y dejar los del banco</span>
+                    <input type="checkbox" data-quitar-duplicados checked>
+                    <small class="campo__ayuda">Se borran en la misma operación que la
+                      importación: o pasa todo, o no pasa nada.</small>
+                  </label>
+                </div>` : ''}
+
               ${plan.reemplaza ? `
                 <div class="aviso aviso--ojo">
                   <strong>Va a reemplazar ${esc(plan.reemplaza)} ${plan.reemplaza === 1
@@ -499,9 +527,11 @@ export function importar({ contenedor, D, hogar, recargar }) {
       b.textContent = 'Importando…';
       try {
         const aprender = $('[data-aprender-numero]', contenedor);
+        const quitar = $('[data-quitar-duplicados]', contenedor);
         const hecho = await aplicar({
           plan, lote, destino, hogarId: hogar.id,
-          aprenderNumero: Boolean(aprender && aprender.checked)
+          aprenderNumero: Boolean(aprender && aprender.checked),
+          quitarDuplicados: Boolean(quitar && quitar.checked)
         });
         // Lo que dice la BASE que pasó, no lo que el navegador creía.
         avisar(`Listo: ${hecho.movimientos} gastos, ${hecho.retiros} retiros y ` +

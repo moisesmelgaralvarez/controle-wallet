@@ -98,6 +98,17 @@ export function preparar({ D, lote, destino }) {
 
   return {
     cuenta,
+    /* Lo que YA está anotado a mano y también viene en el archivo.
+       Es la única forma de que quede duplicado: lo importado se
+       reemplaza solo, pero lo manual no lo toca nadie —a propósito— y
+       entonces el mismo gasto queda dos veces.
+
+       Se emparejan por FECHA y MONTO, no por concepto: el banco
+       recorta y reescribe las descripciones, pero la fecha y el monto
+       no mienten. Un movimiento del archivo empareja como mucho con
+       UNO manual: dos cargas de combustible de L 400 el mismo día son
+       dos gastos reales, y marcar las dos borraría una de verdad. */
+    duplicados: duplicadosManuales(D, lote, destino),
     rubrosNuevos,
     comerciosNuevos,
     movimientos: nuevasDe(copia.movimientos, D.movimientos || [], lote.archivo),
@@ -110,6 +121,41 @@ export function preparar({ D, lote, destino }) {
                    x.fuente === destino.clase + ':' + destino.id &&
                    x.fecha >= lote.desde && x.fecha <= lote.hasta).length
   };
+}
+
+/** Lo que ya está tecleado a mano para este destino en este rango. */
+function manualesEnRango(D, lote, destino) {
+  const ref = destino.clase + ':' + destino.id;
+  const dentro = x => x.fecha >= lote.desde && x.fecha <= lote.hasta &&
+                      (x.origen || 'manual') !== 'import';
+  const suyo = {
+    movimientos: m => destino.clase === 'tarjeta' ? m.tarjetaId === destino.id : m.fuente === ref,
+    retiros: r => r.cuentaId === destino.id,
+    pagos: x => x.tarjetaId === destino.id || x.cuentaId === destino.id
+  };
+  return [
+    ...(D.movimientos || []).filter(m => dentro(m) && suyo.movimientos(m))
+      .map(m => ({ tabla: 'movimientos', id: m.id, fecha: m.fecha,
+                   monto: Math.abs(Number(m.monto) || 0), concepto: m.concepto || '' })),
+    ...(D.retiros || []).filter(r => dentro(r) && suyo.retiros(r))
+      .map(r => ({ tabla: 'retiros', id: r.id, fecha: r.fecha,
+                   monto: Math.abs(Number(r.monto) || 0), concepto: r.nota || 'Retiro' })),
+    ...(D.pagosTarjeta || []).filter(x => dentro(x) && suyo.pagos(x))
+      .map(x => ({ tabla: 'pagos', id: x.id, fecha: x.fecha,
+                   monto: Math.abs(Number(x.monto) || 0), concepto: x.nota || 'Pago de tarjeta' }))
+  ];
+}
+
+function duplicadosManuales(D, lote, destino) {
+  const libres = manualesEnRango(D, lote, destino).map(x => ({ ...x, usado: false }));
+  const dup = [];
+  for (const m of lote.movs) {
+    const monto = Math.round(Math.abs(m.monto) * 100) / 100;
+    const par = libres.find(a => !a.usado && a.fecha === m.fecha &&
+                                 Math.abs(Math.round(a.monto * 100) / 100 - monto) < 0.011);
+    if (par) { par.usado = true; dup.push({ ...par, delBanco: m.concepto || '' }); }
+  }
+  return dup;
 }
 
 /* Del documento a la fila de la base. El motor habla camelCase y la
@@ -131,6 +177,13 @@ const filaMovimiento = m => ({
 const filaRetiro = r => ({
   fecha: r.fecha, periodo: r.periodo, monto: r.monto,
   cuenta_id: r.cuentaId || null, persona_id: r.personaId || null, nota: r.nota || ''
+});
+
+/** Los ids a borrar, repartidos por tabla como los espera la función. */
+const idsAQuitar = dups => ({
+  p_borrar_movimientos: dups.filter(d => d.tabla === 'movimientos').map(d => d.id),
+  p_borrar_retiros:     dups.filter(d => d.tabla === 'retiros').map(d => d.id),
+  p_borrar_pagos:       dups.filter(d => d.tabla === 'pagos').map(d => d.id)
 });
 
 const filaPago = p => ({
@@ -159,7 +212,7 @@ const anclaDe = lote =>
  * que iba a pasar: cuántas filas se reemplazaron de verdad y cuántas
  * entraron. Si algo no coincide, se ve.
  */
-export async function aplicar({ plan, lote, destino, hogarId, aprenderNumero }) {
+export async function aplicar({ plan, lote, destino, hogarId, aprenderNumero, quitarDuplicados }) {
   /* Si el destino se eligió a mano porque no se reconoció solo, se le
      guarda el número que trae el archivo. Es lo que convierte «elegila
      a mano» en algo que se hace UNA vez: la próxima importación del
@@ -192,6 +245,11 @@ export async function aplicar({ plan, lote, destino, hogarId, aprenderNumero }) 
     // El banco manda sobre el saldo: el ancla se pone sola con la
     // fecha de corte del archivo, en vez de tecleada y desfasada.
     p_saldo_banco: anclaDe(lote),
+    /* Los que se habían tecleado a mano y también vienen en el archivo.
+       Van en la MISMA llamada: borrarlos aparte dejaría, si esto
+       fallara después, el mes sin ese movimiento — ni el tecleado ni el
+       importado. Un duplicado se ve; un hueco no. */
+    ...idsAQuitar(quitarDuplicados ? plan.duplicados : []),
     p_retenido: lote.retenido ?? null
   });
 

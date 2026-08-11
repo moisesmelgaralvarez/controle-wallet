@@ -95,8 +95,12 @@ test('el destino ofrecido es de la misma clase que el archivo', () => {
   const vista = readFileSync(
     new URL('../sitio/app/vistas/importar.js', import.meta.url), 'utf8');
 
-  assert.match(vista, /lote\.tipo === 'tarjeta'\s*\n?\s*\?\s*tarjetas\.map/,
+  assert.match(vista, /tipoDe\(lote\) === 'tarjeta'\s*\n?\s*\?\s*tarjetas\.map/,
     'el desplegable volvió a mezclar cuentas y tarjetas');
+  // Y si no se sabe de qué clase es el documento, no se ofrece ninguno:
+  // se pregunta primero.
+  assert.match(vista, /tipoDe\(lote\) \? posibles\(lote\) : \[\]/,
+    'ofrece destinos sin saber si el archivo es de cuenta o de tarjeta');
   // Y cuando no hay ninguno de esa clase, se ofrece registrarlo ahí
   // mismo en vez de mandar a otra pantalla y perder el archivo leído.
   assert.match(vista, /data-registrar/,

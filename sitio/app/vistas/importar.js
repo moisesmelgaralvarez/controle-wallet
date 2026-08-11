@@ -61,7 +61,14 @@ export function importar({ contenedor, D, hogar, recargar }) {
      error no da ningún aviso: entra completo y descuadra el mes.
      Apareció con un CSV de cuenta cuyo único destino ofrecido era una
      tarjeta. */
-  const posibles = lote => lote && lote.tipo === 'tarjeta'
+  /* El lector genérico a veces no puede saber si el documento es de
+     una cuenta o de una tarjeta. No se supone: se pregunta, porque de
+     eso depende a qué se puede archivar y cómo se clasifica cada
+     renglón. */
+  let tipoElegido = null;
+  const tipoDe = l => (l && l.tipo) || tipoElegido;
+
+  const posibles = lote => tipoDe(lote) === 'tarjeta'
     ? tarjetas.map(t => ({ valor: 'tarjeta:' + t.id, texto: `${t.nombre} (tarjeta)` }))
     : cuentas.map(c => ({ valor: 'cuenta:' + c.id, texto: `${c.nombre} (cuenta)` }));
 
@@ -198,7 +205,7 @@ export function importar({ contenedor, D, hogar, recargar }) {
 
   function pintar() {
     const sinDestinos = !hayAlguno;
-    const destinos = posibles(lote);
+    const destinos = tipoDe(lote) ? posibles(lote) : [];
     /* El saldo declarado NO se llama igual en los dos casos: una cuenta
        trae `saldoFin` y una tarjeta `saldoCorte`. Mismo criterio que en
        `datos/importar.js`, que es quien lo escribe. */
@@ -241,7 +248,17 @@ export function importar({ contenedor, D, hogar, recargar }) {
                 ${esc(lote.movs.length)} ${lote.movs.length === 1 ? 'renglón' : 'renglones'},
                 del ${esc(diaCorto(lote.desde))} al ${esc(diaCorto(lote.hasta))}.
               </p>
-              ${control(lote.control)}
+              ${lote.lectura && lote.lectura.metodo === 'saldos' ? `
+                <div class="aviso aviso--ok">
+                  <strong>Leído por el saldo, y comprobado</strong>
+                  <p>Este banco no tiene lector propio, así que cada movimiento se sacó
+                     restando su saldo del anterior — y ${esc(lote.lectura.comprobados)}
+                     de ellos coinciden con la cifra que el mismo renglón declara. No se
+                     adivinó ninguna columna.</p>
+                  ${lote.lectura.sinPrimero ? `<p><b>El primer movimiento quedó fuera:</b>
+                     el archivo no dice con qué saldo arrancaba, y su signo no se puede
+                     deducir. Anotalo a mano si hace falta.</p>` : ''}
+                </div>` : control(lote.control)}
               ${resumen()}
             </section>` : ''}
 
@@ -264,6 +281,17 @@ export function importar({ contenedor, D, hogar, recargar }) {
           ${lote && !leyendo ? `
             <section class="panel">
               <div class="panel__tope"><h2>A dónde va</h2></div>
+              ${!tipoDe(lote) ? `
+                <div class="aviso aviso--ojo">
+                  <strong>¿Este documento es de una cuenta o de una tarjeta?</strong>
+                  <p>El archivo no lo dice con claridad, y no es lo mismo: en una cuenta
+                     un cargo baja el saldo y en una tarjeta sube lo que se debe.</p>
+                </div>
+                ${selector('clase', 'Es de', [
+                  { valor: '', texto: '— elegir —' },
+                  { valor: 'cuenta', texto: 'Una cuenta' },
+                  { valor: 'tarjeta', texto: 'Una tarjeta de crédito' }
+                ], tipoElegido || '')}` : ''}
               ${destino ? `
                 <p class="panel__nota">El archivo dice ser de
                   <b>${esc(lote.cuenta || 'una cuenta')}</b>, y coincide con
@@ -415,6 +443,13 @@ export function importar({ contenedor, D, hogar, recargar }) {
         reg.disabled = false;
         reg.textContent = antes;
       }
+    });
+
+    const clase = $('select[name="clase"]', contenedor);
+    if (clase) clase.addEventListener('change', () => {
+      tipoElegido = clase.value || null;
+      destino = null; plan = null;
+      pintar();
     });
 
     const sel = $('select[name="destino"]', contenedor);

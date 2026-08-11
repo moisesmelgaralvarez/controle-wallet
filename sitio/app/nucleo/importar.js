@@ -678,6 +678,133 @@ function movsDeTabla(filas, cab) {
 }
 
 
+/**
+ * El lector de PDF que NO adivina columnas: se guía por el saldo.
+ *
+ * EL PROBLEMA QUE RESUELVE. Los bancos dan CSV de los meses cerrados,
+ * pero del mes EN CURSO —el único que sirve para controlar el gasto
+ * mientras pasa— solo dan una impresión en PDF. Así que el PDF no es
+ * el camino secundario: es el principal.
+ *
+ * POR QUÉ NO SE LEEN LAS COLUMNAS. El texto de un PDF pierde la
+ * estructura de la tabla: cuando una celda va vacía DESAPARECE y las
+ * de la derecha se corren. Un lector por columnas leía el saldo como
+ * si fuera el crédito —L 8,749.25 donde iban −1,250.75— sin dar
+ * ningún error. Está medido, y tiene su prueba abajo.
+ *
+ * LO QUE SÍ ES DE FIAR: EL SALDO QUE ARRASTRA. Casi todo estado de
+ * cuenta cierra cada renglón con el saldo después del movimiento. Y
+ * entonces el movimiento no hay que adivinarlo:
+ *
+ *     monto = saldo de este renglón − saldo del anterior
+ *
+ * Eso es exacto, y el SIGNO viene solo. Sirve igual para una cuenta
+ * —donde un cargo baja el saldo— y para una tarjeta —donde un cargo
+ * sube lo que se debe—, porque en los dos casos se está leyendo el
+ * movimiento del número del banco en sus propios términos, que es
+ * justo la convención que el núcleo espera.
+ *
+ * Y SE COMPRUEBA SOLO. La diferencia entre dos saldos tiene que
+ * coincidir con alguno de los otros números del renglón: es el mismo
+ * dato dicho dos veces por el banco. Si no coinciden, la lectura está
+ * mal y el archivo se rechaza entero. Un lector que se equivoca en
+ * silencio es peor que no tener lector.
+ */
+function adaptadorSaldos(renglones) {
+  /* CON DOS DECIMALES, y eso no es un detalle. Aceptando cualquier
+     tirada de dígitos, el renglón «Límite de crédito 50,000.00 Fecha
+     de corte 06/08/2026» entraba como si fuera un movimiento —tiene
+     fecha y tiene números— y el 2026 se leía como saldo. A partir de
+     ahí la cadena de saldos se iba entera. El dinero se escribe con
+     centavos; los años y los números de cuenta, no. */
+  const NUM = /-?\d[\d.,]*[.,]\d{2}(?!\d)/g;
+  const plano = renglones.join('\n');
+
+  const lineas = [];
+  for (const r of renglones) {
+    const t = String(r);
+    const fecha = fechaIso(t);
+    // La fecha se quita antes de buscar cifras: «05/08/2026» no es dinero.
+    const sinFecha = t.replace(/\d{1,2}[/-]\d{1,2}[/-]\d{2,4}/g, ' ');
+    const nums = (sinFecha.match(NUM) || []).map(numero);
+    // Hace falta al menos el monto y el saldo. Con uno solo no hay
+    // contra qué comprobar, y comprobar es todo el método.
+    if (fecha && nums.length >= 2) {
+      lineas.push({ fecha, nums, texto: t });
+    }
+  }
+  if (lineas.length < 3) return null;
+
+  /* El saldo de arranque. Muchos estados lo imprimen como un renglón
+     aparte, sin fecha: "SALDO ANTERIOR   12,340.50". Si no está, el
+     primer movimiento no se puede determinar —su signo es genuinamente
+     desconocido— y se dice, en vez de inventarle uno. */
+  const mIni = plano.match(/saldo\s+(?:anterior|inicial)[^\d-]*(-?[\d.,]+\d)/i);
+  let previo = mIni ? numero(mIni[1]) : null;
+
+  const movs = [];
+  let comprobados = 0, fallidos = 0, sinPrimero = false;
+
+  for (const l of lineas) {
+    const saldo = l.nums[l.nums.length - 1];
+    const otros = l.nums.slice(0, -1);
+
+    if (previo == null) {
+      // Sin saldo previo no hay diferencia que calcular. Se anota y se
+      // sigue: los demás renglones sí se pueden leer.
+      previo = saldo;
+      sinPrimero = true;
+      continue;
+    }
+
+    const monto = Math.round((saldo - previo) * 100) / 100;
+    previo = saldo;
+    if (!monto) continue;
+
+    // El banco dijo lo mismo dos veces: la diferencia de saldos tiene
+    // que aparecer como número en el renglón.
+    if (otros.some(n => Math.abs(Math.abs(n) - Math.abs(monto)) < 0.011)) comprobados++;
+    else fallidos++;
+
+    movs.push({ fecha: l.fecha, concepto: conceptoDe(l.texto), monto, balance: saldo });
+  }
+
+  /* Si más de uno de cada diez renglones no cuadra consigo mismo, la
+     lectura está mal. No se entrega «casi bien»: con dinero, casi bien
+     es mal. */
+  if (!movs.length || fallidos > Math.max(1, (comprobados + fallidos) * 0.1)) return null;
+
+  const cuenta = (plano.match(/cuenta\s*(?:no\.?|n[úu]mero)?\s*[:#]?\s*([\d*-]{5,})/i) || [])[1]
+              || (plano.match(/(\d{4}-\d{2}\*+-\*+-\d{4})/) || [])[1]
+              || (plano.match(/\b(\d{9,})\b/) || [])[1] || '';
+
+  // Cuenta o tarjeta cambia a qué se puede archivar y cómo se clasifica.
+  // Si el documento no lo dice claro, no se supone: lo pregunta la pantalla.
+  const c = SIN_TILDES(plano);
+  /* Las señales tienen que ser INEQUÍVOCAS. Un «crédito» suelto no
+     dice nada: es el rótulo de una columna en cualquier estado de
+     cuenta corriente, y tomarlo por tarjeta hacía que el tipo saliera
+     ambiguo justo en el caso más común. */
+  const esTarjeta = /tarjeta de credito|limite de credito|fecha de corte|saldo al corte|pago minimo/.test(c);
+  const esCuenta  = /cuenta de ahorro|cuenta corriente|cuenta de cheques|saldo disponible/.test(c);
+  const tipo = esTarjeta && !esCuenta ? 'tarjeta' : (esCuenta && !esTarjeta ? 'cuenta' : null);
+
+  return {
+    banco: 'Genérico', tipo, cuenta, titular: '',
+    saldoIni: mIni ? numero(mIni[1]) : null,
+    saldoFin: movs.length ? movs[movs.length - 1].balance : null,
+    movs,
+    // Para que la pantalla lo pueda decir en voz alta.
+    lectura: { metodo: 'saldos', comprobados, sinPrimero }
+  };
+}
+
+/** El texto del renglón sin fechas ni cifras: lo que queda es el concepto. */
+const conceptoDe = t => String(t)
+  .replace(/\d{1,2}[/-]\d{1,2}[/-]\d{2,4}/g, ' ')
+  .replace(/-?[\d.,]+\d/g, ' ')
+  .replace(/\s{2,}/g, ' ').trim().slice(0, 80);
+
 /* ============================================================
    6. Clasificación
    ============================================================ */
@@ -855,7 +982,7 @@ async function leerArchivo(archivo, D) {
   let lote = null;
   if (esPdf) {
     const rs = await renglonesPdf(buf);
-    lote = adaptadorBac(rs) || adaptadorFicohsa(rs);
+    lote = adaptadorBac(rs) || adaptadorFicohsa(rs) || adaptadorSaldos(rs);
     if (!lote) {
       /* No se intenta leer un PDF desconocido a la brava. El texto de
          un PDF pierde la estructura de columnas: cuando una celda va
@@ -1135,5 +1262,6 @@ export {
   verificarTarjeta, conciliarConApp,
   // expuestos para las pruebas
   md5, rc4, filasCsv, mapearColumnas, decodificar, fechaIso, numero,
-  adaptadorBac, adaptadorCsv, adaptadorFicohsa, esPagoDeTarjeta, clasificar, verificar, renglonesPdf
+  adaptadorBac, adaptadorCsv, adaptadorFicohsa, adaptadorSaldos,
+  esPagoDeTarjeta, clasificar, verificar, renglonesPdf
 };

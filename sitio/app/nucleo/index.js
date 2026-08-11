@@ -72,7 +72,7 @@ export {
   // nada de lo que existía se pierde en la mudanza. Hay una prueba que
   // compara las dos superficies nombre por nombre.
   md5, rc4, filasCsv, mapearColumnas, decodificar, fechaIso, numero,
-  adaptadorBac, adaptadorCsv, adaptadorFicohsa, esPagoDeTarjeta,
+  adaptadorBac, adaptadorCsv, adaptadorFicohsa, adaptadorSaldos, esPagoDeTarjeta,
   clasificar, verificar, renglonesPdf
 } from './importar.js';
 

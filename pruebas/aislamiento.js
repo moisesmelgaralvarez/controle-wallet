@@ -541,3 +541,78 @@ test('un rango de fechas abierto no borra todo lo importado', async () => {
   const filas = await json(await como(sesionA, `/retiros?hogar_id=eq.${hogarA}&select=id`));
   assert.equal(filas.length, 1, 'un rango inválido se llevó lo ya importado');
 });
+
+/* ------------------------------------------------------------
+   Borrar la cuenta: la propia, y solo la propia
+   ------------------------------------------------------------ */
+
+const borrarCuenta = (sesion, cuerpo) => fetch(`${URL}/functions/v1/cuenta`, {
+  method: 'POST',
+  headers: { apikey: ANON, Authorization: `Bearer ${sesion.access_token}`,
+             'Content-Type': 'application/json' },
+  body: JSON.stringify(cuerpo || {})
+});
+
+test('sin sesión no se puede borrar ninguna cuenta', async () => {
+  const r = await fetch(`${URL}/functions/v1/cuenta`, {
+    method: 'POST',
+    headers: { apikey: ANON, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ confirmacion: 'cualquiera@ejemplo.com' })
+  });
+  assert.ok(!r.ok, 'se pudo llamar al borrado sin sesión');
+});
+
+test('el correo de OTRO no borra nada: se borra al dueño del token', async () => {
+  /* El identificador no se recibe en el cuerpo: se le pregunta a GoTrue
+     quién es el portador del token. Lo único que llega del cuerpo es la
+     confirmación, y tiene que ser el correo PROPIO. Mandar el de otro
+     no borra al otro — no borra a nadie. */
+  const r = await borrarCuenta(sesionA, { confirmacion: usuarioB.email });
+  assert.ok(!r.ok, 'aceptó una confirmación con el correo de otra persona');
+
+  const sigueB = await json(await admin(`/auth/v1/admin/users/${usuarioB.id}`));
+  assert.equal(sigueB.id, usuarioB.id, 'se borró la cuenta de B');
+});
+
+test('sin la confirmación exacta, no se borra', async () => {
+  // Un «¿estás seguro?» se contesta que sí sin leer. Escribir el propio
+  // correo obliga a detenerse, y se comprueba en el SERVIDOR: un botón
+  // deshabilitado en el navegador no es una defensa.
+  for (const intento of [{}, { confirmacion: '' }, { confirmacion: 'no es mi correo' }]) {
+    const r = await borrarCuenta(sesionA, intento);
+    assert.ok(!r.ok, `pasó sin confirmación válida: ${JSON.stringify(intento)}`);
+  }
+  const sigueA = await json(await admin(`/auth/v1/admin/users/${usuarioA.id}`));
+  assert.equal(sigueA.id, usuarioA.id, 'se borró la cuenta de A sin confirmar');
+});
+
+test('con el correo propio, la cuenta se borra de verdad — aunque haya meses cerrados', async () => {
+  /* A tiene 2026-05 CERRADO y escribió esos datos desde su propia
+     sesión. Las dos cosas juntas son lo que rompía el borrado, y son
+     el caso normal de cualquier usuario real:
+
+     1. El mes cerrado es inmutable y lo impone la base.
+     2. Cada fila guarda en `actualizado_por` quién la tocó, con
+        `on delete set null`. Así que borrar el usuario hace un UPDATE
+        sobre cada fila que escribió — y ese UPDATE chocaba con el
+        candado.
+
+     Resultado: cualquiera que hubiera cerrado un mes no podía borrar
+     su cuenta NUNCA, mientras la política de privacidad publicada
+     promete que sí puede. Se escondió mucho tiempo porque probándolo
+     con la clave de servicio `actualizado_por` queda nulo y el UPDATE
+     no ocurre. */
+  // Va al final a propósito: después de esto, A ya no existe.
+  const r = await borrarCuenta(sesionA, { confirmacion: usuarioA.email });
+  if (!r.ok) {
+    // Diagnóstico: en qué hogares está A y cuáles tienen meses cerrados.
+    const suyos = await json(await admin(`/rest/v1/miembros?usuario_id=eq.${usuarioA.id}&select=hogar_id,rol`));
+    const cerrados = await json(await admin('/rest/v1/presupuesto_mes?cerrado=is.true&select=hogar_id,periodo'));
+    assert.fail('no se pudo borrar la cuenta propia: ' + JSON.stringify(await json(r)) +
+      ' | hogares de A: ' + JSON.stringify(suyos) +
+      ' | meses cerrados: ' + JSON.stringify(cerrados));
+  }
+
+  const yaNo = await admin(`/auth/v1/admin/users/${usuarioA.id}`);
+  assert.ok(yaNo.status === 404 || !(await json(yaNo))?.id, 'la cuenta sigue existiendo');
+});

@@ -38,6 +38,7 @@ import { proyectos } from './vistas/proyectos.js';
 import { historia } from './vistas/historia.js';
 import { cierre } from './vistas/cierre.js';
 import { importar } from './vistas/importar.js';
+import { cuenta } from './vistas/cuenta.js';
 import { asistente } from './vistas/asistente.js';
 
 /* Primero lo que viene del correo: quien acaba de confirmar su cuenta
@@ -59,7 +60,8 @@ const VISTAS = {
   proyectos:   { titulo: 'Proyectos',   pintar: proyectos },
   historia:    { titulo: 'Historia',    pintar: historia },
   cierre:      { titulo: 'Cierre de mes', pintar: cierre },
-  importar:    { titulo: 'Importar',     pintar: importar }
+  importar:    { titulo: 'Importar',     pintar: importar },
+  cuenta:      { titulo: 'Tu cuenta',    pintar: cuenta }
 };
 
 /* La sección activa se marca en los dos juegos de navegación —riel y
@@ -197,10 +199,17 @@ async function arrancar({ refrescar = false } = {}) {
     // nada. En vez de enseñar una pantalla de ceros, se lleva a
     // armarlo: ver ceros donde debería haber plata desanima más que
     // una pregunta directa.
-    if (A.faltantes(D).length) return abrirAsistente();
+    /* «Tu cuenta» se alcanza SIEMPRE, aunque el hogar esté a medias.
+       La política de privacidad promete poder llevarse los datos y
+       borrar la cuenta «cuando querás»; mandar al asistente a quien
+       viene justo a eso lo dejaría atrapado. */
+    if (ruta !== 'cuenta' && A.faltantes(D).length) return abrirAsistente();
 
     document.body.dataset.asistente = 'no';
-    pintarMesNav();
+    // El mes no significa nada en «Tu cuenta»: enseñarlo invita a creer
+    // que exportar o borrar depende del mes que se esté mirando.
+    if (ruta === 'cuenta') $('#mesNav').hidden = true;
+    else pintarMesNav();
 
     const v = VISTAS[ruta] || VISTAS.resumen;
     $('#titulo').textContent = v.titulo;

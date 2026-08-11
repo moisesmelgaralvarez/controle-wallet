@@ -4,6 +4,44 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.20.1 — El PDF del mes en curso, de cualquier banco
+
+**Por qué esto importa más de lo que parecía**
+
+Los bancos dan CSV de los meses **cerrados**, pero del mes **en curso** —el único
+que sirve para controlar el gasto mientras pasa— solo dan una impresión en PDF.
+Así que el PDF no era el camino secundario: era el principal, y para importar
+semana a semana es el único.
+
+**Cómo se lee un banco que nadie programó**
+
+No se leen las columnas: **se lee el saldo que arrastra cada renglón.**
+
+    monto = saldo de este renglón − saldo del anterior
+
+Eso es exacto y el signo viene solo. Y funciona igual para una cuenta —donde un
+cargo baja el saldo— que para una tarjeta —donde sube lo que se debe—, porque en
+los dos casos se lee el número del banco en sus propios términos.
+
+**Se comprueba solo, renglón por renglón.** Esa diferencia tiene que coincidir
+con alguno de los otros números del mismo renglón: es el banco diciendo lo mismo
+dos veces. Si más de uno de cada diez no cuadra, **el archivo se rechaza entero**.
+Entregar «casi bien» con dinero es entregar mal.
+
+**Lo que no se inventa**
+
+- Si el archivo no dice con qué saldo arrancaba, el **primer movimiento queda
+  fuera** y se avisa: su signo es genuinamente desconocido.
+- Si no está claro si el documento es de una cuenta o de una tarjeta, **se
+  pregunta**. No es lo mismo, y suponerlo cambiaría el signo de todo.
+- Solo cuentan las cifras con **centavos**. Sin eso, «Fecha de corte 06/08/2026»
+  entraba como movimiento y el 2026 se leía como saldo.
+
+**322 pruebas en verde**, siete nuevas — incluida la que rechaza un archivo cuyos
+saldos no cuadran con sus montos.
+
+---
+
 ## v0.20.0 — El CSV de cualquier banco, y registrar sin salir
 
 **Qué se hizo**

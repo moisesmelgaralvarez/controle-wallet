@@ -49,9 +49,19 @@ test('la API nueva expone todo lo que exponía la vieja', () => {
   assert.deepEqual(faltan, [], `quedaron sin exportar: ${faltan.join(', ')}`);
 });
 
+/* Lo que el núcleo nuevo agregó A PROPÓSITO, con su razón escrita.
+   La lista existe para que agregar algo sea una decisión y no un
+   descuido: si aparece un nombre que no está aquí, la prueba falla. */
+const NUEVOS_A_PROPOSITO = {
+  adaptadorSaldos: 'lee el PDF de cualquier banco guiándose por el saldo que ' +
+                   'arrastra, en vez de adivinar columnas. Hacía falta porque del ' +
+                   'mes en curso los bancos solo dan PDF.'
+};
+
 test('la API nueva no inventa nada que la vieja no tuviera', () => {
   // `default` lo agrega el sistema de módulos, no nosotros.
-  const sobran = Object.keys(nuevo).filter(k => k !== 'default' && !(k in viejo));
+  const sobran = Object.keys(nuevo).filter(
+    k => k !== 'default' && !(k in viejo) && !(k in NUEVOS_A_PROPOSITO));
   assert.deepEqual(sobran, [], `aparecieron de la nada: ${sobran.join(', ')}`);
 });
 

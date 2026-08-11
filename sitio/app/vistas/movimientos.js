@@ -71,6 +71,10 @@ export function movimientos({ contenedor, D, periodo, hogar, recargar }) {
       <button class="boton boton--principal" type="button" data-nuevo="gasto" ${cerrado ? 'disabled' : ''}>Registrar gasto</button>
       <button class="boton boton--borde" type="button" data-nuevo="retiro" ${cerrado ? 'disabled' : ''}>Retiro de efectivo</button>
       <button class="boton boton--borde" type="button" data-nuevo="pago" ${cerrado ? 'disabled' : ''}>Pagar tarjeta</button>
+      <!-- Aquí y no en la barra de abajo: importar no es un sitio al que
+           se navega, es lo que uno piensa justo cuando iba a teclear
+           treinta renglones a mano. -->
+      <button class="boton boton--borde" type="button" data-importar>Importar del banco</button>
     </section>
 
     <div class="zonas">
@@ -169,6 +173,9 @@ export function movimientos({ contenedor, D, periodo, hogar, recargar }) {
     if (tipo === 'retiro') formRetiro(null);
     if (tipo === 'pago')   formPago(null);
   }));
+
+  const imp = $('[data-importar]', contenedor);
+  if (imp) imp.addEventListener('click', () => { location.hash = '#/importar'; });
 
   $$('[data-editar]', contenedor).forEach(b => b.addEventListener('click', () => {
     if (cerrado) return avisar('El mes está cerrado.', 'mal');

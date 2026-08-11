@@ -4,6 +4,64 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.19.0 — Importar el estado de cuenta
+
+**Qué se hizo**
+
+- **Importar estados de cuenta del banco**: el PDF de BAC —que viene cifrado y
+  hay que abrir a mano— y CSV de cualquier banco. Decenas de movimientos de un
+  golpe, en vez de teclearlos.
+- Se llega desde **Movimientos → «Importar del banco»**, que es justo donde uno
+  piensa en ello, y desde el menú lateral en pantalla grande.
+
+**Enseña antes de escribir**
+
+Leer el archivo **no toca tus datos**. Se ve el lote entero antes de aprobarlo:
+cuántos gastos, cuántos retiros, qué rubros nuevos se van a crear, y a qué rubro
+va cada gasto —corregible ahí mismo, y lo corregido queda aprendido para la
+próxima—. Un importador que escribe primero y enseña después no se puede revisar.
+
+**Dice si el archivo cuadra consigo mismo**
+
+El estado de cuenta trae su saldo inicial y su saldo final. Si sumar los
+movimientos no da el final, es que algún renglón no se leyó bien, y se avisa
+antes de aplicar. Esa comprobación no depende de lo que la app crea: solo del
+archivo.
+
+**Avisa qué va a reemplazar**
+
+Cada importación reemplaza lo que se importó antes de esa cuenta en esas fechas
+—es lo que impide duplicar cuando el archivo nuevo ya trae lo del anterior— y
+**lo que escribiste a mano no se toca nunca**. Borrar sin decirlo, aunque sea
+correcto, es de las cosas que hacen desconfiar de una app de dinero.
+
+**Entra todo o no entra nada**
+
+El borrado va antes que la inserción por necesidad. Partido en dos viajes, una
+caída de red en medio dejaría el mes con menos gastos de los que hubo — y eso no
+se ve: el mes parece que salió barato. Va dentro de una sola transacción en la
+base, y hay una prueba que fuerza el fallo a mitad de camino y comprueba que no
+se perdió ni una fila.
+
+**El banco manda sobre el saldo.** Cada importación deja anotado el saldo que
+declara el archivo con su fecha de corte. Es contra eso que cuadra el cierre del
+mes, y antes había que teclearlo a mano.
+
+**Dos defectos que salieron al medir**
+
+Siete entradas en la barra del teléfono **se desbordaban 20 px**. Pero el número
+no era el problema de fondo: importar no es un sitio al que se navega, es algo
+que se hace una vez al mes. Salió de la barra y quedó donde se piensa en ello.
+
+Y `'otros'` —lo que el motor devuelve cuando no supo clasificar un renglón— no
+es un rubro. Mandarlo a la base habría reventado **la importación entera por un
+solo renglón raro**. Ahora entra sin rubro, y el cierre lo lee como «Sin
+clasificar».
+
+**297 pruebas · 27 de aislamiento · 25 de integración.**
+
+---
+
 ## v0.18.1 — El efectivo contado manda
 
 **Qué cambia**

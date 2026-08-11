@@ -139,6 +139,20 @@ const filaPago = p => ({
 });
 
 /**
+ * El saldo que el banco declara, que NO se llama igual en los dos casos.
+ *
+ * Un estado de cuenta trae `saldoFin`; el de una tarjeta trae
+ * `saldoCorte`, porque en la tarjeta lo que hay al final del ciclo no
+ * es un saldo a favor sino lo que se debe. Leer solo `saldoFin` deja
+ * la tarjeta SIN ancla y sin un solo error a la vista: la importación
+ * entra completa, se ve bien, y el patrimonio se queda sin la única
+ * cifra que permite calcularlo sin bajarse el histórico entero. Se
+ * descubrió importando un estado de cuenta de verdad.
+ */
+const anclaDe = lote =>
+  (lote.tipo === 'tarjeta' ? lote.saldoCorte : lote.saldoFin) ?? null;
+
+/**
  * Escribe lo preparado.
  *
  * Devuelve lo que la BASE dice que pasó, no lo que el navegador creía
@@ -168,7 +182,7 @@ export async function aplicar({ plan, lote, destino, hogarId }) {
     p_pagos: plan.pagos.map(filaPago),
     // El banco manda sobre el saldo: el ancla se pone sola con la
     // fecha de corte del archivo, en vez de tecleada y desfasada.
-    p_saldo_banco: lote.saldoFin ?? null,
+    p_saldo_banco: anclaDe(lote),
     p_retenido: lote.retenido ?? null
   });
 

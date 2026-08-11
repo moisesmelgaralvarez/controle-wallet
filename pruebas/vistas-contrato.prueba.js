@@ -47,3 +47,38 @@ for (const archivo of vistas) {
       `reventaría al usarlo, no al cargar la pantalla`);
   });
 }
+
+/* ------------------------------------------------------------
+   El ancla del banco no se llama igual en los dos casos
+   ------------------------------------------------------------ */
+
+test('el saldo declarado se lee del campo correcto según el tipo de archivo', async () => {
+  /* Una cuenta trae `saldoFin`; una tarjeta trae `saldoCorte`, porque
+     al final del ciclo lo que hay no es un saldo a favor sino lo que se
+     debe. Leer solo `saldoFin` dejaba la tarjeta SIN ancla y sin un
+     solo error a la vista: la importación entraba completa, se veía
+     bien, y el patrimonio se quedaba sin la única cifra que permite
+     calcularlo sin bajar el histórico entero.
+
+     Se descubrió importando un estado de cuenta de verdad. La prueba
+     lee el código porque `anclaDe` es interna, y lo que hay que fijar
+     es que los dos campos estén contemplados. */
+  const fuente = readFileSync(
+    new URL('../sitio/app/datos/importar.js', import.meta.url), 'utf8');
+
+  assert.match(fuente, /saldoCorte/,
+    'el importador no contempla el saldo de corte: las tarjetas quedarían sin ancla');
+  assert.match(fuente, /lote\.tipo === 'tarjeta'/,
+    'no distingue cuenta de tarjeta al leer el saldo declarado');
+  assert.doesNotMatch(fuente, /p_saldo_banco:\s*lote\.saldoFin/,
+    'volvió a mandar solo `saldoFin`, que en una tarjeta es undefined');
+});
+
+test('la pantalla dice cuándo NO pudo comprobar que el archivo cuadre', () => {
+  // Callarlo deja creer que se revisó y salió bien, cuando lo que pasó
+  // es que no se revisó.
+  const vista = readFileSync(
+    new URL('../sitio/app/vistas/importar.js', import.meta.url), 'utf8');
+  assert.match(vista, /No se pudo comprobar que el archivo cuadre/,
+    'la ausencia de la comprobación volvió a ser silenciosa');
+});

@@ -555,6 +555,64 @@ test('si la inserción falla, NO se borró nada: entra todo o no entra', async (
     'las filas no son las mismas de antes del intento fallido');
 });
 
+test('lo tecleado a mano que también viene en el archivo se puede quitar, sin duplicar', async () => {
+  /* El requisito: lo que diga la app del banco tiene que coincidir con
+     lo que diga Controle Wallet. La regla del rango ya impedía duplicar
+     lo IMPORTADO; faltaba el otro lado — lo que alguien tecleó a mano y
+     después viene en el estado de cuenta. Eso no lo toca ninguna
+     importación, a propósito, y quedaba dos veces. */
+  const aMano = await meter('retiros', {
+    hogar_id: hogar.id, fecha: '2027-12-05', periodo: '2027-12', monto: 777,
+    cuenta_id: cuentaImport.id, nota: 'Lo anoté yo el mismo día'
+  });
+
+  const r = await importar({
+    p_destino_clase: 'cuenta', p_destino_id: cuentaImport.id,
+    p_desde: '2027-12-01', p_hasta: '2027-12-31', p_lote: 'diciembre.pdf',
+    p_retiros: [{ fecha: '2027-12-05', periodo: '2027-12', monto: 777, nota: 'RETIRO CAJERO' }],
+    p_borrar_retiros: [aMano.id]
+  });
+  assert.ok(r.ok, JSON.stringify(r.cuerpo));
+
+  const enDiciembre = (await retirosDe()).filter(x => x.fecha === '2027-12-05');
+  assert.equal(enDiciembre.length, 1, 'el mismo movimiento quedó dos veces');
+  assert.equal(enDiciembre[0].origen, 'import', 'quedó el tecleado en vez del del banco');
+});
+
+test('sin pedirlo, lo tecleado a mano NO se borra', async () => {
+  // Quitarlo es una decisión de quien importa, no un efecto secundario.
+  const aMano = await meter('retiros', {
+    hogar_id: hogar.id, fecha: '2028-01-05', periodo: '2028-01', monto: 555,
+    cuenta_id: cuentaImport.id, nota: 'Este me lo quedo'
+  });
+
+  const r = await importar({
+    p_destino_clase: 'cuenta', p_destino_id: cuentaImport.id,
+    p_desde: '2028-01-01', p_hasta: '2028-01-31', p_lote: 'enero.pdf',
+    p_retiros: [{ fecha: '2028-01-05', periodo: '2028-01', monto: 555, nota: 'RETIRO CAJERO' }]
+  });
+  assert.ok(r.ok, JSON.stringify(r.cuerpo));
+
+  const sigue = await json(await admin(`/rest/v1/retiros?id=eq.${aMano.id}&select=id,origen`));
+  assert.equal(sigue.length, 1, 'se borró un movimiento manual que nadie mandó borrar');
+  assert.equal(sigue[0].origen, 'manual');
+});
+
+test('no se puede borrar por id un movimiento de OTRO hogar', async () => {
+  /* El `hogar_id` del WHERE no es adorno: sin él, un id ajeno entraría
+     por la petición. RLS ya lo impediría, pero una defensa que se
+     apoya en otra no es una defensa. */
+  const ajeno = '00000000-0000-0000-0000-000000000001';
+  const r = await importar({
+    p_destino_clase: 'cuenta', p_destino_id: cuentaImport.id,
+    p_desde: '2028-03-01', p_hasta: '2028-03-31', p_lote: 'marzo.pdf',
+    p_borrar_retiros: [ajeno]
+  });
+  // No revienta: simplemente no borra nada que no sea de este hogar.
+  assert.ok(r.ok, JSON.stringify(r.cuerpo));
+  assert.ok(!r.cuerpo.manuales_borrados_ret, 'borró algo que no era de este hogar');
+});
+
 test('un mes cerrado rechaza la importación entera, y se dice por qué', async () => {
   // No hace falta comprobarlo en la función: el disparador vive en las
   // tres tablas y aborta la transacción. Que falle completa es lo

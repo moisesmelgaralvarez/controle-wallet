@@ -38,6 +38,7 @@ import { proyectos } from './vistas/proyectos.js';
 import { historia } from './vistas/historia.js';
 import { cierre } from './vistas/cierre.js';
 import { importar } from './vistas/importar.js';
+import { informe } from './vistas/informe.js';
 import { cuenta } from './vistas/cuenta.js';
 import { asistente } from './vistas/asistente.js';
 
@@ -61,6 +62,7 @@ const VISTAS = {
   historia:    { titulo: 'Historia',    pintar: historia },
   cierre:      { titulo: 'Cierre de mes', pintar: cierre },
   importar:    { titulo: 'Importar',     pintar: importar },
+  informe:     { titulo: 'Informe',      pintar: informe },
   cuenta:      { titulo: 'Tu cuenta',    pintar: cuenta }
 };
 

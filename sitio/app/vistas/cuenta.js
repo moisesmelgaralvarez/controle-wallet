@@ -32,6 +32,7 @@ import { usuario, salir } from '../datos/api.js';
 import { olvidar } from '../datos/hogar.js';
 import { olvidarHistorico } from '../datos/historico.js';
 import { crear, borrar } from '../datos/escribir.js';
+import { migrar, reconocer, inventario } from '../datos/migrar.js';
 
 /** Todas las tablas del hogar, sin repetir. */
 const TABLAS = [...new Set([...CONFIGURACION, ...POR_MES])];
@@ -103,6 +104,21 @@ export function cuenta({ contenedor, hogar, recargar }) {
 
       </div>
       <div class="pila">
+
+        <section class="panel">
+          <div class="panel__tope"><h2>Traer el hogar de la app anterior</h2></div>
+          <p class="panel__nota">El respaldo que exporta la app vieja —el archivo
+            <code>presupuesto-….json</code>— entra completo: personas, cuentas, tarjetas,
+            rubros, movimientos, proyectos y los meses ya congelados.</p>
+          <label class="campo campo--pegado">
+            <span>Respaldo de la app anterior</span>
+            <input type="file" accept="application/json,.json" data-respaldo>
+          </label>
+          <div data-inventario></div>
+          <p class="panel__nota"><b>Agrega, no reemplaza.</b> Si este hogar ya tiene datos,
+            los de antes se suman a los de ahora — y quedarían dos veces. Traelo a un hogar
+            vacío, o borrá lo que haya primero.</p>
+        </section>
 
         <section class="panel">
           <div class="panel__tope"><h2>Borrar la cuenta</h2></div>
@@ -248,6 +264,61 @@ export function cuenta({ contenedor, hogar, recargar }) {
       b.dataset.seguro = 'no';
       b.textContent = 'Borrar mi cuenta para siempre';
     }
+  });
+
+  /* ---------- traer el hogar viejo ---------- */
+
+  const resp = $('[data-respaldo]', contenedor);
+  if (resp) resp.addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0];
+    const caja = $('[data-inventario]', contenedor);
+    if (!f || !caja) return;
+
+    let doc;
+    try {
+      doc = JSON.parse(await f.text());
+    } catch {
+      caja.innerHTML = `<p class="aviso aviso--error">Ese archivo no se puede leer como respaldo.</p>`;
+      return;
+    }
+
+    const problema = reconocer(doc);
+    if (problema) {
+      caja.innerHTML = `<p class="aviso aviso--error">${esc(problema)}</p>`;
+      return;
+    }
+
+    /* Se ENSEÑA lo que trae antes de escribir nada. Una migración que
+       empieza sola y avisa después no se puede revisar, y esta escribe
+       años de datos de un golpe. */
+    const inv = inventario(doc);
+    caja.innerHTML = `
+      <div class="aviso aviso--ok">
+        <strong>El respaldo se lee bien</strong>
+        <p>Trae ${esc(inv.personas)} personas, ${esc(inv.cuentas)} cuentas,
+           ${esc(inv.tarjetas)} tarjetas, ${esc(inv.gastos)} rubros,
+           ${esc(inv.movimientos)} movimientos, ${esc(inv.proyectos)} proyectos y
+           ${esc(inv.mesesCongelados)} meses ya congelados.</p>
+      </div>
+      <button class="boton boton--principal" type="button" data-traer>
+        Traer todo a este hogar
+      </button>`;
+
+    $('[data-traer]', caja).addEventListener('click', async ev => {
+      const b = ev.currentTarget;
+      b.disabled = true;
+      b.textContent = 'Trayendo…';
+      try {
+        const r = await migrar({ doc, hogarId: hogar.id });
+        const total = Object.values(r.hechas).reduce((s2, n) => s2 + n, 0);
+        avisar(`Listo: ${total} registros. Revisá que las cifras coincidan con la app anterior.`);
+        recargar();
+      } catch (err) {
+        avisar(err.message || 'No se pudo traer el hogar.', 'mal');
+        b.disabled = false;
+        b.textContent = 'Traer todo a este hogar';
+      }
+    });
   });
 
   /* ---------- invitar ---------- */

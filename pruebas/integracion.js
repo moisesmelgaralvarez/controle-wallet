@@ -25,6 +25,8 @@ import { armar, CONFIGURACION, POR_MES } from '../sitio/app/datos/armador.js';
 import { entrar } from '../sitio/app/datos/api.js';
 import { cerrarMes, guardarAvance, reabrirMes, ErrorSiguienteCerrado }
   from '../sitio/app/datos/cierre.js';
+import { migrar, reconocer, inventario } from '../sitio/app/datos/migrar.js';
+import { readFileSync } from 'node:fs';
 
 const URL     = process.env.SUPABASE_URL;
 const ANON    = process.env.SUPABASE_ANON_KEY;
@@ -644,4 +646,169 @@ test('reabrir devuelve el mes a editable y le quita la fecha de cierre', async (
   // La apertura del siguiente NO se borra: mientras el mes vuelve a
   // cuadrar, esa cifra sigue siendo la mejor que hay.
   assert.ok((await filaMes('2026-10')).apertura, 'se borró la apertura del mes siguiente al reabrir');
+});
+
+
+/* ============================================================
+   Migrar el hogar de la app anterior
+
+   La prueba que decide si la migración sirve NO es que las filas
+   entren: es que los MISMOS NÚMEROS salgan por los dos caminos. El
+   núcleo viejo sobre el documento viejo, y el núcleo nuevo sobre lo
+   que quedó en las tablas.
+
+   Una migración que pierde el 3% de los movimientos se ve igual de
+   bien que una perfecta. Solo la comparación la distingue.
+   ============================================================ */
+
+/** El núcleo de la app anterior, cargado tal cual del `heredado/`. */
+function nucleoViejo() {
+  /* `globalThis.URL` y no `URL` a secas: en este archivo `URL` es la
+     dirección del proyecto de Supabase, declarada arriba, y sombrea al
+     constructor del lenguaje. */
+  const src = readFileSync(new globalThis.URL('../heredado/asesor.js', import.meta.url), 'utf8');
+  const ventana = {};
+  new Function('window', src)(ventana);
+  return ventana.Asesor;
+}
+
+/* Un hogar con todo lo que la app anterior sabía guardar, en su
+   formato: ids cortos, `saldoBanco` como par, meses congelados. */
+const RESPALDO = () => ({
+  version: 6, configurado: true, inicioMes: 7,
+  personas: [{ id: 'p1', nombre: 'Moisés', cuentaId: 'c1' },
+             { id: 'p2', nombre: 'Judith', cuentaId: 'c1' }],
+  cuentas: [{ id: 'c1', nombre: 'Ficohsa', numero: '200012610911', saldoInicial: 15000,
+              desdeMes: '2026-06', saldoBanco: { monto: 18500.25, fecha: '2026-08-31' } }],
+  plantillaIngresos: [{ id: 'q1', nombre: 'Sueldo', dia: 6, lineas: [
+    { personaId: 'p1', bruto: 32000, deducciones: [{ concepto: 'ISR', monto: 4200 }] },
+    { personaId: 'p2', bruto: 18000, deducciones: [] } ] }],
+  ingresosMes: { '2026-07': { confirmado: { q1: true }, lineas: { q1: {
+    p1: { personaId: 'p1', bruto: 33000, deducciones: [{ concepto: 'ISR', monto: 4500 }] },
+    p2: { personaId: 'p2', bruto: 18000, deducciones: [] } } } } },
+  gastos: [
+    { id: 'g1', concepto: 'Comida', monto: 9000, categoria: 'Alimentación', crecimiento: 2, medioPago: 'tarjeta', tarjetaId: 't1' },
+    { id: 'g2', concepto: 'Pediatría', monto: 1800, categoria: 'Salud', crecimiento: 0, medioPago: 'efectivo' }
+  ],
+  tarjetas: [{ id: 't1', nombre: 'BAC', numero: '8941', tipo: 'credito', diaCorte: 6,
+               diaPago: 27, pagaCon: 'q1', cuentaId: 'c1', saldoInicial: 0,
+               desdeMes: '2026-06', pagaTotal: true, tasaAnual: 54,
+               saldoBanco: { monto: 7200, fecha: '2026-08-06' } }],
+  financiamientos: [{ id: 'f1', nombre: 'Refri', cuotaMensual: 620, cuotasTotales: 12, cuotasPagadas: 4 }],
+  proyectos: [{ id: 'x1', nombre: 'Carro', costoMin: 180000, costoMax: 220000,
+                aporteMensual: 2500, tipo: 'necesidad', urgencia: 'este_ano',
+                aportes: [{ id: 'a1', personaId: 'p1', monto: 5000, fecha: '2026-07-20', nota: 'Del aguinaldo' }] }],
+  movimientos: [
+    { id: 'm1', periodo: '2026-07', fecha: '2026-07-20', monto: 2410.75, concepto: 'Súper', gastoId: 'g1', personaId: 'p1', medioPago: 'tarjeta', tarjetaId: 't1' },
+    { id: 'm2', periodo: '2026-07', fecha: '2026-08-02', monto: 1180.50, concepto: 'Gasolina', gastoId: 'g1', personaId: 'p1', medioPago: 'tarjeta', tarjetaId: 't1' },
+    { id: 'm3', periodo: '2026-07', fecha: '2026-07-15', monto: 640.25, concepto: 'Farmacia', gastoId: 'g2', personaId: 'p2', medioPago: 'efectivo' }
+  ],
+  retiros: [{ id: 'r1', periodo: '2026-07', fecha: '2026-07-18', monto: 3000, cuentaId: 'c1', personaId: 'p1', nota: 'Cajero' }],
+  pagosTarjeta: [{ id: 'pt1', periodo: '2026-07', fecha: '2026-07-25', monto: 5000, tarjetaId: 't1', cuentaId: 'c1' }],
+  comercios: { PAIZ: 'g1' },
+  presupuestoMes: {}
+});
+
+let hogarMigrado, docViejo;
+
+test('el respaldo de la app anterior se reconoce antes de tocar nada', () => {
+  assert.equal(reconocer(RESPALDO()), null);
+  assert.match(reconocer({ hola: 1 }), /no trae/);
+  assert.match(reconocer(null), /no es un respaldo/);
+
+  const inv = inventario(RESPALDO());
+  assert.equal(inv.personas, 2);
+  assert.equal(inv.movimientos, 3);
+  assert.equal(inv.aportes, 1);
+});
+
+test('la migración entra entera, con las referencias rehechas', async () => {
+  /* Se migra a un hogar NUEVO y vacío: si se hiciera sobre el de las
+     pruebas anteriores, los totales llevarían dentro lo de aquellas y
+     la comparación no probaría nada. */
+  const sello = Date.now();
+  const correo = `migra-${sello}@controlewallet.test`;
+  const clave = `Clave-${sello}`;
+  const r = await admin('/auth/v1/admin/users', { method: 'POST',
+    body: JSON.stringify({ email: correo, password: clave, email_confirm: true }) });
+  const u = await json(r);
+  assert.ok(u?.id, 'no se pudo crear el usuario de la migración');
+
+  /* Las DOS sesiones tienen que ser la misma persona: la del arnés
+     —que lee con `api()`— y la del cliente de la app, que es quien
+     escribe dentro de `migrar`. Con sesiones distintas, `migrar`
+     intentaba escribir en el hogar de otro usuario y RLS lo frenaba,
+     que es exactamente lo que tiene que hacer. */
+  const s2 = await fetch(`${URL}/auth/v1/token?grant_type=password`, {
+    method: 'POST', headers: { apikey: ANON, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: correo, password: clave })
+  });
+  sesion = await json(s2);
+  await entrar(correo, clave);
+
+  const hogares = await json(await api('/hogares?select=id'));
+  assert.equal(hogares.length, 1, 'el usuario nuevo debería tener un solo hogar');
+  hogarMigrado = hogares[0].id;
+
+  // El día de arranque del mes viene del respaldo, no del hogar nuevo.
+  docViejo = RESPALDO();
+  await api(`/hogares?id=eq.${hogarMigrado}`, { method: 'PATCH',
+    body: JSON.stringify({ inicio_mes: docViejo.inicioMes }) });
+
+  const res = await migrar({ doc: docViejo, hogarId: hogarMigrado });
+  assert.equal(res.hechas.personas, 2);
+  assert.equal(res.hechas.movimientos, 3);
+  assert.equal(res.hechas.plantilla_lineas, 2);
+  assert.equal(res.hechas.aportes, 1);
+
+  // Las referencias tienen que apuntar a algo: un movimiento sin rubro
+  // no da error, solo deja de contar contra el plan.
+  const movs = await json(await api('/movimientos?select=gasto_id,persona_id,tarjeta_id'));
+  assert.ok(movs.every(m => m.gasto_id), 'quedó un movimiento sin rubro');
+  assert.ok(movs.every(m => m.persona_id), 'quedó un movimiento sin persona');
+});
+
+test('LOS MISMOS NÚMEROS por los dos caminos: núcleo viejo y núcleo nuevo', async () => {
+  /* Es la prueba que decide si la migración sirve. Si una sola cifra
+     no cuadra, se perdió algo — y perder el 3% de los movimientos se
+     ve igual de bien que no perder nada. */
+  const filas = { hogar: (await json(await api(`/hogares?id=eq.${hogarMigrado}&select=*`)))[0] };
+  for (const t of [...CONFIGURACION, ...POR_MES]) {
+    filas[t] = await json(await api(`/${t}?select=*`));
+  }
+  const D = armar(filas);
+  const viejo = nucleoViejo();
+  const PER = '2026-07';
+
+  const comparaciones = [
+    ['ingreso neto del mes',   () => viejo.ingresoMes(docViejo, PER).neto,      () => A.ingresoMes(D, PER).neto],
+    ['gastos del plan',        () => viejo.gastosMes(docViejo, 0, PER).total,   () => A.gastosMes(D, 0, PER).total],
+    ['disponible real',        () => viejo.resumenMes(docViejo, PER).disponible,() => A.resumenMes(D, PER).disponible],
+    ['saldo de la cuenta',     () => viejo.saldoCuenta(docViejo, docViejo.cuentas[0], PER).saldo,
+                               () => A.saldoCuenta(D, D.cuentas[0], PER).saldo],
+    ['deuda de la tarjeta',    () => viejo.deudaTarjeta(docViejo, docViejo.tarjetas[0], PER).deuda,
+                               () => A.deudaTarjeta(D, D.tarjetas[0], PER).deuda],
+    ['efectivo en mano',       () => viejo.efectivo(docViejo, PER),             () => A.efectivo(D, PER)],
+    ['cargado en el ciclo',    () => viejo.cicloTarjeta(docViejo, docViejo.tarjetas[0], PER).cargado,
+                               () => A.cicloTarjeta(D, D.tarjetas[0], PER).cargado],
+    ['gasto por categoría',    () => viejo.porCategoria(docViejo, PER).total,   () => A.porCategoria(D, PER).total],
+    ['cuotas del mes',         () => viejo.cuotasEn(docViejo, 0),               () => A.cuotasEn(D, 0)],
+    ['patrimonio neto',        () => viejo.patrimonio(docViejo, PER).neto,      () => A.patrimonio(D, PER).neto]
+  ];
+
+  const distintos = [];
+  for (const [nombre, antes, despues] of comparaciones) {
+    const a = Number(antes()), b = Number(despues());
+    if (Math.abs(a - b) > 0.01) distintos.push(`${nombre}: antes ${a}, ahora ${b}`);
+  }
+  assert.deepEqual(distintos, [],
+    'la migración cambió los números: ' + distintos.join(' · '));
+});
+
+test('lo migrado queda como MANUAL, no como importado', async () => {
+  // Si entrara como 'import', la próxima importación de un estado de
+  // cuenta lo borraría por caer en su rango de fechas.
+  const movs = await json(await api('/movimientos?select=origen'));
+  assert.ok(movs.length && movs.every(m => m.origen === 'manual'),
+    'lo migrado quedaría a merced del borrado de la próxima importación');
 });

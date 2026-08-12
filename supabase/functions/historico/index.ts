@@ -117,6 +117,12 @@ Deno.serve(async (req: Request) => {
       patrimonio: A.patrimonio(D, periodo),
       salud: A.saludFinanciera(D, periodo),
 
+      /* La carta del asesor: qué hacer con el dinero de este mes, en
+         orden. Se calcula aquí porque castiga según el colchón y la
+         deuda, y las dos salen del histórico — con un mes cargado
+         diría otra cosa, con la misma seguridad. */
+      carta: A.cartaAsesor(D, periodo),
+
       // El cierre se calcula AQUÍ por dos razones, y ninguna es de
       // rendimiento. La primera: con qué saldos arrancó el mes sale de
       // recorrer todo lo anterior mientras nadie haya cerrado el mes

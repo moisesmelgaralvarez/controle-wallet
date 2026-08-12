@@ -47,7 +47,8 @@ const CONSUMEN = {
   Resumen:   ['patrimonio', 'cuentas', 'salud'],
   Historia:  ['historia', 'filasUsadas'],
   Proyectos: ['cartera'],
-  Cierre:    ['cierre', 'paraCerrar']
+  Cierre:    ['cierre', 'paraCerrar'],
+  Informe:   ['carta', 'patrimonio', 'salud', 'historia', 'cartera', 'cuentas', 'tarjetas']
 };
 
 test('el lector del contrato encuentra la respuesta de verdad', () => {

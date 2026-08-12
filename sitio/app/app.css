@@ -838,3 +838,50 @@ body[data-mes-pasado="si"] .mes-nav .tope__mes {
 .lista-bloqueos li[data-tipo="exceso"] {
   border-left-color: color-mix(in oklab, var(--alerta) 55%, transparent);
 }
+
+/* ============================================================
+   Informe del mes
+   ============================================================ */
+
+.informe { display: grid; gap: var(--e3); max-width: 62rem; }
+
+.informe__tope h1 { font-size: var(--t-xl); margin: 0 0 0.2rem; }
+.informe__sub { margin: 0; color: var(--tenue); font-size: var(--t-sm); }
+.informe__fuente { margin-top: var(--e1); font-size: var(--t-xs); }
+
+.informe__prosa h3 { font-size: var(--t-sm); margin: var(--e2) 0 0.25rem; }
+.informe__prosa h3:first-child { margin-top: 0; }
+/* Límite de lectura, como toda prosa larga de la app. */
+.informe__prosa p { margin: 0; color: var(--tenue); font-size: var(--t-sm); max-width: 68ch; }
+
+.informe__pie { color: var(--tenue); font-size: var(--t-xs); max-width: 68ch; }
+
+/* ---------- impreso ----------
+
+   Lo que se ve en pantalla es lo que sale por la impresora, quitando
+   lo que no tiene sentido en papel: la navegación, el botón de
+   imprimir y los fondos. Un segundo juego de estilos para el PDF
+   sería un juego que nadie mira hasta que se rompe. */
+@media print {
+  .app__riel, .app__barra, .tope, .solo-lectura, .informe__imprimir,
+  #aviso-flotante { display: none !important; }
+
+  .app { display: block; }
+  .contenido { padding: 0; }
+
+  /* Sobre papel siempre se imprime en claro: gastar tinta en un fondo
+     oscuro además de que no se lee. */
+  :root, body, .panel {
+    background: #fff !important; color: #000 !important;
+  }
+  .panel {
+    border: 1px solid #ccc; break-inside: avoid; page-break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+  .panel__nota, .fila-cfg__t small, .informe__sub, .informe__pie { color: #444 !important; }
+  .fila-cfg__v.bien { color: #0a5c37 !important; }
+  .fila-cfg__v.mal  { color: #8a2b0f !important; }
+  .informe { max-width: none; gap: 1rem; }
+  /* Que un título no quede solo al pie de una hoja. */
+  h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
+}

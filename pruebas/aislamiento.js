@@ -66,14 +66,17 @@ const como = (sesion, ruta, opts = {}) => fetch(`${URL}/rest/v1${ruta}`, {
 const json = async r => { const t = await r.text(); try { return t ? JSON.parse(t) : null; } catch { return t; } };
 
 async function crearUsuario(correo) {
+  // La clave viaja de vuelta: sin ella no se puede abrir sesión como
+  // esa persona, y hay pruebas que necesitan justo eso —comprobar que
+  // quien fue invitado SÍ entra— no solo que los demás no.
+  const clave = 'Prueba-' + Math.random().toString(36).slice(2, 10);
   const r = await admin('/auth/v1/admin/users', {
     method: 'POST',
-    body: JSON.stringify({ email: correo, password: 'Prueba-' + Math.random().toString(36).slice(2, 10),
-                           email_confirm: true })
+    body: JSON.stringify({ email: correo, password: clave, email_confirm: true })
   });
   const u = await json(r);
   if (!r.ok) throw new Error(`No se pudo crear ${correo}: ${JSON.stringify(u)}`);
-  return u;
+  return { ...u, clave };
 }
 
 async function entrar(correo, clave) {
@@ -615,4 +618,74 @@ test('con el correo propio, la cuenta se borra de verdad — aunque haya meses c
 
   const yaNo = await admin(`/auth/v1/admin/users/${usuarioA.id}`);
   assert.ok(yaNo.status === 404 || !(await json(yaNo))?.id, 'la cuenta sigue existiendo');
+});
+
+/* ------------------------------------------------------------
+   Invitaciones: el token abre una puerta, y solo a quien toca
+   ------------------------------------------------------------ */
+
+const aceptar = (sesion, token) => como(sesion, '/rpc/aceptar_invitacion', {
+  method: 'POST', body: JSON.stringify({ p_token: token })
+});
+
+test('A no puede invitar a nadie al hogar de B', async () => {
+  // RLS: insertar una invitación exige ser propietario de ESE hogar.
+  const r = await como(sesionA, '/invitaciones', {
+    method: 'POST',
+    body: JSON.stringify({ hogar_id: hogarB, correo: 'colado@ejemplo.com', rol: 'miembro' })
+  });
+  assert.ok(!r.ok, 'A logró crear una invitación en el hogar de B');
+});
+
+test('un token robado no sirve: el correo tiene que coincidir', async () => {
+  /* Es la condición que de verdad cierra el caso. Sin ella, cualquiera
+     que consiga el enlace —lo reenvían, se filtra, lo ve alguien por
+     encima del hombro— entra al hogar. */
+  const invitado = `invitado-${Date.now()}@controlewallet.test`;
+  const inv = (await json(await como(sesionB, '/invitaciones', {
+    method: 'POST',
+    body: JSON.stringify({ hogar_id: hogarB, correo: invitado, rol: 'miembro' })
+  })))[0];
+  assert.ok(inv?.token, 'no se pudo crear la invitación');
+
+  // A tiene el token, pero la invitación no es para su correo.
+  const r = await aceptar(sesionA, inv.token);
+  assert.ok(!r.ok, 'A entró al hogar de B con un token que no era suyo');
+
+  const dentro = await json(await admin(
+    `/rest/v1/miembros?hogar_id=eq.${hogarB}&usuario_id=eq.${usuarioA.id}&select=usuario_id`));
+  assert.deepEqual(dentro, [], 'A quedó como miembro del hogar de B');
+});
+
+test('un token inventado no abre nada', async () => {
+  const r = await aceptar(sesionA, 'no-existe-este-token-para-nada');
+  assert.ok(!r.ok, 'un token cualquiera fue aceptado');
+});
+
+test('la invitación correcta sí deja entrar, y una sola vez', async () => {
+  const sello = Date.now();
+  const correo = `pareja-${sello}@controlewallet.test`;
+  const pareja = await crearUsuario(correo);
+  const suSesion = await entrar(correo, pareja.clave);
+
+  const inv = (await json(await como(sesionB, '/invitaciones', {
+    method: 'POST',
+    body: JSON.stringify({ hogar_id: hogarB, correo, rol: 'miembro' })
+  })))[0];
+
+  const r = await aceptar(suSesion, inv.token);
+  assert.ok(r.ok, 'la persona invitada no pudo entrar: ' + JSON.stringify(await json(r)));
+
+  const dentro = await json(await admin(
+    `/rest/v1/miembros?hogar_id=eq.${hogarB}&usuario_id=eq.${pareja.id}&select=rol`));
+  assert.equal(dentro.length, 1, 'no quedó como miembro');
+  assert.equal(dentro[0].rol, 'miembro');
+
+  // Y ahora sí ve lo del hogar: las MISMAS cifras, no una copia.
+  const gastos = await json(await como(suSesion, `/gastos?hogar_id=eq.${hogarB}&select=id`));
+  assert.ok(gastos.length >= 1, 'entró al hogar pero no ve sus datos');
+
+  // Usar el enlace otra vez no vuelve a servir: ya está aceptada.
+  const otra = await aceptar(suSesion, inv.token);
+  assert.ok(!otra.ok, 'la misma invitación se pudo usar dos veces');
 });

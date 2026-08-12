@@ -25,11 +25,11 @@
    menú.
    ============================================================ */
 
-import { haySesion, salir, capturarSesionDeURL, ErrorDatos } from './datos/api.js';
+import { haySesion, salir, capturarSesionDeURL, ErrorDatos, llamar } from './datos/api.js';
 import { cargarHogar, datosDelHogar, mesDeHoy, olvidar } from './datos/hogar.js';
 import { olvidarHistorico } from './datos/historico.js';
 import * as A from './nucleo/index.js';
-import { $, esc, fijarMoneda, nombreMes, cerrarHoja } from './ui.js';
+import { $, esc, fijarMoneda, nombreMes, cerrarHoja, cargando } from './ui.js';
 import { limites, mover, esElActual } from './datos/periodos.js';
 import { resumen } from './vistas/resumen.js';
 import { movimientos } from './vistas/movimientos.js';
@@ -110,11 +110,14 @@ function leerHash() {
   const mes = partes[1] || '';
   return {
     ruta: partes[0] || 'resumen',
-    elegido: /^\d{4}-\d{2}$/.test(mes) ? mes : null
+    elegido: /^\d{4}-\d{2}$/.test(mes) ? mes : null,
+    // La invitación trae su token en el mismo sitio donde otras vistas
+    // llevan el mes. No es un período, así que viaja aparte.
+    extra: partes[1] || ''
   };
 }
 
-let { ruta, elegido } = leerHash();
+let { ruta, elegido, extra } = leerHash();
 
 /** Ir a una vista conservando el mes que se está mirando. */
 const enlace = (r, mes) => `#/${r}${mes ? '/' + mes : ''}`;
@@ -171,7 +174,40 @@ function saludarSiViene() {
   delCorreo.tipo = null;   // una sola vez, no en cada recarga
 }
 
+/**
+ * Quien llega con una invitación entra al hogar ANTES de cargar nada.
+ *
+ * Va primero por una razón práctica: si se cargara el hogar antes,
+ * quien todavía no pertenece a ninguno caería en el asistente de
+ * arranque y le tocaría armar un hogar que no necesita — el suyo ya
+ * existe, es al que lo invitaron.
+ */
+async function aceptarInvitacion(token) {
+  marcar('cargando');
+  vista.innerHTML = cargando('Entrando al hogar…');
+  try {
+    await llamar('aceptar_invitacion', { p_token: token });
+    olvidar();
+    olvidarHistorico();
+    // Sin el token en la dirección: ya se usó, y dejarlo invita a
+    // compartir un enlace que ya no sirve.
+    location.replace('/app/#/resumen');
+    location.reload();
+  } catch (err) {
+    marcar('error');
+    vista.innerHTML = `
+      <div class="error-caja">
+        <p><strong>No se pudo entrar al hogar</strong></p>
+        <p>${esc(err.message || 'Esa invitación no se pudo usar.')}</p>
+      </div>
+      <button class="boton boton--borde" type="button" id="alResumen">Ir a mi hogar</button>`;
+    $('#alResumen').addEventListener('click', () => { location.hash = '#/resumen'; });
+  }
+}
+
 async function arrancar({ refrescar = false } = {}) {
+  if (ruta === 'invitacion' && extra) return aceptarInvitacion(extra);
+
   marcar('cargando');
   cerrarHoja();
   try {
@@ -238,7 +274,7 @@ function abrirAsistente() {
 /* ---------- navegación y ciclo de vida ---------- */
 
 window.addEventListener('hashchange', () => {
-  ({ ruta, elegido } = leerHash());
+  ({ ruta, elegido, extra } = leerHash());
   if (document.body.dataset.asistente === 'si') return;
   arrancar();
 });

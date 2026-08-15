@@ -21,7 +21,6 @@ acuerda de por qué existe una llave y a nadie le da confianza tocarla.
 
 | Secreto | Para qué | Dónde vive | Si se rota, se rompe |
 |---|---|---|---|
-| `ANTHROPIC_API_KEY` | Leer facturas por foto | Secretos de Supabase, por proyecto | El escaneo de facturas, hasta redesplegar la función |
 | `RESEND_API_KEY` (contraseña SMTP) | Correos de confirmación, recuperación e invitación | Variable de ambiente al correr `supabase config push`; guardada en Supabase → Auth → SMTP | El registro de usuarios nuevos y la recuperación de contraseña |
 | Contraseña de la base | Conexión directa a Postgres y migraciones | Gestor de contraseñas del dueño | Las migraciones desde la CLI |
 | `service_role` de Supabase | Borrado real de cuentas y tareas de administración | Secretos de Edge Functions. **Nunca en el navegador** | El borrado de cuenta y el panel de plataforma |
@@ -31,6 +30,18 @@ acuerda de por qué existe una llave y a nadie le da confianza tocarla.
 > Los tres últimos son **del proyecto de pruebas**, nunca de producción. La suite
 > de aislamiento crea y borra usuarios: apuntarla a producción sería destructivo,
 > y por eso el propio archivo aborta si detecta el ref de producción.
+
+### El que todavía no existe
+
+`ANTHROPIC_API_KEY`, para leer facturas por foto. **Esa función está detenida
+esperando la decisión del dueño**, así que la llave no está creada en ninguno de
+los dos proyectos — comprobado el 15 de agosto de 2026 con `supabase secrets
+list` en los dos.
+
+Se anota aquí, y no en la tabla, a propósito: la tabla es el inventario de lo que
+existe. Una llave listada como si estuviera puesta hace creer que la función está
+lista, y además manda a buscar y rotar algo que no está. Cuando la función se
+haga, la llave sube a la tabla **en el mismo PR**.
 
 ### La Edge Function `historico` no lleva ningún secreto
 

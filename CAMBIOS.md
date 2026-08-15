@@ -4,6 +4,43 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.25.1 — Tu propio respaldo ya no se cuela por la pantalla de la app vieja
+
+**Qué pasaba**
+
+La pantalla de traer el hogar tiene un portero que revisa el archivo antes de
+escribir nada. Solo miraba dos cosas: que trajera **personas** y **gastos**.
+
+El respaldo que exporta esta misma app —el de «Llevarte todo»— trae las dos,
+porque son dos de sus veinte tablas. Así que el archivo propio **pasaba el
+portero**, se traía como si fuera del formato viejo, y ensuciaba el hogar sin dar
+un solo error. Y como traer *agrega* en vez de reemplazar, eso no se deshace
+solo.
+
+**Por qué era peor de lo que parece**
+
+No es un caso raro: es **el único que quedaba**. Quien no viene de la app
+anterior solo abre esa pantalla por una razón —querer restaurar su respaldo— así
+que el camino más probable hasta ese botón terminaba justo en el fallo callado.
+
+**Por qué no se distingue por la versión**
+
+Parecería lo obvio, y está mal: **el respaldo viejo también trae versión**, va por
+la 6. Mirarla habría dejado fuera todos los respaldos legítimos — cambiar un
+fallo callado por otro.
+
+Se distingue por el sello de fecha que solo pone esta app. La anterior guarda sus
+datos tal cual, sin envoltorio.
+
+**341 pruebas en verde**, cinco nuevas — y comprobado que fallan si se les quita
+el arreglo.
+
+> **Ojo:** el respaldo de «Llevarte todo» **todavía no se puede restaurar**. Esto
+> solo impide que se estropee algo al intentarlo por la puerta equivocada. Que se
+> pueda volver a meter es una función que aún no existe.
+
+---
+
 ## v0.25.0 — Traer el hogar de la app anterior
 
 *Cierra la fase 1.*

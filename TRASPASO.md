@@ -1,7 +1,7 @@
 # Traspaso — continuar Controle Wallet
 
 > Pegá este documento completo al abrir un chat nuevo. Describe el estado real
-> del proyecto al 8 de agosto de 2026, verificado contra el repositorio y contra
+> del proyecto al 12 de agosto de 2026, verificado contra el repositorio y contra
 > los servicios en línea — no de memoria.
 
 ---
@@ -20,6 +20,10 @@ ruta que pidió es peor que otra: vale más eso que una respuesta complaciente.
 
 Todo el código, los comentarios y la interfaz van en **español de Honduras**.
 
+**Regla del dueño, adoptada:** cada pieza que se termina **se une y se publica en
+el momento**. Nada esperando aprobación, sin sorpresas. Y se le dice qué versión
+quedó en línea y qué se ve distinto.
+
 ---
 
 ## 2. Dónde está todo
@@ -31,76 +35,88 @@ Todo el código, los comentarios y la interfaz van en **español de Honduras**.
 | Base de producción | Supabase `controle-produccion` · ref `qhbkghxuwzdrlswphusd` |
 | Base de pruebas | Supabase `controle-pruebas` · ref `xidzmxtninmtxgqhddvu` |
 | Correo de salida | Resend, desde `hola@controlewallet.com` |
-| Correo de entrada | Cloudflare Email Routing: `hola@` → Gmail del dueño |
 | App anterior, congelada | `heredado/` en el repositorio (**no se edita**) |
 
-Las CLI (`gh`, `wrangler`, `supabase`) ya están instaladas y con sesión iniciada.
+Las CLI (`gh`, `wrangler`, `supabase`) están instaladas y con sesión iniciada.
 El enlace de Supabase debe quedar **siempre en pruebas** — es el seguro que evita
-aplicar una migración donde no toca.
+aplicar una migración donde no toca. Cambialo a producción solo para aplicar, y
+devolvelo en el mismo comando.
+
+**La computadora del dueño NO es servidor.** Ninguna pieza del servicio depende
+de ella. Si preguntan, la respuesta corta está en `EL-SERVICIO.md`.
 
 ---
 
 ## 3. Qué ya está hecho
 
-`main` va en **v0.17.0**. Todo pasa por Pull Request; `main` está protegido y ni
-el dueño puede escribirle directo (comprobado). Dos verificaciones obligatorias en
-CI.
+`main` va en **v0.25.0**, y **producción está al día con `main`**. Todo pasa por
+Pull Request; `main` está protegido. Dos verificaciones en CI.
 
-**Etapa 0 · Fundación.** Repositorio, publicación, y vuelta atrás **ensayada**:
-4 segundos revertir el código, 22 segundos el esquema completo ida y vuelta.
+**Etapas 0 a 4 — cerradas.** Fundación con vuelta atrás ensayada (4 s el código,
+22 s el esquema). Núcleo de 1,728 líneas partido en 13 módulos ES. Esquema de 20
+tablas con RLS en todas. Cliente propio sobre PostgREST y GoTrue. Interfaz con
+asistente, Resumen, Movimientos, Presupuesto, Proyectos, Historia y selector de
+mes.
 
-**Etapa 1 · Núcleo.** `asesor.js` (1,728 líneas, probado con dinero real durante
-meses) partido en 13 módulos ES en `sitio/app/nucleo/`. Se extrajo **por número de
-línea con un guion, sin reteclear**. 175 de sus 200 pruebas originales portadas a
-`node --test`; las 25 que faltan probaban la fusión entre teléfonos de `sync.js`,
-que desapareció con el servidor autoritativo.
+**Etapa 5 — cerrada.**
+- **Cierre de mes** con las tres conciliaciones, la apertura sembrada y los dos
+  candados.
+- **Importar estados de cuenta**: BAC y Ficohsa por PDF con lector propio,
+  cualquier banco por CSV/Excel, y **cualquier PDF guiándose por el saldo** que
+  arrastra cada renglón. Sin duplicar, ni del archivo ni de lo tecleado a mano.
+- **Informe del mes**, para imprimir o guardar como PDF.
 
-**Etapa 2 · Esquema.** 20 tablas, RLS en todas con funciones `SECURITY DEFINER`,
-mes cerrado inmutable impuesto en la base, bitácora. Migraciones numeradas con su
-reverso en `supabase/reversos/`.
+**Etapa 6 — cerrada.** Invitaciones al hogar, y panel de cuenta con exportar todo
+y borrar la cuenta de verdad.
 
-**Etapa 3 · Datos y sesión.** Cliente propio sobre PostgREST y GoTrue (sin SDK).
-El **armador** (`datos/armador.js`) convierte las filas de la base en el documento
-con la forma que el núcleo espera — es lo que permite tener la base normalizada
-sin reescribir la aritmética. Registro, confirmación por correo, sesión y
-recuperación funcionando en producción.
+**Etapa 8 — cerrada.** Traer el hogar de la app anterior, con la comprobación de
+que los mismos números salen por los dos caminos.
 
-**Etapa 4 · Interfaz.** Listos: el armazón con riel y barra de pestañas, el
-**asistente de arranque** (5 pasos), **Resumen**, **Movimientos**,
-**Presupuesto** —donde se edita todo lo que el asistente creó—, **Proyectos**
-con veredicto y prioridad por mérito, e **Historia** mes a mes. El armazón
-tiene **selector de mes**: el período va en el hash y lo comparten todas.
+### Las pantallas (9 en el menú)
 
-**Etapa 7 · Sitio público.** Seis páginas en `controlewallet.com`, con vitrina de
-dispositivos dibujada en HTML y CSS, y parallax solo con CSS.
+Resumen · Movimientos · Presupuesto · Proyectos · Historia · Cierre · Importar ·
+Informe · Tu cuenta
 
 ### Las pruebas
 
 ```
-npm run pruebas               282 · núcleo, armador, equivalencia, filas, alcance y paginado
-npm run pruebas:aislamiento    24 · ~55 intentos de violar el aislamiento
-npm run pruebas:integracion    12 · base → armador → núcleo, contra la base real
+npm run pruebas               336 · núcleo, armador, equivalencia, filas, contratos
+npm run pruebas:aislamiento    35 · intentos de violar el aislamiento
+npm run pruebas:integracion    32 · base → armador → núcleo, contra la base real
 ```
 
-Las de «filas» leen las **migraciones** y comprueban que cada columna que los
-formularios escriben existe de verdad, y que cada `check` del esquema tenga su
-recorte en el navegador. Cuando agregués una tabla o una columna, ahí es donde se
-amarra.
+Las de integración y aislamiento necesitan `SUPABASE_URL`, `SUPABASE_ANON_KEY` y
+`SUPABASE_SERVICE_KEY` de **pruebas**. Se sacan sin escribirlas en ningún lado:
 
-Las dos últimas necesitan `SUPABASE_URL`, `SUPABASE_ANON_KEY` y
-`SUPABASE_SERVICE_KEY` del proyecto de **pruebas**; en CI vienen de los secretos
-del repositorio.
+```bash
+REF=xidzmxtninmtxgqhddvu
+LLAVES=$(npx supabase projects api-keys --project-ref $REF -o json)
+export SUPABASE_URL="https://$REF.supabase.co"
+export SUPABASE_ANON_KEY=$(printf '%s' "$LLAVES" | python3 -c "import json,sys; print(next(k['api_key'] for k in json.load(sys.stdin) if k['name']=='anon'))")
+export SUPABASE_SERVICE_KEY=$(printf '%s' "$LLAVES" | python3 -c "import json,sys; print(next(k['api_key'] for k in json.load(sys.stdin) if k['name']=='service_role'))")
+unset LLAVES
+```
+
+### Las funciones de la base y del borde
+
+| Dónde | Qué hace |
+|---|---|
+| Edge `historico` | Corre el núcleo sobre TODO el histórico. Devuelve patrimonio, salud, carta, cierre, paraCerrar, historia, cuentas, tarjetas, cartera |
+| Edge `cuenta` | Borra la cuenta de verdad. Necesita la clave de servicio |
+| Edge `invitar` | Manda la invitación por correo |
+| `importar_lote` | Borra e inserta un estado de cuenta en UNA transacción |
+| `aceptar_invitacion` | Convierte un token válido en membresía |
+| `impedir_mes_cerrado` | Un mes cerrado no admite cambios |
+| `borrar_hogar_sin_miembros` | Se lleva el hogar cuando se va el último |
 
 ---
 
 ## 4. Reglas que no se negocian
 
 1. **El servidor es la única fuente de verdad.** Nada de `localStorage` ni
-   `IndexedDB` como almacén de datos del usuario. Lo único que queda en el
-   dispositivo es el token de sesión.
-2. **El núcleo es puro.** Recibe datos, devuelve números. No sabe de red, ni de
-   base, ni de pantalla. Hay una prueba que verifica que ningún módulo del núcleo
-   toca `window`, `document`, `localStorage` ni `fetch`.
+   `IndexedDB` como almacén. Lo único en el dispositivo es el token de sesión.
+2. **El núcleo es puro.** Recibe datos, devuelve números. Hay una prueba que
+   verifica que no toca `window`, `document`, `localStorage` ni `fetch`.
 3. **Multi-inquilino desde el primer commit.** Ninguna consulta sin acotar al
    hogar. El filtro va en la base, nunca en el cliente.
 4. **El aislamiento se garantiza con RLS.** El código del navegador se asume
@@ -110,10 +126,9 @@ del repositorio.
 6. **Datos de tarjeta: jamás.** Ni número, ni CVV, ni vencimiento.
 7. **Todo cambio pasa por el repositorio**, con rama y Pull Request. Excepción
    documentada: la configuración de autenticación de Supabase se administra en el
-   panel (ver §6).
+   panel (ver `SECRETOS.md`).
 8. **Nada se pierde.** Toda función que existía tiene que seguir existiendo.
-9. **Sin dependencias porque sí.** Las únicas son `wrangler` y `supabase`, y son
-   herramientas, no librerías que viajen al navegador.
+9. **Sin dependencias porque sí.** Las únicas son `wrangler` y `supabase`.
 10. **Ni un estilo en línea.** Es lo que permite `style-src 'self'` sin
     excepciones en la CSP.
 
@@ -123,86 +138,92 @@ del repositorio.
 
 - **Una moneda por hogar**, sin conversión. Multi-moneda es fase 2.
 - **La app anterior está congelada.** Solo errores graves.
-- **RLS con funciones, no con claims en el JWT.** Un token ya emitido no cambia
-  hasta renovarse; revocar acceso tiene que ser inmediato.
-- **Montos en `numeric(14,2)` en la base, flotantes dentro del núcleo.** Está
-  probado así desde hace meses y tiene su propia tolerancia para conciliar.
-- **Un solo Worker** sirve el sitio en `/` y la app en `/app`, para que la vuelta
-  atrás revierta ambos de un golpe.
-- **El token de sesión vive en `localStorage`.** No es dato financiero; la defensa
-  es la CSP estricta. Una cookie `httpOnly` estorbaría en la fase 2 con Capacitor.
-- **El enrutador solo muestra las vistas que ya funcionan.** Un menú con entradas
-  «en construcción» enseña a no confiar en el menú.
+- **RLS con funciones, no con claims en el JWT.**
+- **Montos en `numeric(14,2)` en la base, flotantes dentro del núcleo.**
+- **Un solo Worker** sirve el sitio en `/` y la app en `/app`.
+- **El token de sesión vive en `localStorage`.** La defensa es la CSP estricta.
+- **El enrutador solo muestra las vistas que ya funcionan.**
+- **El efectivo contado manda** sobre el calculado al cerrar un mes.
+- **Los meses pasados NO se congelan solos.** Solo al cerrarlos.
+- **No se lee un PDF desconocido adivinando columnas** — está medido que se
+  equivoca en silencio. Se lee por el saldo, o se rechaza.
 
 ---
 
 ## 6. Trampas que ya costaron caro — leer antes de tocar nada
 
-Cada una de estas rompió algo, y todas fallaron **en silencio**.
+Cada una de estas rompió algo, y **todas fallaron en silencio**.
 
-**`supabase config push` manda el archivo ENTERO, no los cambios.** Rompió
-producción tres veces: mandó un `site_url` de desarrollo, bajó el límite a dos
-correos por hora, y dejó la contraseña de SMTP con un texto de ejemplo. Se le
-puso un guion con guardarraíles y hasta ese guion falló. **La configuración de
-autenticación se administra ahora en el panel**, y los valores vigentes están
-anotados en `SECRETOS.md`.
+**Una comprobación que no puede fallar no está comprobando nada.** Es la trampa
+que más veces se repitió. Comprobar que un módulo *se importa* no comprueba que
+sus funciones existan: importar un espacio de nombres siempre funciona aunque
+venga vacío. Pasó con `A.leerArchivo is not a function` en producción. **Toda
+prueba nueva se verifica rompiéndola a propósito.**
 
-**Nunca escribas una clave dentro de un comando.** Dos veces se le pasó al dueño
-un comando con un texto de ejemplo dentro y se ejecutó tal cual. Si necesita
-poner un secreto, que lo haga en el panel del servicio.
+**El esquema se queda atrás del núcleo, y no avisa.** Cuatro veces: las anclas de
+conciliación, la apertura del cierre, la procedencia de lo importado, y
+`copiado_de`. El núcleo lee un campo que las tablas nunca le dieron. Se encuentra
+**mirando quién consume, no el esquema**.
 
-**Hay cifras del núcleo que recorren TODO el histórico, y el navegador solo tiene
-el mes en curso.** Son `saldoCuenta`, `deudaTarjeta` y `efectivo`, y de ellas
-cuelga el veredicto de un proyecto. Medido: el mismo proyecto sale «Programado»
-con doce meses cargados y «Reconsideralo» con uno solo, inventándose la razón.
-El ancla de conciliación lo arregla —con ella, un mes da EXACTAMENTE lo mismo que
-doce— y `datos/alcance.js` es quien decide si se puede o no. Antes de enseñar
-cualquier cifra que venga de esas tres, preguntale.
+**Los nombres de campo anidados.** Escribiendo el informe me equivoqué en nueve de
+una sentada (`patrimonio.patrimonio` por `.neto`, `salud.meses` por
+`.mesesColchon`). Ninguno da error: llega `undefined` y se imprime L 0.00. Hay
+una prueba que lee el código de la vista y exige que cada campo exista.
+
+**`on delete set null` hace UPDATE, no solo DELETE.** Borrar un usuario actualiza
+cada fila que esa persona tocó, y ese UPDATE chocaba con el candado del mes
+cerrado: **nadie que hubiera cerrado un mes podía borrar su cuenta**. Se escondió
+porque probándolo con la clave de servicio el campo queda nulo.
+
+**`supabase config push` manda el archivo ENTERO.** Rompió producción tres veces.
+La configuración de autenticación se administra en el panel.
+
+**Nunca escribas una clave dentro de un comando.** Dos veces se ejecutó un comando
+con un texto de ejemplo dentro.
+
+**Y nunca le des al dueño un comando sin el `cd`.** Se ejecutó desde la carpeta
+personal y falló con `no such file or directory`.
+
+**Hay cifras del núcleo que recorren TODO el histórico**, y el navegador solo
+tiene el mes en curso: `saldoCuenta`, `deudaTarjeta` y `efectivo`. El ancla de
+conciliación lo arregla y `datos/alcance.js` decide si se puede.
+
+**El ciclo de una tarjeta va de corte a corte**, así que agarra días del mes
+pasado. Por eso el cierre se calcula en el servidor.
+
+**Una foto vacía no es una foto.** `montos` es `not null default '{}'`, y leer ese
+`{}` como plan congelado dejaba el mes entrante con todos sus rubros en cero.
+
+**PostgREST devuelve las columnas `numeric` como TEXTO.** Todo pasa por `num()`.
 
 **Un formulario que se abre y se guarda sin tocar nada no puede cambiar un dato.**
-El campo «desde qué mes» de la tarjeta se rellenaba con el mes de hoy al editar,
-y eso le borraba de la deuda todo lo anterior. Los valores por omisión son para
-CREAR; al editar, lo que estaba vacío se queda vacío.
 
-**`hidden` no esconde si una clase pone `display`.** La regla del navegador vale
-(0,1,0), lo mismo que `.boton` o `.mes-nav`, y entre autor y navegador gana el
-autor. El botón «Volver a hoy» seguía en pantalla. Hay una sola regla con
-`!important` en `app.css` que lo resuelve para toda la app.
+**`hidden` no esconde si una clase pone `display`.** Hay una regla con
+`!important` en `app.css` que lo resuelve.
 
-**PostgREST devuelve las columnas `numeric` como TEXTO.** Un `"8000.00"` sin
-convertir no revienta: se concatena, y el número absurdo aparece tres pantallas
-después. Todo pasa por `num()` en el armador, y hay una prueba dedicada.
+**Un `@media` acota cuándo aplica una regla; no le sube la prioridad.**
 
-**Un `@media` acota cuándo aplica una regla; no le sube la prioridad.** Con la
-misma especificidad gana la última del archivo. Rompió la barra de pestañas, que
-salía en escritorio.
+**La especificidad manda sobre el orden.**
 
-**La especificidad manda sobre el orden.** `.menu a` vale (0,1,1) y
-`.boton--principal` vale (0,1,0): el botón principal salía gris sobre verde,
-ilegible. Se corrige excluyendo, no subiendo especificidad al otro lado.
+**La unidad `ch` se mide contra la fuente del propio elemento.**
 
-**La unidad `ch` se mide contra la fuente del propio elemento.** `68ch` en un
-titular de 70 px son más de 3,000 px: la clase parece aplicada y no limita nada.
+**Medí, no mires.** A 1440 los párrafos salían de 1,302 px y los campos de 1,296.
+La barra de pestañas se desbordaba 20 px con siete entradas.
 
-**Los `.reverso.sql` NO van en `supabase/migrations/`.** La CLI ejecuta todo
-`.sql` de esa carpeta. Van en `supabase/reversos/`.
+**Los `.reverso.sql` NO van en `supabase/migrations/`.** Van en
+`supabase/reversos/`, y cada uno borra su fila de `schema_migrations`.
 
-**Un reverso tiene que borrar su fila de `supabase_migrations.schema_migrations`.**
-Si no, las tablas desaparecen pero el historial dice que están aplicadas, y
-`db push` no las vuelve a correr.
+**`supabase db query` va contra la base LOCAL sin `--linked`.**
 
-**`supabase db query` va contra la base LOCAL si no se le pasa `--linked`.** Un
-cronómetro que mide un comando que no corrió da un número tranquilizador y falso.
+**Verificá que el PR se unió antes de desplegar o etiquetar**, y encadená con
+`&&`.
 
-**Una comprobación que no puede fallar no está comprobando nada.** `git diff
---stat` sale con código 0 aunque haya diferencias. Usar `git diff --quiet`.
+**Cloudflare tarda en propagar.** Un sondeo a segundos del despliegue puede dar
+404 de algo que está bien. Compará el hash del archivo local contra el remoto
+hasta que coincidan.
 
-**Verificá que el PR se unió antes de desplegar o etiquetar.** Encadenar con
-saltos de línea hace que cada comando corra aunque el anterior falle; usar `&&`.
-
-**Borrar un usuario dejaba su hogar huérfano** con todos sus datos dentro,
-contradiciendo la política de privacidad publicada. Hay un disparador que lo
-resuelve, y actúa **solo si era el último miembro**.
+**En `pruebas/integracion.js` y `aislamiento.js`, `URL` está sombreado** por la
+dirección del proyecto. Usá `globalThis.URL`.
 
 ---
 
@@ -215,60 +236,54 @@ npm run pruebas
 git commit -m "qué cambia y por qué"
 git push -u origin feat/lo-que-sea
 gh pr create
+# CI verde → unir → aplicar migración a producción → publicar → etiquetar
 ```
 
 - Nunca a `main` directo. El PR lleva descripción en español: qué cambia y **por
   qué**, con las decisiones no obvias explicadas.
 - Las migraciones se aplican primero a **pruebas**, después a producción.
-- Verificar en el navegador **midiendo**, no a ojo: las capturas del panel escalan
-  distinto de lo que reportan, y varios errores solo aparecieron al medir con
-  JavaScript los anchos, los contrastes y los estados.
+- **Al publicar, el orden es: migración → Edge Function → Worker.** Si el Worker
+  va primero, la pantalla se queda a medias en silencio.
+- Verificar **midiendo**, no a ojo.
 - Los comentarios explican **el porqué**, no el qué.
 
 ---
 
-## 8. Lo que falta, en orden
+## 8. Lo que falta
 
-**Etapa 4 — completa.** Resumen, Movimientos, Presupuesto con confirmación de
-ingresos, Proyectos, Historia, capital y diagnóstico, y selector de mes.
+**Nada de producto, salvo una cosa que es decisión del dueño:**
 
-**Etapa 5 — funciones pesadas**
-- Importar estados de cuenta (BAC, Ficohsa, CSV, PDF) con conciliación. El
-  módulo ya está portado en `nucleo/importar.js`; falta la interfaz.
-- Facturas por foto → Supabase Storage + Edge Function con la clave de Anthropic.
-- Informe del mes (`heredado/reporte.js`, aún sin portar — genera HTML, así que
-  es capa de presentación, no núcleo).
-- Cierre de mes con las tres conciliaciones.
+- **Facturas por foto.** Necesita un modelo de IA de un tercero. Cuesta por uso,
+  manda la imagen fuera, y obligaría a ampliar la política de privacidad.
+  Recomendación dada: **esperar a que un cliente lo pida** — importar el estado de
+  cuenta ya evita teclear.
 
-**Etapa 6 — hogar compartido y paneles**
-- Invitaciones por correo (la tabla y la plantilla ya existen).
-- Panel del usuario: perfil, miembros, sesiones, exportar, borrar cuenta.
-- Panel de plataforma para `admin`.
+**Pendientes del dueño, no técnicos:**
 
-**Etapa 8 — migrar el hogar del dueño**
-- Exportar del `heredado/`, importar al modelo nuevo, y verificar que **el núcleo
-  viejo sobre el documento viejo y el núcleo nuevo sobre las tablas devuelven los
-  mismos números**. Si uno no cuadra, la migración no pasa.
-
----
-
-## 9. Pendientes del dueño
-
-- **Supabase Pro (~$25/mes)** antes del primer usuario que pague: es lo que da el
-  respaldo diario automático que la especificación exige. Hoy no existe.
+- **Supabase Pro (~$25/mes) — LO ÚNICO URGENTE.** Producción **no tiene respaldo
+  automático**. Ya hay datos reales y se puede invitar gente. Un error grave en la
+  base es hoy irrecuperable.
 - **Revisión legal** de términos y privacidad por alguien licenciado en Honduras.
-- **Los precios**, cuando los defina. La página está lista para recibirlos.
+- **Los precios**, cuando los defina.
+
+**Fase 2, no adelantar:** cobro de suscripciones, apps de tienda, multi-moneda.
 
 ---
 
-## 10. Cómo empezar la sesión nueva
+## 9. Cómo empezar la sesión nueva
 
-1. Leé `README.md`, `CAMBIOS.md`, `VUELTA-ATRAS.md` y `SECRETOS.md`.
-2. Corré `npm run pruebas` — deben salir 282 en verde.
-3. Mirá `sitio/app/vistas/movimientos.js` como referencia del estilo, y
-   `vistas/presupuesto.js` con `datos/filas.js` para lo que se edita: ahí está
-   cómo se arma una fila, cómo se valida y por qué eso vive fuera de la pantalla.
-4. Arrancá con **Proyectos**, salvo que el dueño diga otra cosa.
+1. Leé `EL-SERVICIO.md` (para hablar con el dueño), `CAMBIOS.md`,
+   `VUELTA-ATRAS.md` y `SECRETOS.md`.
+2. Corré `npm run pruebas` — deben salir **336 en verde**.
+3. Comprobá que producción esté al día:
+   `curl -s https://controlewallet.com/app/ | grep -o 'data-ruta="[a-z]*"' | sort -u`
+   — deben salir **9 secciones**.
+4. Mirá `sitio/app/vistas/cierre.js` como referencia del estilo de una vista con
+   servidor, y `datos/importar.js` para el patrón de «preparar y después
+   aplicar».
 
-No adelantés trabajo de la fase 2 (cobro de suscripciones, apps de tienda). Si
-algo depende de una decisión de esa fase, dejalo señalado y seguí.
+**Cómo verificar contra pruebas:** `npx wrangler dev` en el puerto 8787 —
+localhost siempre habla con pruebas, nunca con producción. La cuenta de pruebas
+del dueño es `moises-melgar@outlook.com` y **la contraseña la escribe él**: no se
+pide ni se escribe. Antes de tocar datos, sacá una foto de las tablas y compará
+al terminar.

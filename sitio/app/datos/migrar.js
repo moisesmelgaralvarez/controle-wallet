@@ -47,6 +47,25 @@ const texto = (v, largo) => v == null ? null : String(v).slice(0, largo || 200);
  */
 export function reconocer(doc) {
   if (!doc || typeof doc !== 'object') return 'Ese archivo no es un respaldo.';
+
+  /* El respaldo que exporta ESTA app traía `personas` y `gastos` —dos de
+     sus veinte tablas— así que pasaba las dos comprobaciones de abajo
+     como si viniera de la app anterior. Mismos nombres, contenido
+     completamente distinto: se migraba sin decir nada y ensuciaba el
+     hogar. Y como esto AGREGA, el estropicio no se deshace solo.
+
+     Es el caso que más importa atajar, no el más raro: quien no viene de
+     la app vieja solo abre esta pantalla por una razón —querer restaurar
+     su respaldo— y esa es justamente la que fallaba en silencio.
+
+     No sirve distinguirlos por `version`: el documento viejo TAMBIÉN la
+     trae, va por la 6. Lo que la app anterior nunca escribió es
+     `exportado` — su respaldo es el documento del núcleo tal cual
+     (`heredado/app.js`), sin envoltorio ni sello de fecha. */
+  if (typeof doc.exportado === 'string')
+    return 'Ese es un respaldo de Controle Wallet, no de la app anterior. ' +
+           'Esta pantalla solo trae hogares de la app vieja.';
+
   if (!Array.isArray(doc.gastos)) return 'Ese archivo no trae los gastos del hogar.';
   if (!Array.isArray(doc.personas)) return 'Ese archivo no trae a las personas del hogar.';
   return null;

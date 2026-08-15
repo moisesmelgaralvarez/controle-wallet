@@ -4,6 +4,233 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.25.0 — Traer el hogar de la app anterior
+
+*Cierra la fase 1.*
+
+**Qué se hizo**
+
+Desde «Tu cuenta» se sube lo exportado de la app vieja y el hogar entero pasa a
+Controle Wallet: rubros, movimientos, cuentas, tarjetas, proyectos y los meses ya
+cerrados.
+
+**La prueba que decide si esto sirve**
+
+No es que las filas entren. Es que **los mismos números salgan por los dos
+caminos** — el motor viejo sobre los datos viejos, y el motor nuevo sobre lo que
+quedó guardado.
+
+Se comparan diez cifras: ingreso neto, gastos del plan, disponible real, saldo de
+la cuenta, deuda de la tarjeta, efectivo, cargado en el ciclo, gasto por
+categoría, cuotas y patrimonio. **Si una sola no cuadra, la migración no pasa.**
+
+Una migración que pierde el 3% de los movimientos se ve igual de bien que una
+perfecta. Solo la comparación las distingue. Y se comprobó que la comparación
+puede fallar: quitándole un movimiento a propósito, dice «cargado en el ciclo:
+antes 3591.25, ahora 1180.5».
+
+**Tres decisiones que se ven en el resultado**
+
+- **Los meses cerrados entran de último.** En cuanto uno entra marcado como
+  cerrado, la base deja de aceptar movimientos de ese mes — escribirlos antes
+  haría que la migración rechazara sus propios datos.
+- **Lo migrado queda como tecleado a mano**, no como importado del banco. Si
+  entrara como importado, la siguiente importación de un estado de cuenta lo
+  borraría por caer en su rango de fechas.
+- **Agrega, no reemplaza.** Vaciar primero es una decisión que no se puede
+  deshacer, y la toma el dueño desde su panel, no una importación. La pantalla lo
+  advierte.
+
+**336 pruebas · 35 de aislamiento · 32 de integración**, en verde.
+
+---
+
+## v0.24.0 — El informe del mes, para imprimir o llevárselo
+
+**Qué se hizo**
+
+Una pantalla nueva, la única que no sirve para operar la app: sirve para **sacar
+lo que la app sabe y llevárselo**. A una reunión con la pareja, a un asesor, a un
+banco que pide ver cómo se administra la casa. Se imprime o se guarda como PDF.
+
+**No calcula nada por su cuenta**
+
+Cada cifra sale del mismo motor que dibuja el resto de la app. Si un número
+apareciera aquí distinto al de la pantalla, sería un error.
+
+Por eso lo que recorre todo el histórico se le **pide al servidor** en vez de
+estimarlo, y la pantalla **espera** a tenerlo todo antes de dibujar. Dibujar a
+medias y completar después dejaría salir por la impresora una versión incompleta
+que después nadie distingue de la buena.
+
+**Nueve nombres equivocados, y ninguno daba error**
+
+Escribiendo esta pantalla me equivoqué en nueve campos de una sentada
+—`patrimonio.patrimonio` por `.neto`, `salud.meses` por `.mesesColchon`, y siete
+más—. Ninguno rompe nada visible: llega un valor vacío, se imprime **L 0.00**, y
+queda en un documento que alguien enseña.
+
+La comprobación que ya existía no los veía porque solo miraba los nombres de
+primer nivel. La nueva corre el motor de verdad, lee el código del informe, y
+exige que cada campo que usa exista en el resultado. **Comprobado que puede
+fallar**: con un campo inventado, la prueba lo nombra.
+
+**Lo impreso es lo que se ve.** Sin un segundo juego de estilos para el PDF —
+sería uno que nadie mira hasta que se rompe. Al imprimir se quitan la navegación
+y el botón, se fuerza fondo claro, y ningún panel ni título se parte entre dos
+hojas.
+
+**336 pruebas · 35 de aislamiento · 28 de integración**, en verde.
+
+---
+
+## v0.23.0 — El hogar es de dos: invitaciones
+
+**Qué se hizo**
+
+Se invita a alguien al hogar por correo. Quien entra ve **las mismas cifras**, no
+una copia: si tu pareja anota un gasto, aparece en tu pantalla.
+
+**Por qué esta parte no se apoya en la base como todo lo demás**
+
+En toda la app es la base la que decide quién ve qué, y esa es la regla del
+proyecto. Aquí no se puede: **quien acepta una invitación todavía no es
+miembro**, así que ninguna política puede autorizarlo — es justo el momento
+anterior a serlo.
+
+Entonces lo que autoriza es el **enlace**, y sus cuatro condiciones se escriben a
+la vista en vez de esconderse en una regla que no podría existir:
+
+1. **El enlace existe** — 32 bytes al azar, comparados exactos.
+2. **Sigue pendiente** — usarlo dos veces no vuelve a meter a nadie.
+3. **No está vencido** — siete días. Un enlace de hace ocho meses en un correo
+   reenviado no abre la puerta de nadie.
+4. **El correo coincide** — la que de verdad cierra el caso. Sin ella, cualquiera
+   que consiga el enlace entra al hogar.
+
+*Invitar* sí lo controla la base: crear la invitación exige ser el dueño del
+hogar.
+
+**Detalles que salen de usarlo, no de diseñarlo**
+
+- **Se puede copiar el enlace.** El correo se pierde o cae en spam, y sin esa
+  salida una invitación perdida no tiene arreglo.
+- **Si el correo ya tiene cuenta**, eso no es un error: es el caso más común al
+  invitar a quien ya usa la app.
+- **Quien llega invitado entra al hogar antes de cargar nada.** Si no, caería en
+  el asistente de arranque a armar un hogar que no necesita.
+
+**325 pruebas · 35 de aislamiento · 28 de integración**, en verde.
+
+---
+
+## v0.22.0 — Tu cuenta: llevarte todo, o borrarlo todo
+
+**Por qué se hizo ahora**
+
+La política de privacidad publicada dice, textualmente, que la exportación y el
+borrado están disponibles «directamente en tu panel, sin tener que pedirlos». Ese
+panel no existía. **Una política que promete lo que la aplicación no puede hacer
+no es una política: es una deuda.**
+
+**Qué trae**
+
+- **Llevarte todo**: un archivo con todo el hogar tal como está guardado. No un
+  resumen — los datos.
+- **Borrar la cuenta de verdad**: pide escribir el correo propio, y se comprueba
+  también en el servidor. Si hay alguien más en el hogar, el hogar sigue.
+- «Tu cuenta» se alcanza **aunque el hogar esté a medias**: mandar al asistente a
+  quien viene a borrarse lo dejaría atrapado.
+
+**El defecto que esto destapó, y que afectaba a todos**
+
+**Nadie que hubiera cerrado un mes podía borrar su cuenta. Nunca.**
+
+Dos reglas del proyecto chocando sin que se notara: un mes cerrado es intocable,
+y cada fila guarda quién la tocó. Así que borrar a un usuario no solo *borra*
+filas — además **modifica** cada fila que esa persona escribió alguna vez, para
+quitar su nombre. Y esa modificación chocaba con el candado del mes cerrado,
+abortando el borrado entero.
+
+Costó encontrarlo porque probándolo por la vía de administración el campo queda
+vacío y la modificación nunca ocurre. Solo aparece cuando los datos se
+escribieron desde una sesión de verdad — o sea, siempre, en la vida real.
+
+**Cuál de las dos reglas gana: la privacidad.** Que un mes cerrado sea intocable
+existe para que nadie le reescriba a alguien un mes ya cuadrado. Cuando esa misma
+persona decide borrarlo todo, no queda nada que proteger. **Y el candado sigue
+entero**: la modificación solo pasa si no cambia nada más. Intentar colar un
+cambio de monto o de fecha aprovechando eso lo bloquea igual.
+
+**325 pruebas · 31 de aislamiento · 28 de integración**, en verde.
+
+---
+
+## v0.21.0 — Que no quede nada duplicado, ni del archivo ni a mano
+
+**El requisito, en una línea:** lo que diga la app del banco tiene que coincidir
+con lo que diga Controle Wallet.
+
+**El hueco que faltaba cerrar**
+
+Reimportar el mismo archivo ya no duplicaba nada. Faltaba **el otro lado** — lo
+que alguien tecleó a mano y después viene en el estado de cuenta. Eso no lo
+tocaba ninguna importación, y era a propósito: lo escrito a mano es sagrado. Pero
+entonces el mismo gasto quedaba **dos veces**, y el saldo dejaba de coincidir con
+el del banco.
+
+**Cómo se detecta**
+
+Por **fecha y monto**, no por concepto: el banco recorta y reescribe las
+descripciones, pero la fecha y el monto no mienten. Cada movimiento del archivo
+empareja con **uno solo** — dos cargas de combustible de L 400 el mismo día son
+dos gastos reales, y marcar las dos borraría uno de verdad.
+
+**Se enseña antes, y quitarlos es una decisión.** La pantalla los lista con el
+nombre que les puso el dueño y el que les da el banco. **Sin marcar la casilla no
+se borra nada**: quitarlos no puede ser un efecto secundario de importar.
+
+**Y va todo junto.** Borrar en un viaje e insertar en otro dejaría, si el segundo
+no llega, el mes **sin** ese movimiento: ni el tecleado ni el importado. Un
+duplicado se ve; un hueco no.
+
+**324 pruebas · 27 de aislamiento · 28 de integración**, en verde.
+
+---
+
+## v0.20.2 — Un Excel se puede elegir, y se dice por qué no se lee
+
+Salió probando con **seis archivos reales**.
+
+**El selector bloqueaba los Excel sin explicar nada**
+
+Los `.xls` y `.xlsx` quedaban grises y no se podían ni elegir. Eso no informa:
+parece que la app está rota. Se comprobó qué son esos archivos —un Excel binario
+de verdad, no una tabla de texto disfrazada— así que leerlos pediría un
+intérprete que la app no puede cargar sin debilitar su seguridad.
+
+Ahora se pueden elegir, y el mensaje dice **qué hacer**: descargar el CSV o el
+PDF de esos mismos movimientos, que los dos se leen.
+
+**El mensaje de un PDF ilegible decía qué no, no qué sí**
+
+Tres de los seis archivos resultaron ser impresiones en PDF de la propia pantalla
+de importar, no estados de cuenta. Rechazarlos es correcto; no decir por qué, no.
+El mensaje ahora dice qué hace falta: que cada renglón traiga fecha, concepto y
+**el saldo que queda después** — que es de donde sale el monto sin adivinar.
+
+**Medido contra los archivos reales**
+
+| Archivo | Resultado |
+|---|---|
+| CSV de Ficohsa | **15 movimientos, cuadra exacto** |
+| PDF del mes de Ficohsa | **5 movimientos, cuadra exacto** |
+| PDF de tarjeta BAC | **12 movimientos**, sin cuadre — y lo avisa |
+
+**324 pruebas en verde.**
+
+---
+
 ## v0.20.1 — El PDF del mes en curso, de cualquier banco
 
 **Por qué esto importa más de lo que parecía**
@@ -86,6 +313,103 @@ hace falta para importar.
 
 ---
 
+## v0.19.3 — Un estado de cuenta no se puede archivar en una tarjeta
+
+Salió probando con archivos reales, y el peligroso no daba ningún aviso.
+
+**El desplegable ofrecía el destino equivocado**
+
+Con el CSV de una cuenta, el **único** destino ofrecido era una tarjeta — porque
+el hogar no tenía ninguna cuenta registrada. Elegirla habría archivado el estado
+de una cuenta dentro de una tarjeta.
+
+**Y eso no falla:** entra completo, la pantalla dice que salió bien, y el mes
+descuadra. En la cuenta un cargo *resta*; en la tarjeta *suma* a lo que se debe.
+Los pagos de tarjeta se registran desde la cuenta y no al revés. Son dos
+aritméticas distintas.
+
+Ahora el desplegable solo ofrece destinos **de la misma clase que el archivo**. Y
+si no hay ninguno, lo dice y manda a crearlo, en vez de ofrecer el que sí hay.
+
+**Elegir a mano era para siempre**
+
+Las dos tarjetas de producción tienen el número vacío, así que el reconocimiento
+automático no puede emparejar y hay que elegir a mano. Eso es correcto. Pero el
+mes siguiente pasaba lo mismo, y el siguiente. Ahora, al elegir a mano un destino
+sin número, se ofrece **guardarle el que trae el archivo**. Se hace una vez y se
+acabó.
+
+**310 pruebas en verde**, dos nuevas.
+
+---
+
+## v0.19.2 — El ancla de la tarjeta nunca se escribía, y nadie lo decía
+
+Los dos defectos salieron de importar un **estado de cuenta real**. Ninguno daba
+error: la importación entraba completa y la pantalla se veía perfecta.
+
+**1. El ancla de la tarjeta no se escribía**
+
+Una cuenta trae saldo final; una tarjeta trae saldo de corte, porque al final del
+ciclo lo que hay no es un saldo a favor sino lo que se debe. El código leía solo
+el primero, que en un lote de tarjeta viene vacío.
+
+**Consecuencia:** importar la tarjeta dejaba sin escribir el saldo de referencia
+del banco. De ese dato depende que el patrimonio se pueda calcular sin bajarle el
+histórico entero al teléfono, y que la tarjeta tenga contra qué cuadrar al cerrar
+el mes. Todo eso se habría quedado en silencio, con la importación diciendo que
+salió bien.
+
+**2. La comprobación que no corrió no se decía**
+
+Cuando el archivo no trae saldo anterior ni de corte, la comprobación no se puede
+hacer — y la pantalla simplemente **no dibujaba el panel**. O sea: se veía igual
+que un archivo que cuadró.
+
+Es la comprobación que existe para atrapar un PDF mal interpretado *antes* de que
+entre. Callar que no se pudo hacer es peor que no tenerla: deja creer que el
+archivo se revisó. Ahora lo dice, y avisa que habrá que escribir el saldo a mano
+en Presupuesto.
+
+**3. Y se explica por qué los pagos de una tarjeta no entran.** El resumen decía
+«8 pagos de tarjeta» y abajo «Pagos de tarjeta: 0». Las dos cifras eran correctas
+—el dinero sale de la cuenta, no de la tarjeta— pero juntas se leían como un
+error.
+
+**308 pruebas en verde**, dos nuevas.
+
+---
+
+## v0.19.1 — El núcleo no exportaba el importador, y la pantalla reventó
+
+En producción, al elegir un archivo: **«A.leerArchivo is not a function»**.
+
+**Qué pasó**
+
+La puerta del motor financiero no daba salida a ninguna de las funciones del
+importador. La pantalla las pedía y llegaban vacías.
+
+**Por qué no lo atrapé**
+
+Comprobé que la pantalla se pudiera cargar y lo di por bueno. Pero **cargar un
+módulo siempre funciona, aunque venga vacío**: el error solo aparece al llamar.
+
+Fue exactamente la trampa que este proyecto ya tenía anotada — *una comprobación
+que no puede fallar no está comprobando nada.* La mía no podía fallar.
+
+**Qué se arregla**
+
+1. La puerta del motor reexporta el importador completo: las diez funciones
+   públicas y los catorce apoyos que la app anterior también exponía. Nada de lo
+   que existía se pierde en la mudanza.
+2. **Comprobación nueva**: lee el código de cada pantalla, saca cada función que
+   usa, y exige que el motor la dé de verdad. Ocho pantallas cubiertas. Con ella
+   puesta, este fallo falla en las pruebas y no en la pantalla de alguien.
+
+**306 pruebas en verde.**
+
+---
+
 ## v0.19.0 — Importar el estado de cuenta
 
 **Qué se hizo**
@@ -141,6 +465,47 @@ solo renglón raro**. Ahora entra sin rubro, y el cierre lo lee como «Sin
 clasificar».
 
 **297 pruebas · 27 de aislamiento · 25 de integración.**
+
+---
+
+## v0.18.2 — Importar un estado de cuenta: o entra todo, o no se toca nada
+
+*Debajo del capó. La pantalla llegó en la v0.19.0; esto es lo que escribe.*
+
+**Por qué esto va todo junto y no en dos pasos**
+
+La regla obliga a **borrar antes de insertar**: cada archivo reemplaza lo que se
+importó antes para esa cuenta en ese rango de fechas. El orden no es negociable —
+hay que quitar lo viejo para que lo nuevo no duplique.
+
+Partido en dos, una caída entre ellos deja el mes con un hueco: lo viejo borrado
+y lo nuevo sin entrar. **Y no es un hueco que se vea** — la pantalla enseña menos
+gastos de los que hubo, el mes parece que salió barato, se cierra contento, y el
+error aparece cuando el banco no cuadra semanas después.
+
+Hecho de una sola vez, o entra todo o no se movió nada. **Hay una prueba que lo
+demuestra**: se fuerza un fallo justo después del borrado y se comprueba que las
+filas siguen siendo exactamente las mismas.
+
+**Cómo se reusa el motor sin copiarlo**
+
+La clasificación —qué es un gasto, qué es un retiro, a qué rubro va cada cosa— la
+sigue haciendo el motor de la app anterior, entero. En vez de reescribirla aquí
+—dos aritméticas acaban dando dos respuestas y no hay forma de saber cuál creer—
+se le pasa una copia, se le deja trabajar, y se mira qué apareció.
+
+**Detalles que protegen el dinero**
+
+- El rango de fechas se valida: es el dato más peligroso. Sin él, el borrado se
+  llevaría todo lo que esa cuenta haya importado nunca.
+- La procedencia de cada fila la pone la base, nunca quien llama. Si viniera de
+  afuera, alguien podría insertar filas marcadas como «tecleadas a mano» que
+  ninguna importación futura borraría.
+- Los rubros nuevos y los comercios aprendidos se guardan **aparte, a propósito**:
+  si el dinero falla, queda un rubro vacío y reutilizable. El dinero es lo único
+  que no puede quedar a medias.
+
+**297 pruebas · 27 de aislamiento · 25 de integración**, en verde.
 
 ---
 
@@ -736,6 +1101,77 @@ números cuadran con el núcleo: 66,500 − 19,300 − 3,200 − 1,250 = 42,750.
 
 ---
 
+## v0.8.2 — Borrar la cuenta borra de verdad: se va también el hogar
+
+**Qué pasaba**
+
+Borrando una cuenta de prueba: el usuario se iba, su membresía se iba con él, y
+**el hogar se quedaba**. Con todos sus gastos, movimientos y saldos dentro.
+
+Nadie podía volver a verlos —sin membresía la base no los deja leer— pero ahí
+seguían.
+
+**Por qué importa**
+
+La política de privacidad ya publicada dice, con estas palabras: «Si borrás tu
+cuenta, todo se elimina — no la guardamos por si acaso». No era cierto. Datos que
+sobreviven a quien los creó, invisibles y sin dueño, son exactamente lo que nadie
+espera cuando pide que le borren la cuenta.
+
+**La distinción que hace la regla nueva**
+
+Actúa **solo si era el último miembro**. Si borrara el hogar al sacar a
+cualquiera, quitarle el acceso a una pareja destruiría el presupuesto de la casa
+entera.
+
+| | |
+|---|---|
+| Se va el único miembro | hogar y gastos **borrados** |
+| Se saca a uno de dos | hogar y gastos **intactos** |
+
+**24 pruebas de aislamiento en verde.** Se limpian además los hogares que ya
+habían quedado sueltos.
+
+---
+
+## v0.8.1 — Correos en español, y tres minas en la configuración
+
+**Qué cambia**
+
+El primer correo que recibía un usuario nuevo **llegaba en inglés** — tanto que
+Gmail ofrecía traducirlo. Las plantillas de fábrica vienen así. Se reemplazan por
+cuatro en español, guardadas en el repositorio y no escritas a mano en un panel:
+confirmar cuenta, recuperar contraseña, invitación a un hogar y cambio de correo.
+
+**Faltaba el último eslabón del registro.** Al confirmar el correo, quien hacía
+todo bien aterrizaba en la app y **esta le pedía iniciar sesión otra vez**. El
+peor primer minuto posible. Ahora se recoge la sesión, se limpia la barra de
+direcciones —esos códigos no tienen por qué quedar en el historial ni en una
+captura— y se le da la bienvenida.
+
+**Tres minas encontradas al preparar el cambio**
+
+Cada una habría sido un desastre silencioso, de los que se ven perfectos hasta
+que un usuario real se topa con ellos:
+
+1. **La confirmación por correo venía apagada** en los valores de fábrica.
+   Empujarlos habría permitido que cualquiera se registrara con la dirección de
+   otra persona y se quedara con esa cuenta.
+2. **La dirección del sitio venía apuntando a una máquina local.** Cada usuario
+   que confirmara su correo habría terminado en una dirección que no existe.
+3. **La sección del correo saliente venía comentada.** Empujarla habría borrado
+   la configuración de Resend recién puesta.
+
+Las tres corregidas — y de aquí sale la regla de que **la configuración de
+autenticación se administra en el panel**, porque ese comando manda el archivo
+entero y arrastra cada valor de fábrica que nadie tocó.
+
+**Y un endurecimiento:** cambiar la contraseña exige haber entrado hace poco,
+para que una sesión olvidada en una computadora ajena no sirva para apropiarse de
+la cuenta.
+
+---
+
 ## v0.8.0 — Sesión real y la primera pantalla
 
 *Segunda mitad de la etapa 3, y el arranque de la etapa 4.*
@@ -813,6 +1249,48 @@ la barra quedaba al 100%. Los campos de verdad son `avanceMes` y `avanceGasto`.
 - Un pago cuenta como confirmado solo cuando **todas** sus líneas lo están.
   Confirmar es un acto sobre el pago completo; con «alguna» bastaría para dar por
   hecho un mes a medias.
+
+---
+
+## v0.6.1 — El ensayo de vuelta atrás, ahora con la base de datos
+
+**Qué cambia**
+
+Ya había migraciones de verdad, así que se ensayó de verdad el caso que quedaba
+pendiente: una actualización mala **que además cambió la base**.
+
+**El resultado, con cronómetro**
+
+Sobre la base de pruebas, con las veinte tablas y datos dentro:
+
+| | |
+|---|---|
+| Revertir el esquema completo | 4 s |
+| Reconstruirlo | 16 s |
+| **Ida y vuelta** | **22 s** |
+| Pruebas de aislamiento contra lo reconstruido | **22 de 22 en verde** |
+
+Que las pruebas pasen *después* de reconstruir es lo que importa: lo reconstruido
+no solo tiene la misma forma, se comporta igual.
+
+**Tres cosas que solo se ven ensayando**
+
+1. **El comando de revertir iba contra una base local**, no contra la de verdad.
+   El primer intento informó «revertido en 1 s» sin haber revertido nada. *Un
+   cronómetro que mide un comando que no corrió da un número tranquilizador y
+   falso.*
+2. **`VUELTA-ATRAS.md` documentaba un comando que no existe.** Escrito de memoria
+   y nunca ejecutado. Es exactamente lo que el ensayo viene a impedir.
+3. **Revertir el esquema no revertía el registro de migraciones.** Las tablas
+   desaparecían pero el registro seguía diciendo que estaban puestas, así que no
+   se volvían a crear y el esquema quedaba irrecuperable por la vía normal. Ahora
+   cada reverso borra su propia anotación.
+
+**Y una buena noticia:** la contraseña de la base no hacía falta. Ese bloqueo que
+veníamos arrastrando no existía.
+
+Con esto queda cumplido y medido el compromiso de que **una actualización mala se
+puede revertir en menos de cinco minutos, base de datos incluida**.
 
 ---
 

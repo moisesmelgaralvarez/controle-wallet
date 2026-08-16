@@ -1,0 +1,380 @@
+/* ==========================================================================
+   NOCHE — el mundo visual nuevo del sitio público.
+
+   Rediseño, no refinamiento. Reemplaza la identidad anterior en la portada:
+   el lienzo es vacío negro, las superficies son vidrio, y la jerarquía la
+   define la LUZ, no el color. Referencia: «Obsidian Precision», y el modo en
+   que Apple, Nike y Rolex usan el scroll como cámara.
+
+   Se carga de último en index.html, así que gana por cascada sin `!important`.
+
+   TRES COSAS SE CONSERVAN, Y NINGUNA ES ESTÉTICA:
+   1. Cero estilos en línea y cero peticiones externas — lo exige la CSP
+      (`style-src 'self'`), no el gusto.
+   2. `prefers-reduced-motion` apaga TODO el movimiento. Para algunas personas
+      esto produce mareo real.
+   3. Geist, porque ya está autoalojada: cambiarla costaría una petición nueva
+      o una fuente de sistema, y la referencia pide Geist igual.
+   ========================================================================== */
+
+.noche {
+  /* Escala propia. Nada de esto sale de la hoja anterior. */
+  --vacio:        #000000;
+  --humo:         #0b0b0d;
+  --vidrio:       rgba(255, 255, 255, 0.035);
+  --vidrio-alto:  rgba(255, 255, 255, 0.06);
+  --filete:       rgba(255, 255, 255, 0.10);
+  --filete-vivo:  rgba(255, 255, 255, 0.22);
+  --luz:          #f4f3f1;
+  --luz-media:    #a8a8ad;
+  /* Medido, no elegido a ojo: #6b6b73 daba 3.98:1 contra el vacío, debajo del
+     mínimo AA de 4.5 — y estos rótulos van a 12px, que no califican para la
+     excepción de texto grande. Este aclarado los deja en ~5.1:1 sin sacarlos
+     del segundo plano. */
+  --luz-baja:     #7e7e86;
+  --verde:        #95d3ba;
+  --verde-hondo:  #064e3b;
+  --salmon:       #ffb4a9;
+
+  --sombra-honda: 0 40px 120px rgba(0, 0, 0, 0.75);
+  --curva:        cubic-bezier(0.16, 1, 0.3, 1);
+
+  background: var(--vacio);
+  color: var(--luz);
+  position: relative;
+  isolation: isolate;
+  /* `clip` y no `hidden`: el aura mide 160vw y desbordaba la página a lo
+     ancho. `hidden` crearía un contenedor de scroll y rompería cualquier
+     `position: sticky` que entre después; `clip` recorta sin hacer eso. */
+  overflow: clip;
+}
+
+/* La retícula del taller: casi invisible, pero es lo que hace que el negro se
+   lea como un instrumento y no como un fondo apagado. 1px cada 64. */
+.noche::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right,  rgba(255,255,255,0.028) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.028) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(120% 80% at 50% 0%, #000 30%, transparent 78%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.noche > * { position: relative; z-index: 1; }
+
+/* ---------- el acto: una pantalla, una idea ---------- */
+
+.acto {
+  min-height: 100svh;
+  display: grid;
+  align-content: center;
+  padding: clamp(1.75rem, 5vw, 6rem) clamp(1.25rem, 5vw, 4rem);
+}
+
+.acto__marco { width: 100%; max-width: 1440px; margin-inline: auto; }
+
+/* ---------- la luz ambiente ---------- */
+
+/* Una sola fuente de luz, muy grande y muy tenue, que deriva con el scroll.
+   Es lo que da la sensación de objeto suspendido en un vacío con atmósfera,
+   en vez de texto sobre negro. */
+.aura {
+  position: absolute;
+  inset-block: -30% auto;
+  left: 50%;
+  width: min(160vw, 1900px);
+  aspect-ratio: 2 / 1;
+  translate: -50% 0;
+  background: radial-gradient(closest-side,
+              rgba(149, 211, 186, 0.16), rgba(149, 211, 186, 0.05) 55%, transparent 72%);
+  filter: blur(30px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ---------- tipografía del acto ---------- */
+
+.acto__titulo {
+  font-size: clamp(2.9rem, 1rem + 7.6vw, 8rem);
+  font-weight: 600;
+  line-height: 0.92;
+  letter-spacing: -0.055em;
+  margin: 0;
+  max-width: 15ch;
+  text-wrap: balance;
+  color: var(--luz);
+}
+
+.acto__bajada {
+  margin: clamp(1.5rem, 3vw, 2.5rem) 0 0;
+  font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.375rem);
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  color: var(--luz-media);
+  max-width: 46ch;
+}
+
+/* Rótulo técnico. No va encima de un titular —eso está prohibido— sino como
+   metadato al pie de un instrumento, que es su trabajo real. */
+.tecnico {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--luz-baja);
+}
+
+/* ---------- el panel de vidrio ---------- */
+
+.vidrio {
+  background: var(--vidrio);
+  border: 0.5px solid var(--filete);
+  border-radius: 28px;
+  backdrop-filter: blur(40px) saturate(140%);
+  box-shadow: var(--sombra-honda);
+  padding: clamp(1.5rem, 3.5vw, 2.75rem);
+}
+
+/* ---------- el instrumento del ciclo ---------- */
+
+/* La tesis, dibujada como aparato de medición: dos carriles de tiempo, uno
+   corrido respecto del otro, y la marca de corte. Sin caja gris, sin sombra
+   blanda: filetes finos y aire. */
+.instrumento { display: grid; gap: clamp(1.25rem, 2.5vw, 2rem); }
+
+.carril { display: grid; gap: 0.6rem; }
+
+/* A 375 los dos rótulos lado a lado envolvían a dos líneas cada uno y el
+   carril quedaba con una cabecera de cuatro renglones. Apilados, cada uno
+   respira en una línea. Vuelven a enfrentarse cuando hay ancho de sobra. */
+.carril__cabeza { display: grid; gap: 0.25rem; }
+
+@media (min-width: 30rem) {
+  .carril__cabeza {
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 1rem;
+  }
+  .carril__cabeza .tecnico:last-child { text-align: right; }
+}
+
+.carril__via {
+  position: relative;
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.carril__tramo {
+  position: absolute;
+  inset-block: 0;
+  border-radius: 99px;
+  transform-origin: left center;
+}
+
+.carril__tramo--mes {
+  left: 0; right: 0;
+  background: rgba(255, 255, 255, 0.20);
+}
+
+/* El ciclo real arranca antes que el mes y termina antes. Ese corrimiento es
+   todo el argumento del producto. */
+.carril__tramo--ciclo {
+  left: 19.4%; right: 3.2%;
+  background: linear-gradient(90deg, var(--verde-hondo), var(--verde));
+  box-shadow: 0 0 24px rgba(149, 211, 186, 0.45);
+}
+
+.carril__corte {
+  position: absolute;
+  top: -9px; bottom: -9px;
+  left: 19.4%;
+  width: 1px;
+  background: var(--salmon);
+}
+
+.carril__corte::after {
+  content: "";
+  position: absolute;
+  top: -4px; left: 50%;
+  width: 5px; height: 5px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: var(--salmon);
+  box-shadow: 0 0 12px rgba(255, 180, 169, 0.9);
+}
+
+/* ---------- las cifras ---------- */
+
+.lectura-cifras {
+  display: grid;
+  /* 9.5rem y no 13: a 684 px de ventana el mínimo grande tiraba la tercera
+     cifra a un renglón solo, y las tres son una sola lectura — cargado,
+     abonado, y lo que queda colgando. Partirla en dos rompe la frase. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  margin-top: clamp(1.75rem, 3.5vw, 3rem);
+  padding-top: clamp(1.5rem, 3vw, 2.25rem);
+  border-top: 0.5px solid var(--filete);
+}
+
+.dato { display: grid; gap: 0.5rem; }
+
+.dato__v {
+  font-size: clamp(1.9rem, 1rem + 2.6vw, 3.25rem);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--luz);
+}
+
+.dato__v i {
+  font-style: normal;
+  font-size: 0.45em;
+  font-weight: 500;
+  color: var(--luz-baja);
+  margin-right: 0.35em;
+  letter-spacing: 0;
+}
+
+.dato__v--falta { color: var(--salmon); }
+.dato__k { font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--luz-baja); }
+
+/* ---------- acciones ---------- */
+
+.acciones-noche {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: clamp(2rem, 4vw, 3rem);
+}
+
+.pulsar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 1.6rem;
+  border-radius: 12px;
+  border: 0.5px solid transparent;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 180ms var(--curva), box-shadow 220ms var(--curva),
+              background-color 220ms var(--curva), border-color 220ms var(--curva);
+}
+
+/* El verde hondo es un indicador encendido, no un relleno: por eso lleva halo
+   propio en vez de aclararse al pasar el puntero. */
+.pulsar--luz {
+  background: var(--verde-hondo);
+  color: #eafff5;
+  box-shadow: 0 0 0 0 rgba(149, 211, 186, 0);
+}
+
+.pulsar--vidrio {
+  background: var(--vidrio);
+  border-color: var(--filete);
+  color: var(--luz);
+  backdrop-filter: blur(24px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pulsar--luz:hover { box-shadow: 0 0 32px rgba(149, 211, 186, 0.35); }
+  .pulsar--vidrio:hover { background: var(--vidrio-alto); border-color: var(--filete-vivo); }
+}
+
+/* Hundirse al apretar. Es lo que hace que un botón se sienta físico. */
+.pulsar:active { transform: scale(0.975); }
+
+.pulsar:focus-visible { outline: 2px solid var(--verde); outline-offset: 3px; }
+
+/* ---------- el pie de descenso ---------- */
+
+.descenso {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+  color: var(--luz-baja);
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+}
+
+.descenso svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
+/* ==========================================================================
+   EL MOVIMIENTO — el scroll es la cámara.
+   Todo va dentro de @supports y de `no-preference`: si algo de esto no corre,
+   la página se ve COMPLETA y quieta. El movimiento nunca es requisito para
+   entender nada.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* 1. La materialización. El panel llega como material —el desenfoque se
+        resuelve y la escala se asienta— en vez de aparecer de la nada. */
+  .entra {
+    animation: materializar 1100ms var(--curva) both;
+  }
+  @keyframes materializar {
+    from { opacity: 0; transform: translateY(28px) scale(0.985); filter: blur(14px); }
+    to   { opacity: 1; transform: none;                          filter: blur(0);    }
+  }
+
+  .entra--2 { animation-delay: 120ms; }
+  .entra--3 { animation-delay: 240ms; }
+  .entra--4 { animation-delay: 360ms; }
+
+  /* 2. El ciclo se traza solo, de izquierda a derecha: la dirección en que
+        pasa el tiempo y se acumula la deuda. */
+  .carril__tramo--ciclo { animation: trazar 1200ms var(--curva) 420ms both; }
+  @keyframes trazar { from { transform: scaleX(0.02); } to { transform: scaleX(1); } }
+
+  .carril__corte { animation: encender 600ms var(--curva) 1100ms both; }
+  @keyframes encender { from { opacity: 0; } to { opacity: 1; } }
+
+  @supports (animation-timeline: view()) {
+    /* 3. La cámara. La luz deriva y el acto se aleja al salir, así el scroll
+          se siente como desplazamiento en un espacio, no como una lista que
+          sube. Es lo que hacen las páginas de producto de Apple. */
+    .aura {
+      animation: derivar-luz linear both;
+      animation-timeline: view();
+      animation-range: cover;
+    }
+    @keyframes derivar-luz {
+      from { transform: translate3d(0, -14%, 0) scale(1.15); opacity: 0.55; }
+      to   { transform: translate3d(0,  14%, 0) scale(1);    opacity: 1;    }
+    }
+
+    .acto__marco {
+      animation: alejarse linear both;
+      animation-timeline: view();
+      animation-range: exit 10% exit 100%;
+    }
+    @keyframes alejarse {
+      from { opacity: 1; transform: none; filter: blur(0); }
+      to   { opacity: 0; transform: translateY(-4rem) scale(0.965); filter: blur(6px); }
+    }
+  }
+}
+
+/* Sin movimiento: todo visible, quieto y completo. */
+@media (prefers-reduced-motion: reduce) {
+  .noche *, .noche *::before, .noche *::after {
+    animation: none !important;
+    transition: none !important;
+    filter: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

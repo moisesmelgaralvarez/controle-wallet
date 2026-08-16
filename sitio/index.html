@@ -15,6 +15,9 @@
 <link rel="stylesheet" href="/inicio.css">
 <link rel="stylesheet" href="/dispositivos.css">
 <link rel="stylesheet" href="/marca.css">
+<!-- El mundo visual nuevo de la portada. Va de último: gana por cascada sin
+     necesitar un solo !important. -->
+<link rel="stylesheet" href="/noche.css">
 </head>
 <body>
 
@@ -39,41 +42,71 @@
 
 <main id="principal">
 
-  <!-- ── portada ───────────────────────────────────────────── -->
-  <section class="escena hero">
-    <div class="escena__halo" aria-hidden="true"></div>
-    <div class="hero__contenido">
-      <h1>El presupuesto del hogar, sin engañarse</h1>
-      <p class="hero__entrada">
-        Tu tarjeta no cobra por mes: cobra por ciclo. Y ese corrimiento es la
-        razón por la que el dinero alcanza en el papel y no alcanza en la casa.
+  <!-- ── acto I · la portada ───────────────────────────────── -->
+  <!-- Una pantalla, una idea. El instrumento del ciclo no ilustra el titular:
+       lo demuestra. Todo dibujado en CSS — pesa cero y se ve nítido a
+       cualquier resolución. -->
+  <section class="noche acto">
+    <div class="aura" aria-hidden="true"></div>
+
+    <div class="acto__marco">
+      <h1 class="acto__titulo entra">El dinero ya se gastó. El saldo todavía no lo sabe.</h1>
+
+      <p class="acto__bajada entra entra--2">
+        Tu tarjeta no cobra por mes: cobra por ciclo. Ese corrimiento de siete
+        días es la razón por la que las cuentas cuadran en el papel y no cuadran
+        en la casa.
       </p>
 
-      <!-- El desfase se enseña, no se explica: dos reglas de tiempo puestas una
-           sobre otra, y la costura marcada donde el ciclo cruza el mes. Está
-           DIBUJADO en CSS, así que sigue el modo claro u oscuro y no pesa. -->
-      <div class="ciclo" role="img"
-           aria-label="El mes va del 1 al 31 de agosto. El ciclo real de la tarjeta va del 7 de julio al 6 de agosto, así que empieza antes y termina antes.">
-        <div class="ciclo__pista">
-          <span class="ciclo__nombre">El mes</span>
-          <div class="ciclo__barra">
-            <span class="ciclo__tramo ciclo__tramo--mes">1 ago — 31 ago</span>
+      <div class="vidrio entra entra--3">
+        <div class="instrumento" role="img"
+             aria-label="El mes calendario va del 1 al 31 de agosto. El ciclo real de la tarjeta va del 7 de julio al 6 de agosto: empieza antes y termina antes. En ese ciclo se cargaron 19,101 lempiras, se abonaron 14,840 y faltan 4,261.">
+
+          <div class="carril">
+            <div class="carril__cabeza">
+              <span class="tecnico">El mes</span>
+              <span class="tecnico">1 ago — 31 ago</span>
+            </div>
+            <div class="carril__via">
+              <span class="carril__tramo carril__tramo--mes"></span>
+            </div>
           </div>
+
+          <div class="carril">
+            <div class="carril__cabeza">
+              <span class="tecnico">El ciclo que te cobran</span>
+              <span class="tecnico">7 jul — 6 ago</span>
+            </div>
+            <div class="carril__via">
+              <span class="carril__tramo carril__tramo--ciclo"></span>
+              <span class="carril__corte" aria-hidden="true"></span>
+            </div>
+          </div>
+
         </div>
-        <div class="ciclo__pista">
-          <span class="ciclo__nombre">El ciclo real</span>
-          <div class="ciclo__barra">
-            <span class="ciclo__tramo ciclo__tramo--corte">7 jul — 6 ago</span>
-            <span class="ciclo__costura" aria-hidden="true"></span>
+
+        <div class="lectura-cifras">
+          <div class="dato">
+            <span class="dato__v"><i>L</i>19,101</span>
+            <span class="dato__k">Cargado en el ciclo</span>
+          </div>
+          <div class="dato">
+            <span class="dato__v"><i>L</i>14,840</span>
+            <span class="dato__k">Abonado</span>
+          </div>
+          <div class="dato">
+            <span class="dato__v dato__v--falta"><i>L</i>4,261</span>
+            <span class="dato__k">Sigue viéndose como disponible</span>
           </div>
         </div>
       </div>
 
-      <div class="acciones">
-        <a class="boton boton--principal" href="/registro">Crear cuenta</a>
-        <a class="boton boton--borde" href="/entrar">Ya tengo cuenta</a>
+      <div class="acciones-noche entra entra--4">
+        <a class="pulsar pulsar--luz" href="/registro">Crear cuenta</a>
+        <a class="pulsar pulsar--vidrio" href="/entrar">Ya tengo cuenta</a>
       </div>
-      <p class="hero__pie">
+
+      <p class="descenso entra entra--4">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
         Seguí bajando
       </p>

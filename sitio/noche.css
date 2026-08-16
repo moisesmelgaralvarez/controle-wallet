@@ -215,11 +215,16 @@
   .carril__cabeza .tecnico:last-child { text-align: right; }
 }
 
+/* Estas dos líneas estaban en blanco crudo con alfa, no en tokens. En oscuro
+   funcionaba de casualidad; en CLARO el carril del mes —blanco al 20% sobre
+   una carta casi blanca— era INVISIBLE. La mitad del instrumento de la portada
+   no existía en modo claro y no daba ningún error. */
 .carril__via {
   position: relative;
   height: 4px;
   border-radius: 99px;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--vidrio-alto);
+  border: 0.5px solid var(--filete);
 }
 
 .carril__tramo {
@@ -229,9 +234,13 @@
   transform-origin: left center;
 }
 
+/* `--luz-baja` y no `--filete-vivo`: medido, el filete daba 1.8:1 contra su
+   propia vía en claro, debajo del 3:1 que pide un elemento gráfico que carga
+   información. Este carril no es un borde, es un dato — el mes del calendario,
+   la referencia contra la que se lee todo lo demás. */
 .carril__tramo--mes {
   left: 0; right: 0;
-  background: rgba(255, 255, 255, 0.20);
+  background: var(--luz-baja);
 }
 
 /* El ciclo real arranca antes que el mes y termina antes. Ese corrimiento es
@@ -239,7 +248,9 @@
 .carril__tramo--ciclo {
   left: 19.4%; right: 3.2%;
   background: linear-gradient(90deg, var(--verde-hondo), var(--verde));
-  box-shadow: 0 0 24px rgba(149, 211, 186, 0.45);
+  /* `--aura-tinte` ya trae el triplete correcto de cada modo; el halo en verde
+     menta sobre fondo claro se veía lavado. */
+  box-shadow: 0 0 24px rgba(var(--aura-tinte), 0.45);
 }
 
 .carril__corte {
@@ -258,7 +269,7 @@
   translate: -50% 0;
   border-radius: 50%;
   background: var(--salmon);
-  box-shadow: 0 0 12px rgba(255, 180, 169, 0.9);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--salmon) 80%, transparent);
 }
 
 /* ---------- las cifras ---------- */
@@ -341,7 +352,7 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .pulsar--luz:hover { box-shadow: 0 0 32px rgba(149, 211, 186, 0.35); }
+  .pulsar--luz:hover { box-shadow: 0 0 32px rgba(var(--aura-tinte), 0.35); }
   .pulsar--vidrio:hover { background: var(--vidrio-alto); border-color: var(--filete-vivo); }
 }
 
@@ -349,6 +360,45 @@
 .pulsar:active { transform: scale(0.975); }
 
 .pulsar:focus-visible { outline: 2px solid var(--verde); outline-offset: 3px; }
+
+/* ==========================================================================
+   LA PORTADA TIENE QUE CABER EN UNA PANTALLA DE PORTÁTIL
+
+   Medido a 1440×900 —la resolución más común en un MacBook— el acto medía
+   1,180 px contra 804 disponibles bajo el encabezado. El visitante caía en el
+   titular y en MEDIA carta cortada: sin cifras, sin botones y sin saber que
+   había algo más abajo. Una carta cortada por el borde no se lee como «hay
+   más»: se lee como roto.
+
+   `min-height: 100svh` no alcanza porque solo pone un piso, no un techo. Lo
+   que faltaba era mirar el ALTO de la ventana, no solo el ancho — el error
+   clásico de medir en cinco anchos y ningún alto.
+
+   Se comprime la escala y el ritmo, no se quita nada. En pantalla alta todo
+   sigue igual de grande.
+   ========================================================================== */
+
+/* El techo es 68rem (1,088 px) y no 60: un MacBook Pro de 14" reporta 982 px
+   de ventana y quedaba justo afuera, con la carta cortada otra vez. Medido en
+   800, 900, 982 y 1080 de alto. Arriba de eso la portada cabe sin comprimir. */
+@media (min-width: 64rem) and (max-height: 68rem) {
+  .acto { padding-block: clamp(1rem, 3vh, 2.5rem); }
+
+  /* El tope sube a 5rem porque a 1920×1080 sobraban 150 px de holgura y el
+     titular quedaba chico para esa pantalla. A 1440×900 el 4.4vw manda mucho
+     antes del tope, así que ahí no cambia nada. */
+  .acto__titulo { font-size: clamp(2.4rem, 4.4vw, 5rem); max-width: 19ch; }
+  .acto__bajada { margin-top: 1.1rem; font-size: 1.0625rem; max-width: 58ch; }
+
+  .vidrio { padding: clamp(1.1rem, 2vw, 1.75rem); border-radius: 20px; }
+  .instrumento { gap: 1rem; }
+  .lectura-cifras { margin-top: 1.1rem; padding-top: 1rem; }
+  .dato__v { font-size: clamp(1.5rem, 2vw, 2.25rem); }
+  .dato { gap: 0.35rem; }
+
+  .acciones-noche { margin-top: 1.4rem; }
+  .descenso { margin-top: 1.4rem; }
+}
 
 /* ---------- el pie de descenso ---------- */
 
@@ -450,7 +500,7 @@
   translate: -50% 0;
   border-radius: 50%;
   background: var(--salmon);
-  box-shadow: 0 0 12px rgba(255, 180, 169, 0.9);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--salmon) 80%, transparent);
 }
 
 .medida__pies { display: flex; justify-content: space-between; gap: 1rem; }
@@ -531,18 +581,21 @@
 .leyenda b { font-weight: 500; color: var(--luz-media); white-space: nowrap; text-align: right; }
 
 .leyenda i { width: 20px; height: 4px; border-radius: 99px; }
+/* La muestra de la leyenda tiene que ser del MISMO color que el carril que
+   rotula, o deja de rotular nada. */
+.leyenda--mes i { background: var(--luz-baja); }
 
 @media (min-width: 46rem) {
   .propio__leyenda { display: flex; flex-wrap: wrap; gap: 0.6rem 2rem; }
   .leyenda { display: inline-flex; }
   .leyenda b { text-align: left; }
 }
-.leyenda--mes i { background: var(--filete-vivo); }
 .leyenda--ciclo i { background: linear-gradient(90deg, var(--verde-hondo), var(--verde)); }
 
 .reglas { display: block; width: 100%; height: auto; }
 
-.reglas__mes { fill: var(--filete-vivo); }
+/* Mismo criterio que el carril de la portada: el mes es dato, no borde. */
+.reglas__mes { fill: var(--luz-baja); }
 .reglas__ciclo { fill: var(--verde); }
 
 /* La guía del día 1 va neutra a propósito: el calendario no es el culpable,
@@ -1124,7 +1177,7 @@
 .noche .boton:active { transform: scale(0.975); }
 
 @media (hover: hover) and (pointer: fine) {
-  .noche .boton--principal:hover { box-shadow: 0 0 32px rgba(149, 211, 186, 0.35); filter: none; }
+  .noche .boton--principal:hover { box-shadow: 0 0 32px rgba(var(--aura-tinte), 0.35); filter: none; }
   .noche .boton--borde:hover { border-color: var(--filete-vivo); background: var(--vidrio-alto); }
 }
 

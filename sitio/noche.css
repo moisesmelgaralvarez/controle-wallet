@@ -1,0 +1,1439 @@
+/* ==========================================================================
+   NOCHE — el mundo visual nuevo del sitio público.
+
+   Rediseño, no refinamiento. Reemplaza la identidad anterior en la portada:
+   el lienzo es vacío negro, las superficies son vidrio, y la jerarquía la
+   define la LUZ, no el color. Referencia: «Obsidian Precision», y el modo en
+   que Apple, Nike y Rolex usan el scroll como cámara.
+
+   Se carga de último en index.html, así que gana por cascada sin `!important`.
+
+   TRES COSAS SE CONSERVAN, Y NINGUNA ES ESTÉTICA:
+   1. Cero estilos en línea y cero peticiones externas — lo exige la CSP
+      (`style-src 'self'`), no el gusto.
+   2. `prefers-reduced-motion` apaga TODO el movimiento. Para algunas personas
+      esto produce mareo real.
+   3. Geist, porque ya está autoalojada: cambiarla costaría una petición nueva
+      o una fuente de sistema, y la referencia pide Geist igual.
+   ========================================================================== */
+
+/* ---------- los dos modos ----------
+
+   CLARO por omisión, y el oscuro entra por tres caminos, en este orden:
+   preferencia del sistema, y después la elección explícita de la persona, que
+   siempre gana. Los tres bloques definen los MISMOS nombres: ninguna regla de
+   abajo sabe en qué modo está.
+
+   El oscuro no es el claro invertido. El vidrio pasa de blanco translúcido a
+   negro translúcido, el verde sube a menta porque el verde hondo sobre negro
+   no se lee, y la sombra deja de ser una caída para volverse profundidad. */
+
+.noche {
+  --vidrio:       rgba(9, 12, 11, 0.035);
+  --vidrio-alto:  rgba(9, 12, 11, 0.06);
+  --filete:       rgba(9, 12, 11, 0.12);
+  --filete-vivo:  rgba(9, 12, 11, 0.26);
+  --vacio:        #fbfbf9;
+  --luz:          #101112;
+  --luz-media:    #4f5257;
+  --luz-baja:     #6a6d72;
+  --verde:        #0b6b4f;
+  --verde-hondo:  #064e3b;
+  --salmon:       #a8341f;
+  --aura-tinte:   11, 107, 79;
+  --sombra-honda: 0 30px 80px rgba(16, 17, 18, 0.10);
+  --curva:        cubic-bezier(0.16, 1, 0.3, 1);
+
+  background: var(--vacio);
+  color: var(--luz);
+  position: relative;
+  isolation: isolate;
+}
+
+/* El truco para no escribir la paleta oscura dos veces: se define una sola vez
+   y se invoca desde los dos selectores. */
+.noche--oscuro {
+  --vidrio:       rgba(255, 255, 255, 0.035);
+  --vidrio-alto:  rgba(255, 255, 255, 0.06);
+  --filete:       rgba(255, 255, 255, 0.10);
+  --filete-vivo:  rgba(255, 255, 255, 0.22);
+  --vacio:        #000000;
+  --luz:          #f4f3f1;
+  --luz-media:    #a8a8ad;
+  /* Medido, no elegido a ojo: #6b6b73 daba 3.98:1 contra el vacío, debajo del
+     mínimo AA de 4.5 — y estos rótulos van a 12px, que no califican para la
+     excepción de texto grande. Este aclarado los deja en 5.22:1. */
+  --luz-baja:     #7e7e86;
+  --verde:        #95d3ba;
+  --verde-hondo:  #064e3b;
+  --salmon:       #ffb4a9;
+  --aura-tinte:   149, 211, 186;
+  --sombra-honda: 0 40px 120px rgba(0, 0, 0, 0.75);
+}
+
+/* 1. Lo que pide el sistema, mientras nadie haya elegido a mano. */
+@media (prefers-color-scheme: dark) {
+  .noche:not([data-tema="claro"]) {
+    --vidrio:       rgba(255, 255, 255, 0.035);
+    --vidrio-alto:  rgba(255, 255, 255, 0.06);
+    --filete:       rgba(255, 255, 255, 0.10);
+    --filete-vivo:  rgba(255, 255, 255, 0.22);
+    --vacio:        #000000;
+    --luz:          #f4f3f1;
+    --luz-media:    #a8a8ad;
+    --luz-baja:     #7e7e86;
+    --verde:        #95d3ba;
+    --verde-hondo:  #064e3b;
+    --salmon:       #ffb4a9;
+    --aura-tinte:   149, 211, 186;
+    --sombra-honda: 0 40px 120px rgba(0, 0, 0, 0.75);
+  }
+}
+
+/* 2. La elección explícita, que gana siempre — incluso contra el sistema. */
+.noche[data-tema="oscuro"] {
+  --vidrio:       rgba(255, 255, 255, 0.035);
+  --vidrio-alto:  rgba(255, 255, 255, 0.06);
+  --filete:       rgba(255, 255, 255, 0.10);
+  --filete-vivo:  rgba(255, 255, 255, 0.22);
+  --vacio:        #000000;
+  --luz:          #f4f3f1;
+  --luz-media:    #a8a8ad;
+  --luz-baja:     #7e7e86;
+  --verde:        #95d3ba;
+  --verde-hondo:  #064e3b;
+  --salmon:       #ffb4a9;
+  --aura-tinte:   149, 211, 186;
+  --sombra-honda: 0 40px 120px rgba(0, 0, 0, 0.75);
+}
+
+/* El recorte vive en el ACTO, no en el mundo: el aura mide 160vw y desborda,
+   pero recortar en `body` dejaría fuera de juego el panel clavado de la
+   sección del ciclo. `clip` y no `hidden` porque `hidden` crea contenedor de
+   scroll y ahí sí muere el `sticky`.
+
+   `position: relative` no es decorativo: sin él, `.aura` —que es absoluta—
+   toma como referencia el `body` y se salta este recorte. Pasó: la página
+   desbordaba 205 px a cada lado y el `overflow: clip` parecía no hacer nada. */
+.acto { position: relative; overflow: clip; }
+
+.noche > * { position: relative; z-index: 1; }
+
+/* ---------- el acto: una pantalla, una idea ---------- */
+
+.acto {
+  min-height: 100svh;
+  display: grid;
+  align-content: center;
+  padding: clamp(1.75rem, 5vw, 6rem) clamp(1.25rem, 5vw, 4rem);
+}
+
+.acto__marco { width: 100%; max-width: 1440px; margin-inline: auto; }
+
+/* ---------- la luz ambiente ---------- */
+
+/* Una sola fuente de luz, muy grande y muy tenue, que deriva con el scroll.
+   Es lo que da la sensación de objeto suspendido en un vacío con atmósfera,
+   en vez de texto sobre negro. */
+.aura {
+  position: absolute;
+  inset-block: -30% auto;
+  left: 50%;
+  width: min(160vw, 1900px);
+  aspect-ratio: 2 / 1;
+  translate: -50% 0;
+  background: radial-gradient(closest-side,
+              rgba(var(--aura-tinte), 0.16), rgba(var(--aura-tinte), 0.05) 55%, transparent 72%);
+  filter: blur(30px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ---------- tipografía del acto ---------- */
+
+.acto__titulo {
+  font-size: clamp(2.9rem, 1rem + 7.6vw, 8rem);
+  font-weight: 600;
+  line-height: 0.92;
+  letter-spacing: -0.055em;
+  margin: 0;
+  max-width: 15ch;
+  text-wrap: balance;
+  color: var(--luz);
+}
+
+.acto__bajada {
+  margin: clamp(1.5rem, 3vw, 2.5rem) 0 0;
+  font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.375rem);
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  color: var(--luz-media);
+  max-width: 46ch;
+}
+
+/* Rótulo técnico. No va encima de un titular —eso está prohibido— sino como
+   metadato al pie de un instrumento, que es su trabajo real. */
+.tecnico {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--luz-baja);
+}
+
+/* ---------- el panel de vidrio ---------- */
+
+.vidrio {
+  background: var(--vidrio);
+  border: 0.5px solid var(--filete);
+  border-radius: 28px;
+  backdrop-filter: blur(40px) saturate(140%);
+  box-shadow: var(--sombra-honda);
+  padding: clamp(1.5rem, 3.5vw, 2.75rem);
+}
+
+/* ---------- el instrumento del ciclo ---------- */
+
+/* La tesis, dibujada como aparato de medición: dos carriles de tiempo, uno
+   corrido respecto del otro, y la marca de corte. Sin caja gris, sin sombra
+   blanda: filetes finos y aire. */
+.instrumento { display: grid; gap: clamp(1.25rem, 2.5vw, 2rem); }
+
+.carril { display: grid; gap: 0.6rem; }
+
+/* A 375 los dos rótulos lado a lado envolvían a dos líneas cada uno y el
+   carril quedaba con una cabecera de cuatro renglones. Apilados, cada uno
+   respira en una línea. Vuelven a enfrentarse cuando hay ancho de sobra. */
+.carril__cabeza { display: grid; gap: 0.25rem; }
+
+@media (min-width: 30rem) {
+  .carril__cabeza {
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 1rem;
+  }
+  .carril__cabeza .tecnico:last-child { text-align: right; }
+}
+
+/* Estas dos líneas estaban en blanco crudo con alfa, no en tokens. En oscuro
+   funcionaba de casualidad; en CLARO el carril del mes —blanco al 20% sobre
+   una carta casi blanca— era INVISIBLE. La mitad del instrumento de la portada
+   no existía en modo claro y no daba ningún error. */
+.carril__via {
+  position: relative;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--vidrio-alto);
+  border: 0.5px solid var(--filete);
+}
+
+.carril__tramo {
+  position: absolute;
+  inset-block: 0;
+  border-radius: 99px;
+  transform-origin: left center;
+}
+
+/* `--luz-baja` y no `--filete-vivo`: medido, el filete daba 1.8:1 contra su
+   propia vía en claro, debajo del 3:1 que pide un elemento gráfico que carga
+   información. Este carril no es un borde, es un dato — el mes del calendario,
+   la referencia contra la que se lee todo lo demás. */
+.carril__tramo--mes {
+  left: 0; right: 0;
+  background: var(--luz-baja);
+}
+
+/* El ciclo real arranca antes que el mes y termina antes. Ese corrimiento es
+   todo el argumento del producto. */
+.carril__tramo--ciclo {
+  left: 19.4%; right: 3.2%;
+  background: linear-gradient(90deg, var(--verde-hondo), var(--verde));
+  /* `--aura-tinte` ya trae el triplete correcto de cada modo; el halo en verde
+     menta sobre fondo claro se veía lavado. */
+  box-shadow: 0 0 24px rgba(var(--aura-tinte), 0.45);
+}
+
+.carril__corte {
+  position: absolute;
+  top: -9px; bottom: -9px;
+  left: 19.4%;
+  width: 1px;
+  background: var(--salmon);
+}
+
+.carril__corte::after {
+  content: "";
+  position: absolute;
+  top: -4px; left: 50%;
+  width: 5px; height: 5px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: var(--salmon);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--salmon) 80%, transparent);
+}
+
+/* ---------- las cifras ---------- */
+
+.lectura-cifras {
+  display: grid;
+  /* 9.5rem y no 13: a 684 px de ventana el mínimo grande tiraba la tercera
+     cifra a un renglón solo, y las tres son una sola lectura — cargado,
+     abonado, y lo que queda colgando. Partirla en dos rompe la frase. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  margin-top: clamp(1.75rem, 3.5vw, 3rem);
+  padding-top: clamp(1.5rem, 3vw, 2.25rem);
+  border-top: 0.5px solid var(--filete);
+}
+
+.dato { display: grid; gap: 0.5rem; }
+
+.dato__v {
+  font-size: clamp(1.9rem, 1rem + 2.6vw, 3.25rem);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--luz);
+}
+
+.dato__v i {
+  font-style: normal;
+  font-size: 0.45em;
+  font-weight: 500;
+  color: var(--luz-baja);
+  margin-right: 0.35em;
+  letter-spacing: 0;
+}
+
+.dato__v--falta { color: var(--salmon); }
+.dato__k { font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--luz-baja); }
+
+/* ---------- acciones ---------- */
+
+.acciones-noche {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: clamp(2rem, 4vw, 3rem);
+}
+
+.pulsar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 1.6rem;
+  border-radius: 12px;
+  border: 0.5px solid transparent;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 180ms var(--curva), box-shadow 220ms var(--curva),
+              background-color 220ms var(--curva), border-color 220ms var(--curva);
+}
+
+/* El verde hondo es un indicador encendido, no un relleno: por eso lleva halo
+   propio en vez de aclararse al pasar el puntero. */
+.pulsar--luz {
+  background: var(--verde-hondo);
+  color: #eafff5;
+  box-shadow: 0 0 0 0 rgba(149, 211, 186, 0);
+}
+
+.pulsar--vidrio {
+  background: var(--vidrio);
+  border-color: var(--filete);
+  color: var(--luz);
+  backdrop-filter: blur(24px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pulsar--luz:hover { box-shadow: 0 0 32px rgba(var(--aura-tinte), 0.35); }
+  .pulsar--vidrio:hover { background: var(--vidrio-alto); border-color: var(--filete-vivo); }
+}
+
+/* Hundirse al apretar. Es lo que hace que un botón se sienta físico. */
+.pulsar:active { transform: scale(0.975); }
+
+.pulsar:focus-visible { outline: 2px solid var(--verde); outline-offset: 3px; }
+
+/* ==========================================================================
+   LA PORTADA TIENE QUE CABER EN UNA PANTALLA DE PORTÁTIL
+
+   Medido a 1440×900 —la resolución más común en un MacBook— el acto medía
+   1,180 px contra 804 disponibles bajo el encabezado. El visitante caía en el
+   titular y en MEDIA carta cortada: sin cifras, sin botones y sin saber que
+   había algo más abajo. Una carta cortada por el borde no se lee como «hay
+   más»: se lee como roto.
+
+   `min-height: 100svh` no alcanza porque solo pone un piso, no un techo. Lo
+   que faltaba era mirar el ALTO de la ventana, no solo el ancho — el error
+   clásico de medir en cinco anchos y ningún alto.
+
+   Se comprime la escala y el ritmo, no se quita nada. En pantalla alta todo
+   sigue igual de grande.
+   ========================================================================== */
+
+/* El techo es 68rem (1,088 px) y no 60: un MacBook Pro de 14" reporta 982 px
+   de ventana y quedaba justo afuera, con la carta cortada otra vez. Medido en
+   800, 900, 982 y 1080 de alto. Arriba de eso la portada cabe sin comprimir. */
+@media (min-width: 64rem) and (max-height: 68rem) {
+  .acto { padding-block: clamp(1rem, 3vh, 2.5rem); }
+
+  /* El tope sube a 5rem porque a 1920×1080 sobraban 150 px de holgura y el
+     titular quedaba chico para esa pantalla. A 1440×900 el 4.4vw manda mucho
+     antes del tope, así que ahí no cambia nada. */
+  .acto__titulo { font-size: clamp(2.4rem, 4.4vw, 5rem); max-width: 19ch; }
+  .acto__bajada { margin-top: 1.1rem; font-size: 1.0625rem; max-width: 58ch; }
+
+  .vidrio { padding: clamp(1.1rem, 2vw, 1.75rem); border-radius: 20px; }
+  .instrumento { gap: 1rem; }
+  .lectura-cifras { margin-top: 1.1rem; padding-top: 1rem; }
+  .dato__v { font-size: clamp(1.5rem, 2vw, 2.25rem); }
+  .dato { gap: 0.35rem; }
+
+  .acciones-noche { margin-top: 1.4rem; }
+  .descenso { margin-top: 1.4rem; }
+}
+
+/* ---------- el pie de descenso ---------- */
+
+.descenso {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+  color: var(--luz-baja);
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+}
+
+.descenso svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
+/* ==========================================================================
+   ACTO II — EL APARATO QUE SE LLENA
+
+   La carta del ciclo dejó de ser una ficha quieta al lado de un texto que
+   pasa. Ahora es el instrumento: la vía se llena con el scroll, el abono
+   persigue a la carga y no la alcanza, y el hueco que queda es el faltante.
+   El scroll es la aguja, no un ascensor.
+   ========================================================================== */
+
+.aparato { display: grid; gap: clamp(1.5rem, 3vw, 2.25rem); }
+
+/* Mismo patrón que la cabecera de los carriles de la portada: apilada en
+   angosto, enfrentada en cuanto hay ancho. */
+.aparato__cabeza { display: grid; gap: 0.25rem; }
+
+@media (min-width: 30rem) {
+  .aparato__cabeza {
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 1rem;
+  }
+  .aparato__cabeza .tecnico:last-child { text-align: right; }
+}
+
+/* Medido a 1920: la banda de dos columnas repartía 880 px a cada lado, y el
+   hito de la derecha usa 42ch —unos 530— así que quedaban 350 px muertos
+   pegados al borde. Es el mismo principio que ya rige los párrafos: en
+   pantalla ancha crece el margen, no la mancha. */
+@media (min-width: 1600px) {
+  .noche .fijo { max-width: 1400px; margin-inline: auto; }
+}
+
+.medida { display: grid; gap: 0.8rem; }
+
+.medida__via {
+  position: relative;
+  height: 10px;
+  border-radius: 99px;
+  background: var(--vidrio-alto);
+  border: 0.5px solid var(--filete);
+}
+
+/* Las tres capas, en el orden en que se leen: lo que se cargó, lo que quedó
+   sin cubrir, y encima lo que la quincena sí abona. */
+.medida__carga,
+.medida__abono,
+.medida__falta {
+  position: absolute;
+  inset-block: 0;
+  border-radius: 99px;
+  transform-origin: left center;
+}
+
+.medida__carga { left: 0; right: 0; background: var(--filete-vivo); }
+
+/* 14,840 de 19,101 son el 77.69% del ciclo. El tramo empieza en esa cifra y
+   no en un número redondo porque el dibujo tiene que decir la verdad: si se
+   redondeara a 75%, el faltante se vería un 10% más grande de lo que es. */
+.medida__abono {
+  left: 0;
+  width: 77.69%;
+  background: linear-gradient(90deg, var(--verde-hondo), var(--verde));
+}
+
+.medida__falta { left: 77.69%; right: 0; background: var(--salmon); }
+
+/* La costura, el motivo que recorre la página: marca dónde la plata deja de
+   alcanzar. En la portada marcaba dónde el ciclo cruza al mes; acá, dónde el
+   abono se acaba. Siempre es el mismo gesto — una línea fina y un nudo. */
+.medida__costura {
+  position: absolute;
+  top: -9px; bottom: -9px;
+  left: 77.69%;
+  width: 1px;
+  background: var(--salmon);
+  transform-origin: center;
+}
+
+.medida__costura::after {
+  content: "";
+  position: absolute;
+  top: -4px; left: 50%;
+  width: 5px; height: 5px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: var(--salmon);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--salmon) 80%, transparent);
+}
+
+.medida__pies { display: flex; justify-content: space-between; gap: 1rem; }
+
+.aparato__cifras { margin: 0; display: grid; gap: 0.9rem; }
+
+.renglon {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.renglon dt { color: var(--luz-baja); font-size: 0.875rem; }
+.renglon dd { margin: 0; color: var(--luz); font-size: 0.9375rem; }
+
+.renglon--total {
+  border-top: 0.5px solid var(--filete);
+  padding-top: 0.9rem;
+  margin-top: 0.2rem;
+}
+
+.renglon--total dt { color: var(--luz); font-weight: 600; font-size: 1rem; }
+.renglon--total dd { font-weight: 700; font-size: 1.1875rem; }
+.renglon--total .falta { color: var(--salmon); }
+
+/* `.noche p` gana por especificidad (0,2,0) sobre una clase sola, así que
+   este pie se nombra con el mismo prefijo o se queda gris medio. */
+.noche .aparato__pie {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: var(--luz-baja);
+  max-width: 46ch;
+}
+
+/* ==========================================================================
+   ACTO III — EL CICLO PROPIO
+
+   El único momento de la página donde el visitante toca algo. El dibujo es
+   SVG y lo mueve /ciclo.js por atributos de geometría; acá solo vive el
+   color, que es lo que permite que siga el modo claro u oscuro como todo
+   lo demás.
+   ========================================================================== */
+
+.propio { display: grid; justify-items: center; gap: clamp(2rem, 4vw, 3.25rem); }
+
+.propio__intro { max-width: 46rem; text-align: center; }
+.propio__intro .lectura { margin-inline: auto; }
+
+.propio__panel {
+  width: min(100%, 58rem);
+  display: grid;
+  gap: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+
+/* Mismo problema y misma solución que la cabecera de los carriles de la
+   portada: a 390 el rótulo en versalitas con 0.14em de interletrado no cabe
+   junto al rango, y enfrentarlos deja al rango partido en dos renglones. En
+   angosto va cada leyenda en su propia fila, con el rango alineado a la
+   derecha; en cuanto hay ancho vuelven a ir en línea. */
+.propio__leyenda { display: grid; gap: 0.6rem; }
+
+.leyenda {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--luz-baja);
+}
+
+/* El rango se separa del rótulo por color, no por otro tamaño ni otro peso:
+   son la misma línea de metadato y partirla en dos estilos la rompería. */
+.leyenda b { font-weight: 500; color: var(--luz-media); white-space: nowrap; text-align: right; }
+
+.leyenda i { width: 20px; height: 4px; border-radius: 99px; }
+/* La muestra de la leyenda tiene que ser del MISMO color que el carril que
+   rotula, o deja de rotular nada. */
+.leyenda--mes i { background: var(--luz-baja); }
+
+@media (min-width: 46rem) {
+  .propio__leyenda { display: flex; flex-wrap: wrap; gap: 0.6rem 2rem; }
+  .leyenda { display: inline-flex; }
+  .leyenda b { text-align: left; }
+}
+.leyenda--ciclo i { background: linear-gradient(90deg, var(--verde-hondo), var(--verde)); }
+
+.reglas { display: block; width: 100%; height: auto; }
+
+/* Mismo criterio que el carril de la portada: el mes es dato, no borde. */
+.reglas__mes { fill: var(--luz-baja); }
+.reglas__ciclo { fill: var(--verde); }
+
+/* La guía del día 1 va neutra a propósito: el calendario no es el culpable,
+   es solo la referencia contra la que se mide el corrimiento.
+
+   `fill-opacity` y no `opacity` en todo este dibujo: la regla de movimiento
+   reducido de más abajo fuerza `opacity: 1 !important` en todo el mundo, y
+   cualquier atenuación hecha con `opacity` se perdería justo para quien pidió
+   menos estímulo. */
+.reglas__guia { fill: var(--luz); fill-opacity: 0.28; }
+
+.reglas__costura { fill: var(--salmon); }
+.reglas__nudo { fill: var(--salmon); }
+.reglas__cota,
+.reglas__tope { fill: var(--salmon); fill-opacity: 0.75; }
+
+/* Medido a 390: el dibujo entra en 302 px y el viewBox lo encoge a 0.487, así
+   que un pelo de 1.5 unidades sale a 0.73 px y el navegador lo desvanece. No
+   se arregla con otro viewBox — se arregla engrosando las piezas en unidades
+   de usuario, que es lo mismo que trazar más grueso un plano que se va a
+   imprimir más chico. Son propiedades CSS de geometría: donde no existan,
+   mandan los atributos del marcado y el dibujo se ve como hoy. */
+@media (max-width: 700px) {
+  .reglas__mes,
+  .reglas__ciclo { height: 10px; }
+  .reglas__guia,
+  .reglas__costura,
+  .reglas__tope { width: 3px; }
+  .reglas__cota { height: 2px; }
+  .reglas__nudo { r: 7px; }
+}
+
+/* El dibujo se recompone al mover el control. Sin esta transición los carriles
+   saltan de posición y se pierde la relación entre lo que se movió y lo que
+   cambió — que es exactamente lo único que esta sección tiene que enseñar. */
+@media (prefers-reduced-motion: no-preference) {
+  .reglas__ciclo,
+  .reglas__cota,
+  .reglas__tope,
+  .reglas__costura,
+  .reglas__nudo {
+    transition: x 260ms var(--curva), width 260ms var(--curva), cx 260ms var(--curva);
+  }
+}
+
+.noche .propio__lectura {
+  margin: 0;
+  font-size: clamp(1rem, 0.95rem + 0.35vw, 1.1875rem);
+  line-height: 1.6;
+  color: var(--luz-media);
+  max-width: 54ch;
+}
+
+.propio__lectura b { color: var(--luz); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.noche .propio__pie {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: var(--luz-baja);
+  max-width: 52ch;
+}
+
+/* ---------- el control ---------- */
+
+/* Escondido hasta que /ciclo.js lo enciende. Un deslizador visible que no
+   responde es peor que ningún deslizador. */
+.dial { display: none; }
+
+.vidrio.vivo .dial {
+  display: grid;
+  gap: 0.7rem;
+  padding-top: clamp(0.75rem, 2vw, 1.25rem);
+  border-top: 0.5px solid var(--filete);
+}
+
+.dial__rotulo { font-size: 0.875rem; color: var(--luz-media); }
+.dial__fila { display: flex; align-items: center; gap: 1.25rem; }
+
+.dial__dia {
+  min-width: 3.5rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 10px;
+  border: 0.5px solid var(--filete);
+  background: var(--vidrio-alto);
+  color: var(--luz);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* El deslizador se dibuja entero: los navegadores no comparten un solo
+   selector para la vía y el tirador, así que van los dos juegos. */
+.dial__deslizador {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.dial__deslizador::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 99px;
+  background: var(--filete-vivo);
+}
+
+.dial__deslizador::-moz-range-track {
+  height: 4px;
+  border-radius: 99px;
+  background: var(--filete-vivo);
+}
+
+.dial__deslizador::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px; height: 22px;
+  margin-top: -9px;
+  border: none;
+  border-radius: 50%;
+  background: var(--verde);
+  box-shadow: 0 0 0 4px var(--vacio), 0 0 24px rgba(var(--aura-tinte), 0.55);
+}
+
+.dial__deslizador::-moz-range-thumb {
+  width: 22px; height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: var(--verde);
+  box-shadow: 0 0 0 4px var(--vacio), 0 0 24px rgba(var(--aura-tinte), 0.55);
+}
+
+.dial__deslizador:focus-visible { outline: 2px solid var(--verde); outline-offset: 6px; border-radius: 12px; }
+
+/* En pantalla táctil el objetivo sube a 44 px sin agrandar el tirador: lo
+   que crece es la banda que recibe el dedo. */
+@media (pointer: coarse) {
+  .dial__deslizador { height: 44px; }
+}
+
+/* ==========================================================================
+   LA VOZ TIPOGRÁFICA DE LOS ACTOS
+
+   Dos clases y nada más. El titular de una sección no compite con el de la
+   portada —es la mitad de grande— pero tampoco es un `h2` de plantilla: en un
+   lienzo vacío, el tamaño ES la jerarquía, porque no hay color que la ponga.
+
+   Llevan `.noche` delante porque `.noche h2` (0,1,1) y `.noche p` (0,2,0) le
+   ganarían a una clase sola. La especificidad manda sobre el orden.
+   ========================================================================== */
+
+.noche .titular {
+  font-size: clamp(2.1rem, 1rem + 3.3vw, 4.25rem);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  color: var(--luz);
+  max-width: 20ch;
+  text-wrap: balance;
+  margin: 0;
+}
+
+.noche .bajada {
+  margin: clamp(1.25rem, 2.5vw, 1.75rem) 0 0;
+  font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+  color: var(--luz-media);
+  max-width: 48ch;
+}
+
+.noche .titular--centro,
+.noche .bajada--centro { margin-inline: auto; text-align: center; }
+
+/* El filete que separa un acto del siguiente. Se traza solo al llegar: es el
+   único adorno del sitio que no dice nada, y por eso es tan fino que casi no
+   está. Quitarle el trazo no cambia una coma de lo que se entiende. */
+.regla-viva {
+  height: 1px;
+  background: var(--filete);
+  margin-inline: clamp(1.25rem, 5vw, 5rem);
+  transform-origin: left center;
+}
+
+/* ==========================================================================
+   ACTO IV — LA VITRINA
+
+   No se rediseña la composición de los tres aparatos: ya funciona y es de lo
+   mejor que tiene el sitio. Lo que le faltaba era aire y una presentación —
+   el objeto llega, no aparece.
+   ========================================================================== */
+
+.noche .vitrina { padding-block: clamp(4.5rem, 11vw, 11rem); }
+
+.noche .vitrina__intro {
+  margin-bottom: clamp(2.75rem, 6vw, 6.5rem);
+  max-width: 48rem;
+}
+
+/* ==========================================================================
+   ACTO V — EL PULSO: UNA SOLA CIFRA
+
+   Lo único que hay que decidir hoy va del tamaño que le corresponde. Todo lo
+   demás de esta pantalla es más chico a propósito.
+   ========================================================================== */
+
+.acto-pulso { display: grid; justify-items: center; gap: clamp(3rem, 7vw, 6rem); }
+
+.mayor { text-align: center; max-width: 34rem; }
+
+/* Con `.mayor__valor` a secas esto salía en gris medio: es un <p>, y
+   `.noche p` (0,2,0) le gana a una clase sola (0,1,0). La cifra más grande
+   del sitio estaba apagada y no daba ningún error. */
+.noche .mayor__valor {
+  margin: 0;
+  font-size: clamp(3.25rem, 1rem + 11vw, 11rem);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.055em;
+  font-variant-numeric: tabular-nums;
+  color: var(--luz);
+}
+
+/* La L no compite con la cifra: es la unidad, y una unidad del mismo tamaño
+   que el número lo hace ilegible de un vistazo. */
+.noche .mayor__valor i {
+  font-style: normal;
+  font-size: 0.38em;
+  font-weight: 500;
+  color: var(--luz-baja);
+  margin-right: 0.3em;
+  letter-spacing: 0;
+  vertical-align: 0.42em;
+}
+
+.noche .mayor__rotulo {
+  margin: clamp(1rem, 2vw, 1.5rem) 0 0;
+  font-size: clamp(1rem, 0.95rem + 0.35vw, 1.1875rem);
+  color: var(--luz);
+  letter-spacing: -0.01em;
+}
+
+.noche .mayor__pie {
+  margin: 0.9rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--luz-baja);
+}
+
+/* ---------- la misma cifra, el veredicto opuesto ---------- */
+
+.contraste {
+  width: min(100%, 58rem);
+  display: grid;
+  border-top: 1px solid var(--filete);
+}
+
+/* Todo este acto va centrado, y es el único de la página que lo hace. En un
+   sitio que lee de izquierda a derecha, centrar una sección la separa del
+   resto sin necesidad de fondo, borde ni color: es el monumento del recorrido
+   y por eso se para distinto. */
+.contraste__cara {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: center;
+  text-align: center;
+  padding: clamp(1.75rem, 3.5vw, 2.75rem) clamp(1rem, 3vw, 2rem);
+  border-bottom: 1px solid var(--filete);
+}
+
+@media (min-width: 46rem) {
+  .contraste { grid-template-columns: 1fr 1fr; }
+  .contraste__cara + .contraste__cara { border-left: 1px solid var(--filete); }
+}
+
+.contraste__pct {
+  font-size: clamp(2.75rem, 1rem + 5.5vw, 5.25rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  color: var(--luz);
+}
+
+.contraste__dia { font-size: 0.9375rem; color: var(--luz-media); }
+
+/* Un color, un significado: el verde es lo que va a favor, el salmón lo que
+   va en contra. Acá el mismo 26% cae de los dos lados según el día. */
+.contraste__juicio {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.contraste__juicio--bien { color: var(--verde); }
+.contraste__juicio--mal  { color: var(--salmon); }
+
+.noche .contraste__pie {
+  margin: 0;
+  max-width: 58ch;
+  text-align: center;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--luz-baja);
+}
+
+/* ==========================================================================
+   ACTO VI — LA REJILLA
+
+   Las cuatro cartas dejan de ser cajas. En un lienzo vacío una caja gris es
+   ruido: lo que separa dos ideas es un filete y aire, no un rectángulo. El
+   marcado no cambia — se reusa `.tarjeta` tal cual y se traduce acá.
+   ========================================================================== */
+
+.acto-rejilla .titular { margin-bottom: clamp(2.5rem, 5vw, 4.5rem); }
+
+.noche .tarjetas { gap: 0; margin-top: 0; }
+
+/* `box-shadow: none` no es de más: `marca.css` §5.5 le pone la sombra del ADN
+   a `.tarjeta` junto con el radio y el filete. Al quitarle el fondo y el borde
+   quedaba la sombra sola dibujando el fantasma de la caja que se acababa de
+   quitar — un rectángulo redondeado flotando sin nada adentro. Se veía, y no
+   daba ningún error. */
+.noche .tarjeta {
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--filete);
+  border-radius: 0;
+  box-shadow: none;
+  padding: clamp(1.75rem, 3vw, 2.5rem) 0 clamp(1.5rem, 2.5vw, 2.25rem);
+}
+
+/* El número deja de ser una insignia con fondo y pasa a ser lo que es: una
+   marca de orden al margen. */
+.noche .tarjeta__num {
+  display: block;
+  width: auto; height: auto;
+  margin-bottom: 0.9rem;
+  background: transparent;
+  border-radius: 0;
+  color: var(--luz-baja);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+}
+
+.noche .tarjeta h3 {
+  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.4375rem);
+  letter-spacing: -0.025em;
+  margin-bottom: 0.7rem;
+}
+
+.noche .tarjeta p { font-size: 0.9375rem; line-height: 1.65; color: var(--luz-media); max-width: 46ch; }
+
+/* Cuatro ideas se leen en 2×2, no en 3+1 huérfano. La cuarta columna solo
+   entra cuando cada celda todavía respira. */
+@media (min-width: 46rem) {
+  .noche .tarjetas { grid-template-columns: 1fr 1fr; column-gap: clamp(2rem, 5vw, 4.5rem); }
+  .noche .tarjeta + .tarjeta { border-left: 0; }
+}
+
+@media (min-width: 85rem) {
+  .noche .tarjetas--densa { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ==========================================================================
+   ACTO VII — LOS HECHOS
+
+   Son hechos, y un hecho no necesita caja. Filetes, aire y el término en
+   claro: se lee de corrido y se escanea de un vistazo.
+   ========================================================================== */
+
+.acto-hechos { display: grid; gap: clamp(2.5rem, 6vw, 5rem); }
+.hechos__intro { max-width: 48rem; }
+
+.noche .hechos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  width: min(100%, 62rem);
+  border-top: 1px solid var(--filete);
+}
+
+.noche .hecho {
+  display: grid;
+  gap: 0.5rem;
+  padding: clamp(1.25rem, 2.5vw, 1.9rem) 0;
+  border-bottom: 1px solid var(--filete);
+  color: var(--luz-media);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.noche .hecho b {
+  color: var(--luz);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+/* Entre 46 y 56 rem el renglón todavía va en una columna y la explicación se
+   estiraba hasta 805 px — 74 caracteres, sobre el tope de 65. El tope va acá y
+   no en el <li>, que también carga el término. */
+.noche .hecho span { max-width: 60ch; }
+
+/* Con ancho de sobra el término va en su propia columna: el ojo baja por los
+   cuatro nombres sin leer las cuatro explicaciones. */
+@media (min-width: 56rem) {
+  .noche .hecho {
+    grid-template-columns: 16rem 1fr;
+    gap: clamp(1.5rem, 4vw, 3.5rem);
+    align-items: baseline;
+  }
+}
+
+/* ==========================================================================
+   ACTO VIII — LA RESOLUCIÓN
+
+   El remate. Los dos carriles de la portada vuelven, y esta vez se alinean con
+   el scroll: la costura pierde el salmón y se vuelve verde. La tesis se cierra
+   en imagen antes de pedir el correo.
+
+   El estado en reposo —sin animación, sin soporte, o con movimiento reducido—
+   es el RESUELTO: alineado y en verde. Si el efecto no corre, lo que queda es
+   la promesa, no el problema.
+   ========================================================================== */
+
+.resolucion { display: grid; align-content: center; justify-items: center; }
+.resolucion__marco { width: min(100%, 46rem); text-align: center; }
+
+.carriles {
+  position: relative;
+  height: 58px;
+  width: min(100%, 34rem);
+  margin: 0 auto clamp(2.5rem, 5vw, 4rem);
+}
+
+.carriles__riel {
+  position: absolute;
+  left: 0; right: 0;
+  height: 4px;
+  border-radius: 99px;
+}
+
+.carriles__riel--mes   { top: 16px; background: var(--filete-vivo); }
+
+/* Verde plano y no el degradado de la portada. Allá el degradado dice que el
+   ciclo se ACUMULA; acá lo único que se mira es si los dos extremos calzan, y
+   con el degradado el extremo izquierdo arranca en verde hondo —casi negro
+   sobre el lienzo oscuro— justo donde hay que ver si calza. */
+.carriles__riel--ciclo { top: 38px; background: var(--verde); }
+
+/* `currentColor` y no un fondo propio: así el hilo y su nudo cambian de color
+   con una sola propiedad animada, en vez de dos que se pueden desincronizar. */
+.carriles__costura {
+  position: absolute;
+  top: 6px; bottom: 6px;
+  left: 0;
+  width: 1px;
+  color: var(--verde);
+  background: currentColor;
+}
+
+.carriles__costura::after {
+  content: "";
+  position: absolute;
+  top: -4px; left: 50%;
+  width: 5px; height: 5px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.acciones-noche--centro { justify-content: center; }
+
+/* ==========================================================================
+   EL MUNDO ENVUELVE LA PÁGINA ENTERA
+
+   Sin esto la portada era el mundo nuevo y del segundo scroll para abajo
+   seguía el anterior: se leía como dos productos pegados. Acá se apagan las
+   superficies de la hoja vieja y se traduce lo que quedaba a vidrio y vacío.
+   ========================================================================== */
+
+/* Las franjas teñidas de la hoja anterior existían para dar ritmo en un
+   lienzo claro. En el vacío no hacen falta: el ritmo lo dan la luz y el aire.
+   Se apagan todas y el fondo queda continuo. */
+.noche .franja,
+.noche .franja--superficie,
+.noche .franja--suave,
+.noche .franja--alta,
+.noche .escena { background: transparent; }
+
+/* Encabezado: vidrio flotante, no barra opaca. El contenido pasa por debajo,
+   que es lo que lo hace sentir una capa y no un recorte de pantalla. */
+.noche .cabecera {
+  background: color-mix(in srgb, var(--vacio) 72%, transparent);
+  backdrop-filter: blur(24px) saturate(140%);
+  border-bottom: 0.5px solid var(--filete);
+}
+
+/* ---------- el interruptor de modo ---------- */
+
+/* Va en el encabezado, junto a las acciones de sesión: es una preferencia de
+   lectura, no una función del producto, así que no compite con «Crear cuenta».
+   Es un <button> de verdad —no un checkbox disfrazado— porque tiene que poder
+   anunciar su estado a un lector de pantalla. */
+.modo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  border: 0.5px solid var(--filete);
+  background: var(--vidrio);
+  color: var(--luz-media);
+  cursor: pointer;
+  padding: 0;
+  transition: color 200ms var(--curva), border-color 200ms var(--curva),
+              background-color 200ms var(--curva), transform 160ms var(--curva);
+}
+
+.modo svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.6;
+            stroke-linecap: round; stroke-linejoin: round; }
+
+/* Solo se ve el icono del modo al que se va a cambiar. El otro no se esconde
+   con `hidden` —una clase con `display` le ganaría— sino con `display` propio. */
+.modo__sol { display: none; }
+.noche[data-tema="oscuro"] .modo__sol { display: block; }
+.noche[data-tema="oscuro"] .modo__luna { display: none; }
+
+@media (prefers-color-scheme: dark) {
+  .noche:not([data-tema="claro"]) .modo__sol { display: block; }
+  .noche:not([data-tema="claro"]) .modo__luna { display: none; }
+}
+
+.modo:active { transform: scale(0.94); }
+.modo:focus-visible { outline: 2px solid var(--verde); outline-offset: 3px; }
+
+@media (hover: hover) and (pointer: fine) {
+  .modo:hover { color: var(--luz); border-color: var(--filete-vivo); background: var(--vidrio-alto); }
+}
+
+/* En pantalla táctil el objetivo sube a 44 px sin agrandar el dibujo. */
+@media (pointer: coarse) {
+  .modo { width: 44px; height: 44px; }
+}
+
+.noche .cabecera .marca,
+.noche .cabecera .marca span { color: var(--luz); }
+/* `:not(.boton)` no es cosmético: sin él este selector (0,3,0) le gana al de
+   `.noche .boton--principal` (0,2,0) y el botón del encabezado hereda color de
+   enlace de navegación. Quedaba gris sobre verde hondo — 1.24:1 medido, es
+   decir ilegible. La especificidad manda sobre el orden. */
+.noche .menu a:not(.boton) { color: var(--luz-media); }
+.noche .menu a[aria-current="page"]:not(.boton) { color: var(--luz); }
+.noche .sesion { border-left-color: var(--filete); }
+
+/* El nombre no se parte en dos renglones: con el interruptor nuevo, a 684 px
+   la cabecera se apretaba y «Controle Wallet» caía en dos líneas. */
+.noche .marca { white-space: nowrap; }
+
+@media (hover: hover) and (pointer: fine) {
+  .noche .menu a:not(.boton):hover { color: var(--luz); }
+}
+
+/* Los botones heredados adoptan el lenguaje del acto: el verde hondo es un
+   indicador encendido, no un relleno claro. */
+.noche .boton { border-radius: 12px; transition: transform 180ms var(--curva), box-shadow 220ms var(--curva); }
+.noche .boton--principal { background: var(--verde-hondo); color: #eafff5; border-color: transparent; }
+.noche .boton--borde { background: var(--vidrio); border-color: var(--filete); color: var(--luz); }
+.noche .boton:active { transform: scale(0.975); }
+
+@media (hover: hover) and (pointer: fine) {
+  .noche .boton--principal:hover { box-shadow: 0 0 32px rgba(var(--aura-tinte), 0.35); filter: none; }
+  .noche .boton--borde:hover { border-color: var(--filete-vivo); background: var(--vidrio-alto); }
+}
+
+/* Texto general del mundo. */
+.noche h2, .noche h3 { color: var(--luz); letter-spacing: -0.03em; }
+.noche p, .noche li { color: var(--luz-media); }
+.noche .lectura { color: var(--luz-media); }
+.noche h2.lectura, .noche h3.lectura { color: var(--luz); }
+
+/* La carta del ciclo pasa a ser vidrio, no un rectángulo gris con sombra
+   blanda — que es justo lo que el sitio tenía y se veía barato. */
+.noche .ejemplo {
+  background: var(--vidrio);
+  border: 0.5px solid var(--filete);
+  border-radius: 28px;
+  backdrop-filter: blur(40px) saturate(140%);
+  box-shadow: var(--sombra-honda);
+}
+
+.noche .ejemplo dt { color: var(--luz-baja); }
+.noche .ejemplo dd { color: var(--luz); }
+.noche .ejemplo .total { border-top-color: var(--filete); }
+.noche .ejemplo__pie { color: var(--luz-baja); }
+
+/* Los hitos del recorrido. */
+.noche .hito__fecha { color: var(--verde); }
+.noche .hito p b { color: var(--luz); }
+.noche .hito__falta { color: var(--salmon); }
+
+/* El pie, y el halo viejo que ya no hace falta: la luz la pone `.aura`. */
+.noche .pie { background: transparent; border-top: 0.5px solid var(--filete); color: var(--luz-baja); }
+.noche .pie a { color: var(--luz-media); }
+.noche .escena__halo { display: none; }
+
+/* ==========================================================================
+   EL MOVIMIENTO — el scroll es la cámara.
+   Todo va dentro de @supports y de `no-preference`: si algo de esto no corre,
+   la página se ve COMPLETA y quieta. El movimiento nunca es requisito para
+   entender nada.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* 1. La materialización. El panel llega como material —el desenfoque se
+        resuelve y la escala se asienta— en vez de aparecer de la nada. */
+  .entra {
+    animation: materializar 1100ms var(--curva) both;
+  }
+  @keyframes materializar {
+    from { opacity: 0; transform: translateY(28px) scale(0.985); filter: blur(14px); }
+    to   { opacity: 1; transform: none;                          filter: blur(0);    }
+  }
+
+  .entra--2 { animation-delay: 120ms; }
+  .entra--3 { animation-delay: 240ms; }
+  .entra--4 { animation-delay: 360ms; }
+
+  /* 2. El ciclo se traza solo, de izquierda a derecha: la dirección en que
+        pasa el tiempo y se acumula la deuda. */
+  .carril__tramo--ciclo { animation: trazar 1200ms var(--curva) 420ms both; }
+  @keyframes trazar { from { transform: scaleX(0.02); } to { transform: scaleX(1); } }
+
+  .carril__corte { animation: encender 600ms var(--curva) 1100ms both; }
+  @keyframes encender { from { opacity: 0; } to { opacity: 1; } }
+
+  @supports (animation-timeline: view()) {
+    /* 3. La cámara. La luz deriva y el acto se aleja al salir, así el scroll
+          se siente como desplazamiento en un espacio, no como una lista que
+          sube. Es lo que hacen las páginas de producto de Apple. */
+    .aura {
+      animation: derivar-luz linear both;
+      animation-timeline: view();
+      animation-range: cover;
+    }
+    @keyframes derivar-luz {
+      from { transform: translate3d(0, -14%, 0) scale(1.15); opacity: 0.55; }
+      to   { transform: translate3d(0,  14%, 0) scale(1);    opacity: 1;    }
+    }
+
+    .acto__marco {
+      animation: alejarse linear both;
+      animation-timeline: view();
+      animation-range: exit 10% exit 100%;
+    }
+    @keyframes alejarse {
+      from { opacity: 1; transform: none; filter: blur(0); }
+      to   { opacity: 0; transform: translateY(-4rem) scale(0.965); filter: blur(6px); }
+    }
+
+    /* ---------- 4. el aparato del acto II ----------
+
+       Tres movimientos y nada más: los tramos crecen, la costura enciende,
+       los renglones llegan. Ninguno usa `filter`, a diferencia de la entrada
+       de la portada: aquello corre una vez al cargar y esto corre en CADA
+       cuadro del scroll, donde un desenfoque cuesta caro. */
+
+    @keyframes crecer   { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    @keyframes prender  { from { opacity: 0; transform: scaleY(0.15); } to { opacity: 1; transform: none; } }
+    @keyframes llegar   { from { opacity: 0; transform: translateY(0.9rem); } to { opacity: 1; transform: none; } }
+
+    .medida__carga,
+    .medida__abono,
+    .medida__falta { animation: crecer linear both; }
+    .medida__costura { animation: prender linear both; }
+    .renglon { animation: llegar linear both; }
+
+    /* En teléfono y tableta el panel no se clava, así que cada pieza corre
+       con su propia entrada en pantalla. Escalonadas, no todas de golpe. */
+    .medida__carga   { animation-timeline: view(); animation-range: entry 20% cover 26%; }
+    .medida__costura { animation-timeline: view(); animation-range: entry 30% cover 34%; }
+    .medida__abono   { animation-timeline: view(); animation-range: entry 34% cover 42%; }
+    .medida__falta   { animation-timeline: view(); animation-range: entry 44% cover 52%; }
+    .renglon--1      { animation-timeline: view(); animation-range: entry 25% cover 32%; }
+    .renglon--2      { animation-timeline: view(); animation-range: entry 35% cover 42%; }
+    .renglon--3      { animation-timeline: view(); animation-range: entry 45% cover 52%; }
+
+    /* De 1000 px para arriba el panel SÍ se clava, y ahí el instrumento se
+       cuelga del recorrido largo de la sección: el mismo scroll que hace
+       pasar los cuatro hitos es el que llena la vía.
+
+       La línea de tiempo se declara en `.fijo` —el ancestro— y no hace falta
+       `timeline-scope`: un nombre declarado arriba lo ven todos los
+       descendientes. Y no puede ir en `.fijo__visual`, que es el que se
+       clava: un elemento pegado no se mueve respecto de la ventana, así que
+       su propia línea de tiempo se congela. */
+    @media (min-width: 1000px) {
+      .fijo { view-timeline: --recorrido block; }
+
+
+      /* Los tiempos NO son a ojo. Medido en el navegador, el centro de cada
+         hito cruza el medio de la ventana en estos puntos del recorrido:
+
+           1  «Abre el ciclo» ................ −21%   (la vía todavía vacía)
+           2  «Corta, y aparece el número» ...  22%   (19,101 completo)
+           3  «Entra el pago, y no llena» ....  65%   (14,840, y el faltante)
+           4  «Y el sueldo ya se gastó» ...... 108%   (todo dibujado)
+
+         Cada tramo termina donde su hito se lee, nunca después: si el número
+         aparece antes que la barra que lo dibuja, el aparato deja de medir y
+         pasa a decorar. La carga arranca en `entry 85%` porque ahí es donde
+         el panel se clava, y no tiene sentido llenar algo que todavía sube. */
+      .medida__carga   { animation-timeline: --recorrido; animation-range: entry 85% contain 24%; }
+      .renglon--1      { animation-timeline: --recorrido; animation-range: contain 16% contain 24%; }
+      .medida__abono   { animation-timeline: --recorrido; animation-range: contain 40% contain 60%; }
+      .renglon--2      { animation-timeline: --recorrido; animation-range: contain 52% contain 60%; }
+      .medida__costura { animation-timeline: --recorrido; animation-range: contain 60% contain 66%; }
+      .medida__falta   { animation-timeline: --recorrido; animation-range: contain 62% contain 74%; }
+      .renglon--3      { animation-timeline: --recorrido; animation-range: contain 66% contain 76%; }
+    }
+
+    /* ---------- 5. la voz de los actos ----------
+       Titular y bajada llegan con una diferencia de tiempo tan corta que no se
+       percibe como escalón, solo como que el titular manda. */
+    .titular { animation: llegar linear both; animation-timeline: view(); animation-range: entry 8% cover 30%; }
+    .bajada  { animation: llegar linear both; animation-timeline: view(); animation-range: entry 14% cover 36%; }
+
+    /* El filete se traza de izquierda a derecha, como el tiempo. */
+    .regla-viva { animation: crecer linear both; animation-timeline: view(); animation-range: entry 20% cover 45%; }
+
+    /* ---------- 6. la vitrina se presenta ----------
+       El objeto llega en vez de aparecer. Va en `.aparatos` y no en cada
+       aparato: los tres ya flotan a distinta velocidad —ese es el parallax de
+       `dispositivos.css`— y sumarle una entrada a cada uno los haría pelear.
+       El escenario entero se presenta, y adentro cada pieza sigue su ritmo. */
+    .aparatos {
+      animation: presentar linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 34%;
+    }
+    @keyframes presentar {
+      from { opacity: 0; transform: translateY(2.5rem) scale(0.955); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* ---------- 7. la cifra se asienta ----------
+       Más recorrido que el resto, porque es más grande: un objeto grande que
+       se mueve poco se siente pegado, y uno chico que se mueve mucho, suelto. */
+    .mayor__valor {
+      animation: asentar linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 45%;
+    }
+    @keyframes asentar {
+      from { opacity: 0; transform: translateY(2.75rem) scale(0.955); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .mayor__rotulo { animation: llegar linear both; animation-timeline: view(); animation-range: entry 20% cover 38%; }
+
+    /* Las dos caras del contraste entran una detrás de otra: primero la que
+       está bien, después la que no. Ese orden es el argumento. */
+    .contraste__cara:nth-child(1) { animation: llegar linear both; animation-timeline: view(); animation-range: entry 12% cover 34%; }
+    .contraste__cara:nth-child(2) { animation: llegar linear both; animation-timeline: view(); animation-range: entry 20% cover 42%; }
+
+    /* Los hechos bajan en cascada corta. Cuatro renglones con 4% de diferencia
+       se leen como una lista que se escribe sola, no como cuatro cosas. */
+    .hecho { animation: llegar linear both; animation-timeline: view(); }
+    .hecho:nth-child(1) { animation-range: entry 10% cover 30%; }
+    .hecho:nth-child(2) { animation-range: entry 14% cover 34%; }
+    .hecho:nth-child(3) { animation-range: entry 18% cover 38%; }
+    .hecho:nth-child(4) { animation-range: entry 22% cover 42%; }
+
+    /* ---------- 8. la resolución ----------
+       El ciclo se corre hasta calzar con el mes, y la costura deja de ser una
+       alarma. Es el único momento del sitio donde el salmón se apaga: en todos
+       los demás marca algo que sigue en contra. */
+    /* DOS COSAS QUE SE MIDIERON ACÁ, Y LAS DOS FALLABAN EN SILENCIO.
+
+       1. La línea de tiempo es la de la SECCIÓN, no la del carril. Colgado de
+          su propia `view()`, el carril mide 4 px de alto: su fase `entry` dura
+          4 px de scroll y la alineación terminaba antes de que la escena se
+          viera. Para una pieza chica dentro de una escena grande, la línea de
+          tiempo siempre es la de la escena.
+
+       2. LA ÚLTIMA SECCIÓN DE LA PÁGINA NUNCA COMPLETA SU `cover`. No hay nada
+          debajo para seguir bajando, así que el scroll se acaba antes. Medido:
+          con esta escena de una pantalla y un pie de 95 px, lo máximo que se
+          alcanza es `cover 56%`. El remate con rango hasta 66% no se resolvía
+          NUNCA — la costura se quedaba en un color a medio camino entre el
+          salmón y el verde, que es peor que no haber hecho nada.
+
+          El techo sale de (alto + pie) / (alto + ventana), o sea siempre un
+          poco arriba del 50%. Por eso todo esto cierra en 46%, con margen.
+          Si algún día crece el pie, el margen crece; si la escena se estira,
+          hay que volver a medirlo. */
+    .resolucion { view-timeline: --final block; }
+
+    .carriles__riel--ciclo {
+      animation: alinear linear both;
+      animation-timeline: --final;
+      animation-range: cover 12% cover 42%;
+    }
+    @keyframes alinear {
+      from { transform: translateX(-22%); }
+      to   { transform: none; }
+    }
+
+    .carriles__costura {
+      animation: coser linear both;
+      animation-timeline: --final;
+      animation-range: cover 16% cover 46%;
+    }
+    @keyframes coser {
+      from { color: var(--salmon); }
+      to   { color: var(--verde); }
+    }
+  }
+}
+
+/* Sin movimiento: todo visible, quieto y completo. */
+@media (prefers-reduced-motion: reduce) {
+  .noche *, .noche *::before, .noche *::after {
+    animation: none !important;
+    transition: none !important;
+    filter: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

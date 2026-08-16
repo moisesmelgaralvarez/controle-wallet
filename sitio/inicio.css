@@ -76,6 +76,12 @@
    mientras se explica, en vez de mover todo a la vez. */
 .fijo { display: grid; gap: var(--e3); align-items: start; }
 
+/* Debajo de 1000 px no aplica el recorrido de 60vh, y sin esto los hitos
+   quedaban pegados: la fecha del siguiente caía justo bajo el párrafo del
+   anterior y los cuatro se leían como un solo bloque. La separación entre
+   hitos tiene que ser mayor que la de adentro, o el grupo no se distingue. */
+.fijo__texto { display: grid; gap: var(--e4); }
+
 @media (min-width: 1000px) {
   .fijo { grid-template-columns: 1fr 1fr; gap: var(--e5); }
   .fijo__visual { position: sticky; top: 18vh; }
@@ -84,11 +90,36 @@
   .fijo__texto > *:last-child { margin-bottom: 30vh; }
 }
 
-.paso h3 { margin-bottom: var(--e1); }
-.paso p { color: var(--tenue); max-width: 40ch; margin-bottom: 0; }
-.paso__n {
-  display: block; font-size: var(--t-xs); font-weight: 700;
-  letter-spacing: 0.12em; color: var(--acento); margin-bottom: 0.5rem;
+/* ---------- los hitos del ciclo ---------- */
+
+/* La fecha va como columna propia, no como rótulo encima del título: acá el
+   orden es cronológico y real, así que la fecha es un eje, no un adorno. En
+   angosto se apila, porque una columna de fechas a 375 se come el texto. */
+.hito { display: grid; gap: 0.35rem; }
+
+.hito h3 { margin-bottom: 0; }
+.hito p { color: var(--tenue); max-width: 42ch; margin-bottom: 0; }
+
+.hito__fecha {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: var(--ls-rotulo, 0.02em);
+  text-transform: uppercase;
+  color: var(--acento);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Las cifras dentro del texto van en el peso del titular, no en rojo: el rojo
+   está reservado a lo que va en contra, y sobreusarlo lo apaga. */
+.hito p b { color: var(--tinta); font-weight: 600; }
+.hito__falta { color: var(--alerta); }
+
+@media (min-width: 700px) {
+  .hito {
+    grid-template-columns: 6.5rem 1fr;
+    gap: 0.35rem var(--e2);
+  }
+  .hito__fecha { grid-row: span 2; padding-top: 0.35rem; }
 }
 
 /* ---------- números grandes ---------- */

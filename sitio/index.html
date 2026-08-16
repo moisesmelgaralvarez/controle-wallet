@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Controle Wallet — El presupuesto del hogar, sin engañarse</title>
-<meta name="description" content="Presupuesto familiar que entiende cómo se vive de verdad: tarjeta por ciclo de corte, ingresos que cambian cada mes y cuotas que se terminan. Para el hogar, no para una persona sola.">
+<title>Controle Wallet — El presupuesto del hogar, sobre el ciclo real</title>
+<meta name="description" content="Presupuesto familiar calculado sobre el ciclo de corte de tu tarjeta, no sobre el mes calendario. Contempla ingresos variables, cuotas con vencimiento y dos personas administrando el mismo hogar.">
 <link rel="canonical" href="https://controlewallet.com/">
 <meta property="og:title" content="Controle Wallet">
-<meta property="og:description" content="El presupuesto del hogar, sin engañarse.">
+<meta property="og:description" content="El presupuesto del hogar, calculado sobre el ciclo real de tu tarjeta.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://controlewallet.com/">
 <meta property="og:locale" content="es_HN">
@@ -15,8 +15,17 @@
 <link rel="stylesheet" href="/inicio.css">
 <link rel="stylesheet" href="/dispositivos.css">
 <link rel="stylesheet" href="/marca.css">
+<!-- El mundo visual nuevo de la portada. Va de último: gana por cascada sin
+     necesitar un solo !important. -->
+<link rel="stylesheet" href="/noche.css">
+<!-- Sin `defer` a propósito: aplica el tema guardado antes del primer
+     pintado, o hay destello blanco en cada carga. -->
+<script src="/modo.js"></script>
+<!-- Con `defer`, al revés que modo.js: este no tiene nada que hacer antes del
+     primer pintado. La sección ya se ve completa sin él. -->
+<script src="/ciclo.js" defer></script>
 </head>
-<body>
+<body class="noche">
 
 <a class="saltar" href="#principal">Saltar al contenido</a>
 
@@ -33,89 +42,277 @@
     <span class="sesion">
       <a href="/entrar">Entrar</a>
       <a class="boton boton--principal" href="/registro">Crear cuenta</a>
+      <button class="modo" type="button" data-modo aria-pressed="false" aria-label="Cambiar a modo oscuro">
+        <svg class="modo__luna" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+        <svg class="modo__sol" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
     </span>
   </nav>
 </header>
 
 <main id="principal">
 
-  <!-- ── portada ───────────────────────────────────────────── -->
-  <section class="escena hero">
-    <div class="escena__halo" aria-hidden="true"></div>
-    <div class="hero__contenido">
-      <p class="rotulo">Finanzas del hogar</p>
-      <h1>El presupuesto del hogar, sin engañarse</h1>
-      <p class="hero__entrada">
-        La mayoría de las apps suponen que ganás lo mismo todos los meses y que
-        la tarjeta es una deuda aparte. En un hogar real, ninguna de las dos
-        cosas es cierta.
+  <!-- ── acto I · la portada ───────────────────────────────── -->
+  <!-- Una pantalla, una idea. El instrumento del ciclo no ilustra el titular:
+       lo demuestra. Todo dibujado en CSS — pesa cero y se ve nítido a
+       cualquier resolución. -->
+  <section class="acto">
+    <div class="aura" aria-hidden="true"></div>
+
+    <div class="acto__marco">
+      <h1 class="acto__titulo entra">El dinero ya se gastó. El saldo todavía no lo sabe.</h1>
+
+      <p class="acto__bajada entra entra--2">
+        Tu tarjeta no cobra por mes calendario: cobra por ciclo de corte. Ese
+        desfase es la razón por la que las cuentas cuadran en el papel y no
+        cuadran en la casa.
       </p>
-      <div class="acciones">
-        <a class="boton boton--principal" href="/registro">Crear cuenta</a>
-        <a class="boton boton--borde" href="/entrar">Ya tengo cuenta</a>
+
+      <div class="vidrio entra entra--3">
+        <div class="instrumento" role="img"
+             aria-label="El mes calendario va del 1 al 31 de agosto. El ciclo real de la tarjeta va del 7 de julio al 6 de agosto: empieza antes y termina antes. En ese ciclo se cargaron 19,101 lempiras, se abonaron 14,840 y faltan 4,261.">
+
+          <div class="carril">
+            <div class="carril__cabeza">
+              <span class="tecnico">Mes calendario</span>
+              <span class="tecnico">1 ago — 31 ago</span>
+            </div>
+            <div class="carril__via">
+              <span class="carril__tramo carril__tramo--mes"></span>
+            </div>
+          </div>
+
+          <div class="carril">
+            <div class="carril__cabeza">
+              <span class="tecnico">Ciclo de corte</span>
+              <span class="tecnico">7 jul — 6 ago</span>
+            </div>
+            <div class="carril__via">
+              <span class="carril__tramo carril__tramo--ciclo"></span>
+              <span class="carril__corte" aria-hidden="true"></span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="lectura-cifras">
+          <div class="dato">
+            <span class="dato__v"><i>L</i>19,101</span>
+            <span class="dato__k">Cargado al ciclo</span>
+          </div>
+          <div class="dato">
+            <span class="dato__v"><i>L</i>14,840</span>
+            <span class="dato__k">Cubierto</span>
+          </div>
+          <div class="dato">
+            <span class="dato__v dato__v--falta"><i>L</i>4,261</span>
+            <span class="dato__k">Aún figura como disponible</span>
+          </div>
+        </div>
       </div>
-      <p class="hero__pie">
+
+      <div class="acciones-noche entra entra--4">
+        <a class="pulsar pulsar--luz" href="/registro">Crear cuenta</a>
+        <a class="pulsar pulsar--vidrio" href="/entrar">Entrar</a>
+      </div>
+
+      <!-- Un rótulo que dice qué viene, no una instrucción. «Seguí bajando» le
+           explica al lector cómo usar una página web; esto le adelanta el
+           contenido, que es lo único que puede hacerlo bajar. -->
+      <p class="descenso entra entra--4">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-        Seguí bajando
+        El ciclo, en cuatro fechas
       </p>
     </div>
   </section>
 
   <!-- ── el corte de la tarjeta, con el visual clavado ──────── -->
-  <section class="franja franja--superficie">
+  <section class="franja">
     <div class="fijo">
 
+      <!-- El aparato no ilustra los hitos: los MIDE. Mientras el texto pasa
+           al lado, la vía se llena con el scroll — la carga corre, el abono
+           la persigue y no la alcanza. El scroll es la aguja del instrumento,
+           no un ascensor. -->
       <div class="fijo__visual">
-        <div class="ejemplo revelar">
-          <h3>Ciclo del 7 de julio al 6 de agosto</h3>
-          <dl>
-            <dt>Se cargó a la tarjeta</dt>
-            <dd>L 19,101.00</dd>
-            <dt>Lo paga: Comisiones</dt>
-            <dd>L 14,840.00</dd>
-            <div class="total">
-              <dt>Faltan</dt>
-              <dd class="falta">L 4,261.00</dd>
+        <div class="vidrio aparato">
+          <div class="aparato__cabeza">
+            <span class="tecnico">Ciclo de corte</span>
+            <span class="tecnico">7 jul — 6 ago</span>
+          </div>
+
+          <!-- Solo la vía lleva `role="img"`: es dibujo puro. Las cifras de
+               abajo son contenido y se leen como lo que son. -->
+          <div class="medida">
+            <div class="medida__via" role="img"
+                 aria-label="De los 19,101 lempiras cargados al ciclo, la quincena cubre 14,840. El tramo final, 4,261, queda sin cubrir.">
+              <span class="medida__carga"></span>
+              <span class="medida__falta"></span>
+              <span class="medida__abono"></span>
+              <span class="medida__costura"></span>
+            </div>
+            <div class="medida__pies">
+              <span class="tecnico">7 jul · apertura</span>
+              <span class="tecnico">6 ago · corte</span>
+            </div>
+          </div>
+
+          <dl class="aparato__cifras">
+            <div class="renglon renglon--1">
+              <dt>Cargado al ciclo</dt>
+              <dd class="cifra">L 19,101.00</dd>
+            </div>
+            <div class="renglon renglon--2">
+              <dt>Cubierto por la quincena</dt>
+              <dd class="cifra">L 14,840.00</dd>
+            </div>
+            <!-- Una sola cifra. La versión anterior imprimía este monto dos
+                 veces, corrido, para «dibujar» el doble conteo: se leía como
+                 un error de render, no como un recurso. El doble conteo lo
+                 dice la vía, que es donde funciona. -->
+            <div class="renglon renglon--3 renglon--total">
+              <dt>Sin cubrir</dt>
+              <dd class="cifra falta">L 4,261.00</dd>
             </div>
           </dl>
-          <p class="ejemplo__pie">
-            Esa diferencia sale de las quincenas o se queda revolviendo con
+
+          <p class="aparato__pie">
+            El mismo dinero, contado dos veces: una al gastarlo y otra al
+            pagarlo. La diferencia sale de la siguiente quincena o genera
             intereses.
           </p>
         </div>
       </div>
 
+      <!-- Los hitos van fechados, no numerados. Un 01/02/03 sería decoración;
+           acá el orden ES el dato — el ciclo pasa en ese orden y por eso el
+           dinero se cuenta dos veces. La fecha carga información que el
+           lector necesita; un número ordinal no. -->
       <div class="fijo__texto">
-        <div class="paso revelar">
-          <span class="paso__n">01</span>
-          <h3>La tarjeta no es una deuda</h3>
+        <div class="hito">
+          <span class="hito__fecha"><time datetime="2026-07-07">7 jul</time></span>
+          <h3>Apertura del ciclo</h3>
           <p>
-            Es por dónde pasa el gasto. Si cargás el súper y la gasolina a la
-            tarjeta y después la pagás con el sueldo, restar el gasto
-            <em>y además</em> el pago cuenta el mismo dinero dos veces.
+            Todo consumo con tarjeta se acumula a partir de esta fecha. Todavía
+            no es deuda: es gasto del hogar cayendo en un mismo saldo.
           </p>
         </div>
 
-        <div class="paso revelar">
-          <span class="paso__n">02</span>
-          <h3>Se vigila por ciclo, no por mes</h3>
+        <div class="hito">
+          <span class="hito__fecha"><time datetime="2026-08-06">6 ago</time></span>
+          <h3>Corte</h3>
           <p>
-            Del 7 de julio al 6 de agosto se cargaron diecinueve mil. El corte lo
-            paga un ingreso concreto. La pregunta no es cuánto debés: es si ese
-            ingreso alcanza.
+            <b class="cifra">L 19,101</b> cargados al ciclo. Ese saldo lo paga un
+            ingreso concreto, no «el mes». La pregunta no es cuánto debés: es si
+            ese ingreso alcanza.
           </p>
         </div>
 
-        <div class="paso revelar">
-          <span class="paso__n">03</span>
-          <h3>Saberlo el día 20 no es lo mismo</h3>
+        <div class="hito">
+          <span class="hito__fecha"><time datetime="2026-08-15">15 ago</time></span>
+          <h3>Pago</h3>
           <p>
-            Que enterarse el día 6, cuando ya no hay nada que hacer. Con el
-            faltante a la vista todavía se puede mover algo.
+            La quincena cubre <b class="cifra">L 14,840</b>. Quedan
+            <b class="cifra hito__falta">L 4,261</b> sin cubrir, que salen de la
+            siguiente quincena o generan intereses.
+          </p>
+        </div>
+
+        <div class="hito">
+          <span class="hito__fecha">Resto de agosto</span>
+          <h3>El saldo que engaña</h3>
+          <p>
+            Ese monto sin cubrir sigue figurando como disponible en la cuenta. Es
+            el mismo dinero contado dos veces: una al gastarlo y otra al verlo en
+            el saldo.
           </p>
         </div>
       </div>
 
+    </div>
+  </section>
+
+  <!-- ── el ciclo propio ───────────────────────────────────── -->
+  <!-- El único momento de la página donde el visitante toca algo. No es un
+       adorno: es la pregunta que el producto contesta, hecha demostración
+       antes de pedir un correo.
+
+       Todo el dibujo va en SVG y lo mueve /ciclo.js cambiando atributos de
+       geometría (x, width, x1) — que no son CSS y por tanto no rozan la
+       regla de cero estilos en línea ni la CSP.
+
+       Sin JavaScript, la sección se ve completa con el ciclo del ejemplo y
+       el control no aparece. Nunca un control que no hace nada. -->
+  <section class="franja propio">
+    <div class="propio__intro revelar">
+      <h2 class="lectura">El desfase no es del ejemplo. Es del tuyo.</h2>
+      <p class="lectura">
+        Indicá el día de corte de tu tarjeta y medí cuánto se corre tu mes real
+        respecto del mes calendario.
+      </p>
+    </div>
+
+    <div class="vidrio propio__panel revelar" data-panel>
+      <!-- La leyenda rotula el dibujo y por eso carga los rangos: es lo que
+           evita meter texto dentro del SVG, que al escalar con el viewBox
+           quedaría en 8 px a 390 de ancho. -->
+      <div class="propio__leyenda">
+        <span class="leyenda leyenda--mes">
+          <i aria-hidden="true"></i>Mes calendario <b>del 1 al 31</b>
+        </span>
+        <span class="leyenda leyenda--ciclo">
+          <i aria-hidden="true"></i>Ciclo de corte <b data-rango>del 7 al 6</b>
+        </span>
+      </div>
+
+      <!-- 62 días de ventana, del -31 al 31. La escala es 9.5 px por día y el
+           origen está en x = 15, que es lo que /ciclo.js reusa para no tener
+           dos veces la misma constante. -->
+      <svg class="reglas" viewBox="0 0 620 118" aria-hidden="true" focusable="false">
+        <!-- Los dos carriles: el mes arranca en el día 1 (x = 309.5) y no se
+             mueve nunca; el ciclo se corre entero según dónde caiga el corte. -->
+        <rect class="reglas__mes" x="309.5" y="26" width="294.5" height="6" rx="3"/>
+        <rect class="reglas__ciclo" data-ciclo x="72" y="62" width="294.5" height="6" rx="3"/>
+
+        <!-- La guía del día 1. Es la referencia contra la que se mide todo lo
+             demás, así que va neutra: el calendario no es el culpable. -->
+        <rect class="reglas__guia" x="309" y="14" width="1" height="68"/>
+
+        <!-- La costura va como <rect> y no como <line> a propósito: `x` es
+             propiedad CSS en SVG y se puede transicionar; `x1` es solo
+             atributo y saltaría de golpe mientras los carriles se deslizan. -->
+        <rect class="reglas__costura" data-costura x="365.75" y="14" width="1.5" height="68"/>
+        <circle class="reglas__nudo" data-nudo cx="366.5" cy="14" r="4"/>
+
+        <!-- La cota: los días que el ciclo ya lleva corriendo cuando el mes del
+             calendario apenas abre. Dibujo técnico y no bloque de color — un
+             rectángulo relleno de este tamaño se come los dos carriles. -->
+        <rect class="reglas__tope" data-tope x="72" y="91" width="1" height="11"/>
+        <rect class="reglas__cota" data-cota x="72" y="96" width="237.5" height="1"/>
+        <rect class="reglas__tope" x="309" y="91" width="1" height="11"/>
+      </svg>
+
+      <!-- Una sola frase, y la que importa. El rango ya lo dice la leyenda:
+           repetirlo acá haría que el lector de pantalla lea dos veces lo
+           mismo en cada movimiento del control. -->
+      <p class="propio__lectura" data-lectura aria-live="polite">
+        El día 1, cuando vos empezás el mes, tu tarjeta ya acumula
+        <b data-dias>25 días</b> de consumo.
+      </p>
+
+      <div class="dial">
+        <label class="dial__rotulo" for="corte">Día de corte de tu tarjeta</label>
+        <div class="dial__fila">
+          <input class="dial__deslizador" id="corte" type="range"
+                 min="1" max="28" step="1" value="6" data-corte>
+          <output class="dial__dia" for="corte" data-dia>6</output>
+        </div>
+      </div>
+
+      <p class="propio__pie">
+        Ese tramo lo pagás con el ingreso que asignaste a este mes. Por eso el
+        presupuesto cuadra en la hoja y no cuadra en la casa.
+      </p>
     </div>
   </section>
 
@@ -126,13 +323,12 @@
   <section class="franja franja--alta escena vitrina">
     <div class="escena__halo" aria-hidden="true"></div>
 
-    <div class="vitrina__intro revelar">
-      <p class="rotulo">Una cuenta, todas las pantallas</p>
-      <h2 class="lectura">El mismo hogar, se abra donde se abra</h2>
-      <p class="lectura">
-        En el teléfono, lo que se necesita de pie en la fila del súper. En la
-        computadora, el tablero completo con la historia al lado. No es la misma
-        pantalla estirada: cada tamaño muestra lo que cabe bien.
+    <div class="vitrina__intro">
+      <h2 class="titular">El mismo hogar, se abra donde se abra</h2>
+      <p class="bajada">
+        En el teléfono, la decisión del momento. En la computadora, el tablero
+        completo con el historial al lado. Cada tamaño muestra lo que
+        corresponde, no la misma pantalla estirada.
       </p>
     </div>
 
@@ -251,111 +447,157 @@
     </div>
   </section>
 
-  <!-- ── el pulso ──────────────────────────────────────────── -->
-  <section class="escena franja franja--suave">
-    <div class="escena__halo" aria-hidden="true"></div>
-    <div class="dos revelar">
-      <div>
-        <p class="rotulo">El pulso del mes</p>
-        <h2 class="lectura">Gastar el 26% es normal el día 20 y es alarma el día 4</h2>
-        <p class="lectura">
-          Esa comparación —cuánto mes ha corrido contra cuánto presupuesto se ha
-          ido— es toda la señal que hace falta para corregir a tiempo.
-        </p>
+  <div class="regla-viva" aria-hidden="true"></div>
+
+  <!-- ── acto V · el pulso ─────────────────────────────────── -->
+  <!-- Una sola cifra, del tamaño que le corresponde a lo único que hay que
+       decidir hoy. El rótulo va DEBAJO: encima de una cifra o de un titular
+       está prohibido, y al pie de un instrumento es donde trabaja. -->
+  <section class="franja franja--alta acto-pulso">
+    <div class="mayor">
+      <p class="mayor__valor"><i>L</i>1,340</p>
+      <p class="mayor__rotulo">disponible por día para cerrar el mes sin déficit</p>
+      <p class="mayor__pie">
+        No un semáforo de colores: la cifra contra la que se decide un gasto
+        concreto, hoy.
+      </p>
+    </div>
+
+    <!-- La misma cifra dos veces, y el veredicto opuesto. Es el argumento
+         entero del pulso sin una sola línea de explicación previa. -->
+    <div class="contraste">
+      <div class="contraste__cara">
+        <span class="contraste__pct">26%</span>
+        <span class="contraste__dia">del presupuesto, el día 20</span>
+        <span class="contraste__juicio contraste__juicio--bien">Normal</span>
       </div>
-      <div class="cifra">
-        <span class="cifra__valor">L 1,340</span>
-        <span class="cifra__pie">
-          es lo que te queda por día para llegar justo a fin de mes. No un
-          semáforo de colores: la cifra con la que se decide si se sale a cenar
-          o no.
-        </span>
+      <div class="contraste__cara">
+        <span class="contraste__pct">26%</span>
+        <span class="contraste__dia">del presupuesto, el día 4</span>
+        <span class="contraste__juicio contraste__juicio--mal">Alarma</span>
       </div>
     </div>
+
+    <p class="contraste__pie">
+      Lo que cambia no es el gasto, sino cuánto mes ha transcurrido. Esa
+      comparación es la única señal que hace falta para corregir a tiempo.
+    </p>
   </section>
 
-  <!-- ── lo que cambia ─────────────────────────────────────── -->
-  <section class="franja franja--alta">
-    <p class="rotulo revelar">Lo que cambia</p>
-    <h2 class="lectura revelar">Hecho para cómo se vive de verdad</h2>
+  <div class="regla-viva" aria-hidden="true"></div>
+
+  <!-- ── acto VI · lo que cambia ───────────────────────────── -->
+  <section class="franja franja--alta acto-rejilla">
+    <h2 class="titular">Cuatro supuestos que este presupuesto no hace</h2>
 
     <div class="tarjetas tarjetas--densa">
       <article class="tarjeta">
         <span class="tarjeta__num" aria-hidden="true">1</span>
-        <h3>Los ingresos cambian</h3>
+        <h3>Que el ingreso es el mismo todos los meses</h3>
         <p>
-          Si trabajás por comisión, el mes bueno paga más retención y el neto no
-          es el de siempre. Cada pago se confirma con lo que de verdad entró, y
-          lo que falta confirmar queda marcado como estimado en toda la app.
+          Si trabajás por comisión, un mes bueno paga más retención y el neto
+          cambia. Cada pago se confirma contra lo que realmente entró, y lo que
+          falta confirmar queda marcado como estimado en toda la aplicación.
         </p>
       </article>
 
       <article class="tarjeta">
         <span class="tarjeta__num" aria-hidden="true">2</span>
-        <h3>Las cuotas se terminan</h3>
+        <h3>Que una cuota dura para siempre</h3>
         <p>
-          La refri a doce cuotas no es un gasto eterno. La app sabe cuántas
-          faltan, así que sabe en qué mes se libera ese dinero — y te avisa que
-          desde ahí tus metas avanzan más rápido.
+          Un electrodoméstico a doce cuotas no es un gasto permanente. La
+          aplicación sabe cuántas faltan y en qué mes se libera ese monto, y
+          proyecta tus metas a partir de esa fecha.
         </p>
       </article>
 
       <article class="tarjeta">
         <span class="tarjeta__num" aria-hidden="true">3</span>
-        <h3>El mes no siempre empieza el 1</h3>
+        <h3>Que el mes empieza el día 1</h3>
         <p>
-          Muchos hogares viven en el ciclo de su tarjeta: «agosto» va del 7 de
-          agosto al 6 de septiembre. Vos decidís qué día arranca tu mes.
+          Si tu hogar vive sobre el ciclo de la tarjeta, «agosto» va del 7 de
+          agosto al 6 de septiembre. Vos definís qué día arranca tu mes y todo
+          el presupuesto se calcula sobre esa base.
         </p>
       </article>
 
       <article class="tarjeta">
         <span class="tarjeta__num" aria-hidden="true">4</span>
-        <h3>El hogar son dos</h3>
+        <h3>Que administra una sola persona</h3>
         <p>
-          Invitás a tu pareja o a quien administre con vos. Los dos ven lo mismo
-          al mismo tiempo, y queda constancia de quién anotó qué.
+          Invitás a quien administra con vos. Ambos ven la misma información al
+          mismo tiempo, y cada registro queda con su autor.
         </p>
       </article>
     </div>
   </section>
 
-  <!-- ── lo demás ──────────────────────────────────────────── -->
-  <section class="franja franja--superficie">
-    <div class="dos">
-      <div class="revelar">
-        <p class="rotulo">Y además</p>
-        <h2 class="lectura">Lo que ya está resuelto</h2>
-        <p class="lectura">
-          Nada de esto es promesa: es lógica que una familia usó con dinero real
-          durante meses antes de que existiera el producto.
-        </p>
-      </div>
-      <div class="revelar">
-        <ul class="lista">
-          <li><strong>Cierre de mes</strong> con el presupuesto congelado, para que bajar el gasto de septiembre no reescriba agosto hacia atrás.</li>
-          <li><strong>Estados de cuenta</strong> de BAC y Ficohsa, o cualquier CSV, importados y conciliados sin duplicar nada.</li>
-          <li><strong>Facturas por foto</strong>: comercio, fecha, total y categoría leídos solos. Vos confirmás antes de que entre.</li>
-          <li><strong>Proyectos con veredicto</strong>: viable, ajustado o no viable, con cuánto apartar al mes y en cuántos meses llegás.</li>
-          <li><strong>Efectivo y retiros</strong> como lo que son: sacar plata del cajero no es un gasto, es un traslado.</li>
-        </ul>
-      </div>
+  <div class="regla-viva" aria-hidden="true"></div>
+
+  <!-- ── acto VII · lo que ya está resuelto ────────────────── -->
+  <!-- Lista con filetes y aire, no cartas: son hechos, y un hecho no necesita
+       caja. Cada renglón se traza al entrar, de arriba abajo. -->
+  <section class="franja franja--alta acto-hechos">
+    <div class="hechos__intro">
+      <h2 class="titular">En operación, no en la hoja de ruta</h2>
+      <p class="bajada">
+        Nada de lo que sigue es una promesa a futuro. Está funcionando hoy, y se
+        usó con dinero real durante meses antes de que existiera el producto.
+      </p>
     </div>
+
+    <ul class="hechos">
+      <li class="hecho">
+        <b>Cierre de mes</b>
+        <span>con el presupuesto congelado: ajustar septiembre no reescribe agosto hacia atrás.</span>
+      </li>
+      <li class="hecho">
+        <b>Estados de cuenta</b>
+        <span>de BAC y Ficohsa, o cualquier CSV, importados y conciliados sin duplicar movimientos.</span>
+      </li>
+      <li class="hecho">
+        <b>Proyectos con veredicto</b>
+        <span>viable, ajustado o no viable, con el monto mensual a reservar y el plazo para llegar.</span>
+      </li>
+      <li class="hecho">
+        <b>Efectivo y retiros</b>
+        <span>tratados como traslado y no como gasto: sacar del cajero no consume presupuesto.</span>
+      </li>
+    </ul>
   </section>
 
-  <!-- ── cierre ────────────────────────────────────────────── -->
-  <section class="escena franja cierre">
-    <div class="escena__halo" aria-hidden="true"></div>
-    <div class="revelar">
-      <p class="rotulo">Empezá</p>
-      <h2>Tu presupuesto, armado a tu manera</h2>
-      <p>
-        Sin costo mientras dure la construcción. Un asistente te guía en pocos
-        pasos y todo se puede cambiar después.
+  <!-- ── acto VIII · la resolución ─────────────────────────── -->
+  <!-- El remate de la película. Los dos carriles de la portada vuelven, y esta
+       vez se ALINEAN con el scroll: la costura pierde el salmón y se vuelve
+       verde. La tesis se resuelve en imagen antes de pedir el correo.
+
+       Y es verdad, no un efecto: el producto deja elegir qué día arranca tu
+       mes, que es exactamente hacer coincidir el mes con el ciclo. -->
+  <section class="franja escena resolucion">
+    <div class="resolucion__marco">
+
+      <div class="carriles" role="img"
+           aria-label="Los dos carriles de tiempo, el del mes del calendario y el del ciclo de la tarjeta, quedan alineados: el corrimiento desaparece.">
+        <span class="carriles__riel carriles__riel--mes"></span>
+        <span class="carriles__riel carriles__riel--ciclo"></span>
+        <span class="carriles__costura"></span>
+      </div>
+
+      <h2 class="titular titular--centro">
+        Cuando el mes y el ciclo coinciden, se acaban las sorpresas
+      </h2>
+
+      <!-- El sitio se estaba disculpando por algo terminado. Según TRASPASO.md
+           §8 no falta ninguna función; lo pendiente son decisiones del negocio.
+           Y el «sin costo» sigue siendo cierto, así que se dice sin rodeos. -->
+      <p class="bajada bajada--centro">
+        Todo lo anterior está en operación hoy, sin costo. Un asistente configura
+        tu hogar en pocos pasos y cualquier cosa se puede cambiar después.
       </p>
-      <div class="acciones">
-        <a class="boton boton--principal" href="/registro">Crear cuenta</a>
-        <a class="boton boton--borde" href="/entrar">Entrar</a>
+
+      <div class="acciones-noche acciones-noche--centro">
+        <a class="pulsar pulsar--luz" href="/registro">Crear cuenta</a>
+        <a class="pulsar pulsar--vidrio" href="/entrar">Entrar</a>
       </div>
     </div>
   </section>

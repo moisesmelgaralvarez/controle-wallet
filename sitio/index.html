@@ -79,15 +79,20 @@
     <div class="acto__marco">
       <h1 class="acto__titulo entra">El dinero ya se gastó. El saldo todavía no lo sabe.</h1>
 
+      <!-- La tesis subió un escalón. Antes decía «tu tarjeta cobra por ciclo»,
+           y eso dejaba afuera a quien no tiene tarjeta — que en un hogar
+           hondureño es muchísima gente. Ahora la premisa es el día de pago,
+           que tiene todo el mundo, y la tarjeta es el primer ejemplo. El
+           instrumento de abajo no cambió ni un píxel: solo su rótulo. -->
       <p class="acto__bajada entra entra--2">
-        Tu tarjeta no cobra por mes calendario: cobra por ciclo de corte. Ese
-        desfase es la razón por la que las cuentas cuadran en el papel y no
-        cuadran en la casa.
+        Tu mes no empieza el 1. Empieza cuando cae tu sueldo, o cuando corta tu
+        tarjeta. Ese desfase es la razón por la que las cuentas cuadran en el
+        papel y no cuadran en la casa.
       </p>
 
       <div class="vidrio entra entra--3">
         <div class="instrumento" role="img"
-             aria-label="El mes calendario va del 1 al 31 de agosto. El ciclo real de la tarjeta va del 7 de julio al 6 de agosto: empieza antes y termina antes. En ese ciclo se cargaron 19,101 lempiras, se abonaron 14,840 y faltan 4,261.">
+             aria-label="El mes calendario va del 1 al 31 de agosto. El mes real de este hogar va del 7 de julio al 6 de agosto: empieza antes y termina antes. En ese periodo se gastaron 19,101 lempiras, se cubrieron 14,840 y quedan 4,261 sin cubrir.">
 
           <div class="carril">
             <div class="carril__cabeza">
@@ -101,7 +106,7 @@
 
           <div class="carril">
             <div class="carril__cabeza">
-              <span class="tecnico">Ciclo de corte</span>
+              <span class="tecnico">Tu mes real</span>
               <span class="tecnico">7 jul — 6 ago</span>
             </div>
             <div class="carril__via">
@@ -115,7 +120,7 @@
         <div class="lectura-cifras">
           <div class="dato">
             <span class="dato__v"><i>L</i>19,101</span>
-            <span class="dato__k">Cargado al ciclo</span>
+            <span class="dato__k">Gastado en tu mes real</span>
           </div>
           <div class="dato">
             <span class="dato__v"><i>L</i>14,840</span>
@@ -265,8 +270,9 @@
     <div class="propio__intro revelar">
       <h2 class="lectura">El desfase no es del ejemplo. Es del tuyo.</h2>
       <p class="lectura">
-        Indicá el día de corte de tu tarjeta y medí cuánto se corre tu mes real
-        respecto del mes calendario.
+        Decinos qué marca el arranque de tu mes y medí cuánto se corre respecto
+        del calendario. Da igual si lo marca tu tarjeta o tu sueldo: casi nadie
+        vive del 1 al 31.
       </p>
     </div>
 
@@ -279,7 +285,7 @@
           <i aria-hidden="true"></i>Mes calendario <b>del 1 al 31</b>
         </span>
         <span class="leyenda leyenda--ciclo">
-          <i aria-hidden="true"></i>Ciclo de corte <b data-rango>del 7 al 6</b>
+          <i aria-hidden="true"></i>Tu mes real <b data-rango>del 7 al 6</b>
         </span>
       </div>
 
@@ -313,13 +319,38 @@
       <!-- Una sola frase, y la que importa. El rango ya lo dice la leyenda:
            repetirlo acá haría que el lector de pantalla lea dos veces lo
            mismo en cada movimiento del control. -->
-      <p class="propio__lectura" data-lectura aria-live="polite">
-        El día 1, cuando vos empezás el mes, tu tarjeta ya acumula
-        <b data-dias>25 días</b> de consumo.
-      </p>
+      <div aria-live="polite">
+        <p class="propio__lectura" data-lectura>
+          El día 1, cuando vos empezás el mes, <b data-sujeto>tu tarjeta ya
+          acumula</b> <b data-dias>25 días</b> de consumo.
+        </p>
+
+        <!-- El único caso sin desfase: te pagan el 1. Es una frase aparte y no
+             la misma con un cero adentro, porque «ya llevás 0 días de consumo»
+             se lee como error, no como respuesta. -->
+        <p class="propio__lectura" data-calza hidden>
+          Tu mes real coincide con el del calendario: no hay desfase que
+          corregir. Lo demás del presupuesto sigue igual de útil.
+        </p>
+      </div>
 
       <div class="dial">
-        <label class="dial__rotulo" for="corte">Día de corte de tu tarjeta</label>
+        <!-- Las dos formas de tener un mes que no empieza el 1. La segunda
+             existe para el hogar sin tarjeta, que en Honduras es la mayoría:
+             el mes de la casa lo marca la quincena, no el calendario. -->
+        <fieldset class="marcas">
+          <legend class="dial__rotulo">¿Qué marca el arranque de tu mes?</legend>
+          <label class="marca-op">
+            <input type="radio" name="marca" value="corte" checked data-marca>
+            <span>Corta mi tarjeta</span>
+          </label>
+          <label class="marca-op">
+            <input type="radio" name="marca" value="pago" data-marca>
+            <span>Me pagan</span>
+          </label>
+        </fieldset>
+
+        <label class="dial__rotulo" for="corte" data-rotulo>El día que corta</label>
         <div class="dial__fila">
           <input class="dial__deslizador" id="corte" type="range"
                  min="1" max="28" step="1" value="6" data-corte>

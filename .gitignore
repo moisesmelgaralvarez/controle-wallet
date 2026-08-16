@@ -43,3 +43,7 @@ Captura*.png
 # herramienta de escritorio, no parte del producto.
 .claude/settings.local.json
 .claude/launch.json
+
+# Los crudos de Higgsfield y los cuadros de revisión. Lo que se publica es el
+# codificado en sitio/media/, no el master de 2 MB.
+/revision/

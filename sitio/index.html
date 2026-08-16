@@ -321,8 +321,8 @@
     <div class="escena__halo" aria-hidden="true"></div>
 
     <div class="vitrina__intro">
-      <h2 class="lectura">El mismo hogar, se abra donde se abra</h2>
-      <p class="lectura">
+      <h2 class="titular">El mismo hogar, se abra donde se abra</h2>
+      <p class="bajada">
         En el teléfono, lo que se necesita de pie en la fila del súper. En la
         computadora, el tablero completo con la historia al lado. No es la misma
         pantalla estirada: cada tamaño muestra lo que cabe bien.
@@ -444,31 +444,48 @@
     </div>
   </section>
 
-  <!-- ── el pulso ──────────────────────────────────────────── -->
-  <section class="escena franja franja--suave">
-    <div class="escena__halo" aria-hidden="true"></div>
-    <div class="dos">
-      <div>
-        <h2 class="lectura">Gastar el 26% es normal el día 20 y es alarma el día 4</h2>
-        <p class="lectura">
-          Esa comparación —cuánto mes ha corrido contra cuánto presupuesto se ha
-          ido— es toda la señal que hace falta para corregir a tiempo.
-        </p>
+  <div class="regla-viva" aria-hidden="true"></div>
+
+  <!-- ── acto V · el pulso ─────────────────────────────────── -->
+  <!-- Una sola cifra, del tamaño que le corresponde a lo único que hay que
+       decidir hoy. El rótulo va DEBAJO: encima de una cifra o de un titular
+       está prohibido, y al pie de un instrumento es donde trabaja. -->
+  <section class="franja franja--alta acto-pulso">
+    <div class="mayor">
+      <p class="mayor__valor"><i>L</i>1,340</p>
+      <p class="mayor__rotulo">por día, para llegar justo a fin de mes</p>
+      <p class="mayor__pie">
+        No un semáforo de colores: la cifra con la que se decide si se sale a
+        cenar o no.
+      </p>
+    </div>
+
+    <!-- La misma cifra dos veces, y el veredicto opuesto. Es el argumento
+         entero del pulso sin una sola línea de explicación previa. -->
+    <div class="contraste">
+      <div class="contraste__cara">
+        <span class="contraste__pct">26%</span>
+        <span class="contraste__dia">del presupuesto, el día 20</span>
+        <span class="contraste__juicio contraste__juicio--bien">Normal</span>
       </div>
-      <div class="cifra">
-        <span class="cifra__valor">L 1,340</span>
-        <span class="cifra__pie">
-          es lo que te queda por día para llegar justo a fin de mes. No un
-          semáforo de colores: la cifra con la que se decide si se sale a cenar
-          o no.
-        </span>
+      <div class="contraste__cara">
+        <span class="contraste__pct">26%</span>
+        <span class="contraste__dia">del presupuesto, el día 4</span>
+        <span class="contraste__juicio contraste__juicio--mal">Alarma</span>
       </div>
     </div>
+
+    <p class="contraste__pie">
+      Lo que cambia no es el gasto: es cuánto mes ha corrido. Esa comparación es
+      toda la señal que hace falta para corregir a tiempo.
+    </p>
   </section>
 
-  <!-- ── lo que cambia ─────────────────────────────────────── -->
-  <section class="franja franja--alta">
-    <h2 class="lectura">Hecho para cómo se vive de verdad</h2>
+  <div class="regla-viva" aria-hidden="true"></div>
+
+  <!-- ── acto VI · lo que cambia ───────────────────────────── -->
+  <section class="franja franja--alta acto-rejilla">
+    <h2 class="titular">Hecho para cómo se vive de verdad</h2>
 
     <div class="tarjetas tarjetas--densa">
       <article class="tarjeta">
@@ -511,39 +528,69 @@
     </div>
   </section>
 
-  <!-- ── lo demás ──────────────────────────────────────────── -->
-  <section class="franja franja--superficie">
-    <div class="dos">
-      <div>
-        <h2 class="lectura">Lo que ya está resuelto</h2>
-        <p class="lectura">
-          Nada de esto es promesa: es lógica que una familia usó con dinero real
-          durante meses antes de que existiera el producto.
-        </p>
-      </div>
-      <div>
-        <ul class="lista">
-          <li><strong>Cierre de mes</strong> con el presupuesto congelado, para que bajar el gasto de septiembre no reescriba agosto hacia atrás.</li>
-          <li><strong>Estados de cuenta</strong> de BAC y Ficohsa, o cualquier CSV, importados y conciliados sin duplicar nada.</li>
-          <li><strong>Proyectos con veredicto</strong>: viable, ajustado o no viable, con cuánto apartar al mes y en cuántos meses llegás.</li>
-          <li><strong>Efectivo y retiros</strong> como lo que son: sacar plata del cajero no es un gasto, es un traslado.</li>
-        </ul>
-      </div>
+  <div class="regla-viva" aria-hidden="true"></div>
+
+  <!-- ── acto VII · lo que ya está resuelto ────────────────── -->
+  <!-- Lista con filetes y aire, no cartas: son hechos, y un hecho no necesita
+       caja. Cada renglón se traza al entrar, de arriba abajo. -->
+  <section class="franja franja--alta acto-hechos">
+    <div class="hechos__intro">
+      <h2 class="titular">Lo que ya está resuelto</h2>
+      <p class="bajada">
+        Nada de esto es promesa: es lógica que una familia usó con dinero real
+        durante meses antes de que existiera el producto.
+      </p>
     </div>
+
+    <ul class="hechos">
+      <li class="hecho">
+        <b>Cierre de mes</b>
+        <span>con el presupuesto congelado, para que bajar el gasto de septiembre no reescriba agosto hacia atrás.</span>
+      </li>
+      <li class="hecho">
+        <b>Estados de cuenta</b>
+        <span>de BAC y Ficohsa, o cualquier CSV, importados y conciliados sin duplicar nada.</span>
+      </li>
+      <li class="hecho">
+        <b>Proyectos con veredicto</b>
+        <span>viable, ajustado o no viable, con cuánto apartar al mes y en cuántos meses llegás.</span>
+      </li>
+      <li class="hecho">
+        <b>Efectivo y retiros</b>
+        <span>como lo que son: sacar plata del cajero no es un gasto, es un traslado.</span>
+      </li>
+    </ul>
   </section>
 
-  <!-- ── cierre ────────────────────────────────────────────── -->
-  <section class="escena franja cierre">
-    <div class="escena__halo" aria-hidden="true"></div>
-    <div>
-      <h2>Tu presupuesto, armado a tu manera</h2>
-      <p>
+  <!-- ── acto VIII · la resolución ─────────────────────────── -->
+  <!-- El remate de la película. Los dos carriles de la portada vuelven, y esta
+       vez se ALINEAN con el scroll: la costura pierde el salmón y se vuelve
+       verde. La tesis se resuelve en imagen antes de pedir el correo.
+
+       Y es verdad, no un efecto: el producto deja elegir qué día arranca tu
+       mes, que es exactamente hacer coincidir el mes con el ciclo. -->
+  <section class="franja escena resolucion">
+    <div class="resolucion__marco">
+
+      <div class="carriles" role="img"
+           aria-label="Los dos carriles de tiempo, el del mes del calendario y el del ciclo de la tarjeta, quedan alineados: el corrimiento desaparece.">
+        <span class="carriles__riel carriles__riel--mes"></span>
+        <span class="carriles__riel carriles__riel--ciclo"></span>
+        <span class="carriles__costura"></span>
+      </div>
+
+      <h2 class="titular titular--centro">
+        Cuando el mes y el ciclo son el mismo, se acaban las sorpresas
+      </h2>
+
+      <p class="bajada bajada--centro">
         Sin costo mientras dure la construcción. Un asistente te guía en pocos
         pasos y todo se puede cambiar después.
       </p>
-      <div class="acciones">
-        <a class="boton boton--principal" href="/registro">Crear cuenta</a>
-        <a class="boton boton--borde" href="/entrar">Entrar</a>
+
+      <div class="acciones-noche acciones-noche--centro">
+        <a class="pulsar pulsar--luz" href="/registro">Crear cuenta</a>
+        <a class="pulsar pulsar--vidrio" href="/entrar">Entrar</a>
       </div>
     </div>
   </section>

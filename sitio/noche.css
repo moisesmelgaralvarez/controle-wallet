@@ -17,52 +17,105 @@
       o una fuente de sistema, y la referencia pide Geist igual.
    ========================================================================== */
 
-.noche {
-  /* Escala propia. Nada de esto sale de la hoja anterior. */
-  --vacio:        #000000;
-  --humo:         #0b0b0d;
-  --vidrio:       rgba(255, 255, 255, 0.035);
-  --vidrio-alto:  rgba(255, 255, 255, 0.06);
-  --filete:       rgba(255, 255, 255, 0.10);
-  --filete-vivo:  rgba(255, 255, 255, 0.22);
-  --luz:          #f4f3f1;
-  --luz-media:    #a8a8ad;
-  /* Medido, no elegido a ojo: #6b6b73 daba 3.98:1 contra el vacío, debajo del
-     mínimo AA de 4.5 — y estos rótulos van a 12px, que no califican para la
-     excepción de texto grande. Este aclarado los deja en ~5.1:1 sin sacarlos
-     del segundo plano. */
-  --luz-baja:     #7e7e86;
-  --verde:        #95d3ba;
-  --verde-hondo:  #064e3b;
-  --salmon:       #ffb4a9;
+/* ---------- los dos modos ----------
 
-  --sombra-honda: 0 40px 120px rgba(0, 0, 0, 0.75);
+   CLARO por omisión, y el oscuro entra por tres caminos, en este orden:
+   preferencia del sistema, y después la elección explícita de la persona, que
+   siempre gana. Los tres bloques definen los MISMOS nombres: ninguna regla de
+   abajo sabe en qué modo está.
+
+   El oscuro no es el claro invertido. El vidrio pasa de blanco translúcido a
+   negro translúcido, el verde sube a menta porque el verde hondo sobre negro
+   no se lee, y la sombra deja de ser una caída para volverse profundidad. */
+
+.noche {
+  --vidrio:       rgba(9, 12, 11, 0.035);
+  --vidrio-alto:  rgba(9, 12, 11, 0.06);
+  --filete:       rgba(9, 12, 11, 0.12);
+  --filete-vivo:  rgba(9, 12, 11, 0.26);
+  --vacio:        #fbfbf9;
+  --luz:          #101112;
+  --luz-media:    #4f5257;
+  --luz-baja:     #6a6d72;
+  --verde:        #0b6b4f;
+  --verde-hondo:  #064e3b;
+  --salmon:       #a8341f;
+  --aura-tinte:   11, 107, 79;
+  --sombra-honda: 0 30px 80px rgba(16, 17, 18, 0.10);
   --curva:        cubic-bezier(0.16, 1, 0.3, 1);
 
   background: var(--vacio);
   color: var(--luz);
   position: relative;
   isolation: isolate;
-  /* `clip` y no `hidden`: el aura mide 160vw y desbordaba la página a lo
-     ancho. `hidden` crearía un contenedor de scroll y rompería cualquier
-     `position: sticky` que entre después; `clip` recorta sin hacer eso. */
-  overflow: clip;
 }
 
-/* La retícula del taller: casi invisible, pero es lo que hace que el negro se
-   lea como un instrumento y no como un fondo apagado. 1px cada 64. */
-.noche::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to right,  rgba(255,255,255,0.028) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255,255,255,0.028) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: radial-gradient(120% 80% at 50% 0%, #000 30%, transparent 78%);
-  pointer-events: none;
-  z-index: 0;
+/* El truco para no escribir la paleta oscura dos veces: se define una sola vez
+   y se invoca desde los dos selectores. */
+.noche--oscuro {
+  --vidrio:       rgba(255, 255, 255, 0.035);
+  --vidrio-alto:  rgba(255, 255, 255, 0.06);
+  --filete:       rgba(255, 255, 255, 0.10);
+  --filete-vivo:  rgba(255, 255, 255, 0.22);
+  --vacio:        #000000;
+  --luz:          #f4f3f1;
+  --luz-media:    #a8a8ad;
+  /* Medido, no elegido a ojo: #6b6b73 daba 3.98:1 contra el vacío, debajo del
+     mínimo AA de 4.5 — y estos rótulos van a 12px, que no califican para la
+     excepción de texto grande. Este aclarado los deja en 5.22:1. */
+  --luz-baja:     #7e7e86;
+  --verde:        #95d3ba;
+  --verde-hondo:  #064e3b;
+  --salmon:       #ffb4a9;
+  --aura-tinte:   149, 211, 186;
+  --sombra-honda: 0 40px 120px rgba(0, 0, 0, 0.75);
 }
+
+/* 1. Lo que pide el sistema, mientras nadie haya elegido a mano. */
+@media (prefers-color-scheme: dark) {
+  .noche:not([data-tema="claro"]) {
+    --vidrio:       rgba(255, 255, 255, 0.035);
+    --vidrio-alto:  rgba(255, 255, 255, 0.06);
+    --filete:       rgba(255, 255, 255, 0.10);
+    --filete-vivo:  rgba(255, 255, 255, 0.22);
+    --vacio:        #000000;
+    --luz:          #f4f3f1;
+    --luz-media:    #a8a8ad;
+    --luz-baja:     #7e7e86;
+    --verde:        #95d3ba;
+    --verde-hondo:  #064e3b;
+    --salmon:       #ffb4a9;
+    --aura-tinte:   149, 211, 186;
+    --sombra-honda: 0 40px 120px rgba(0, 0, 0, 0.75);
+  }
+}
+
+/* 2. La elección explícita, que gana siempre — incluso contra el sistema. */
+.noche[data-tema="oscuro"] {
+  --vidrio:       rgba(255, 255, 255, 0.035);
+  --vidrio-alto:  rgba(255, 255, 255, 0.06);
+  --filete:       rgba(255, 255, 255, 0.10);
+  --filete-vivo:  rgba(255, 255, 255, 0.22);
+  --vacio:        #000000;
+  --luz:          #f4f3f1;
+  --luz-media:    #a8a8ad;
+  --luz-baja:     #7e7e86;
+  --verde:        #95d3ba;
+  --verde-hondo:  #064e3b;
+  --salmon:       #ffb4a9;
+  --aura-tinte:   149, 211, 186;
+  --sombra-honda: 0 40px 120px rgba(0, 0, 0, 0.75);
+}
+
+/* El recorte vive en el ACTO, no en el mundo: el aura mide 160vw y desborda,
+   pero recortar en `body` dejaría fuera de juego el panel clavado de la
+   sección del ciclo. `clip` y no `hidden` porque `hidden` crea contenedor de
+   scroll y ahí sí muere el `sticky`.
+
+   `position: relative` no es decorativo: sin él, `.aura` —que es absoluta—
+   toma como referencia el `body` y se salta este recorte. Pasó: la página
+   desbordaba 205 px a cada lado y el `overflow: clip` parecía no hacer nada. */
+.acto { position: relative; overflow: clip; }
 
 .noche > * { position: relative; z-index: 1; }
 
@@ -90,7 +143,7 @@
   aspect-ratio: 2 / 1;
   translate: -50% 0;
   background: radial-gradient(closest-side,
-              rgba(149, 211, 186, 0.16), rgba(149, 211, 186, 0.05) 55%, transparent 72%);
+              rgba(var(--aura-tinte), 0.16), rgba(var(--aura-tinte), 0.05) 55%, transparent 72%);
   filter: blur(30px);
   pointer-events: none;
   z-index: 0;
@@ -310,6 +363,139 @@
 }
 
 .descenso svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
+/* ==========================================================================
+   EL MUNDO ENVUELVE LA PÁGINA ENTERA
+
+   Sin esto la portada era el mundo nuevo y del segundo scroll para abajo
+   seguía el anterior: se leía como dos productos pegados. Acá se apagan las
+   superficies de la hoja vieja y se traduce lo que quedaba a vidrio y vacío.
+   ========================================================================== */
+
+/* Las franjas teñidas de la hoja anterior existían para dar ritmo en un
+   lienzo claro. En el vacío no hacen falta: el ritmo lo dan la luz y el aire.
+   Se apagan todas y el fondo queda continuo. */
+.noche .franja,
+.noche .franja--superficie,
+.noche .franja--suave,
+.noche .franja--alta,
+.noche .escena { background: transparent; }
+
+/* Encabezado: vidrio flotante, no barra opaca. El contenido pasa por debajo,
+   que es lo que lo hace sentir una capa y no un recorte de pantalla. */
+.noche .cabecera {
+  background: color-mix(in srgb, var(--vacio) 72%, transparent);
+  backdrop-filter: blur(24px) saturate(140%);
+  border-bottom: 0.5px solid var(--filete);
+}
+
+/* ---------- el interruptor de modo ---------- */
+
+/* Va en el encabezado, junto a las acciones de sesión: es una preferencia de
+   lectura, no una función del producto, así que no compite con «Crear cuenta».
+   Es un <button> de verdad —no un checkbox disfrazado— porque tiene que poder
+   anunciar su estado a un lector de pantalla. */
+.modo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  border: 0.5px solid var(--filete);
+  background: var(--vidrio);
+  color: var(--luz-media);
+  cursor: pointer;
+  padding: 0;
+  transition: color 200ms var(--curva), border-color 200ms var(--curva),
+              background-color 200ms var(--curva), transform 160ms var(--curva);
+}
+
+.modo svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.6;
+            stroke-linecap: round; stroke-linejoin: round; }
+
+/* Solo se ve el icono del modo al que se va a cambiar. El otro no se esconde
+   con `hidden` —una clase con `display` le ganaría— sino con `display` propio. */
+.modo__sol { display: none; }
+.noche[data-tema="oscuro"] .modo__sol { display: block; }
+.noche[data-tema="oscuro"] .modo__luna { display: none; }
+
+@media (prefers-color-scheme: dark) {
+  .noche:not([data-tema="claro"]) .modo__sol { display: block; }
+  .noche:not([data-tema="claro"]) .modo__luna { display: none; }
+}
+
+.modo:active { transform: scale(0.94); }
+.modo:focus-visible { outline: 2px solid var(--verde); outline-offset: 3px; }
+
+@media (hover: hover) and (pointer: fine) {
+  .modo:hover { color: var(--luz); border-color: var(--filete-vivo); background: var(--vidrio-alto); }
+}
+
+/* En pantalla táctil el objetivo sube a 44 px sin agrandar el dibujo. */
+@media (pointer: coarse) {
+  .modo { width: 44px; height: 44px; }
+}
+
+.noche .cabecera .marca,
+.noche .cabecera .marca span { color: var(--luz); }
+/* `:not(.boton)` no es cosmético: sin él este selector (0,3,0) le gana al de
+   `.noche .boton--principal` (0,2,0) y el botón del encabezado hereda color de
+   enlace de navegación. Quedaba gris sobre verde hondo — 1.24:1 medido, es
+   decir ilegible. La especificidad manda sobre el orden. */
+.noche .menu a:not(.boton) { color: var(--luz-media); }
+.noche .menu a[aria-current="page"]:not(.boton) { color: var(--luz); }
+.noche .sesion { border-left-color: var(--filete); }
+
+/* El nombre no se parte en dos renglones: con el interruptor nuevo, a 684 px
+   la cabecera se apretaba y «Controle Wallet» caía en dos líneas. */
+.noche .marca { white-space: nowrap; }
+
+@media (hover: hover) and (pointer: fine) {
+  .noche .menu a:not(.boton):hover { color: var(--luz); }
+}
+
+/* Los botones heredados adoptan el lenguaje del acto: el verde hondo es un
+   indicador encendido, no un relleno claro. */
+.noche .boton { border-radius: 12px; transition: transform 180ms var(--curva), box-shadow 220ms var(--curva); }
+.noche .boton--principal { background: var(--verde-hondo); color: #eafff5; border-color: transparent; }
+.noche .boton--borde { background: var(--vidrio); border-color: var(--filete); color: var(--luz); }
+.noche .boton:active { transform: scale(0.975); }
+
+@media (hover: hover) and (pointer: fine) {
+  .noche .boton--principal:hover { box-shadow: 0 0 32px rgba(149, 211, 186, 0.35); filter: none; }
+  .noche .boton--borde:hover { border-color: var(--filete-vivo); background: var(--vidrio-alto); }
+}
+
+/* Texto general del mundo. */
+.noche h2, .noche h3 { color: var(--luz); letter-spacing: -0.03em; }
+.noche p, .noche li { color: var(--luz-media); }
+.noche .lectura { color: var(--luz-media); }
+.noche h2.lectura, .noche h3.lectura { color: var(--luz); }
+
+/* La carta del ciclo pasa a ser vidrio, no un rectángulo gris con sombra
+   blanda — que es justo lo que el sitio tenía y se veía barato. */
+.noche .ejemplo {
+  background: var(--vidrio);
+  border: 0.5px solid var(--filete);
+  border-radius: 28px;
+  backdrop-filter: blur(40px) saturate(140%);
+  box-shadow: var(--sombra-honda);
+}
+
+.noche .ejemplo dt { color: var(--luz-baja); }
+.noche .ejemplo dd { color: var(--luz); }
+.noche .ejemplo .total { border-top-color: var(--filete); }
+.noche .ejemplo__pie { color: var(--luz-baja); }
+
+/* Los hitos del recorrido. */
+.noche .hito__fecha { color: var(--verde); }
+.noche .hito p b { color: var(--luz); }
+.noche .hito__falta { color: var(--salmon); }
+
+/* El pie, y el halo viejo que ya no hace falta: la luz la pone `.aura`. */
+.noche .pie { background: transparent; border-top: 0.5px solid var(--filete); color: var(--luz-baja); }
+.noche .pie a { color: var(--luz-media); }
+.noche .escena__halo { display: none; }
 
 /* ==========================================================================
    EL MOVIMIENTO — el scroll es la cámara.

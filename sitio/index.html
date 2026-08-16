@@ -35,16 +35,20 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg>
     <span>Controle Wallet</span>
   </a>
+  <!-- «Entrar» y «Crear cuenta» salen del <nav>: son acciones de sesión, no
+       navegación. Además de ser lo correcto para un lector de pantalla, es lo
+       que permite acomodarlas aparte en teléfono, donde metidas adentro
+       obligaban a la cabecera a partirse en tres filas de 150 px. -->
   <nav class="menu" aria-label="Principal">
     <a href="/" aria-current="page">Inicio</a>
     <a href="/precios">Precios</a>
     <a href="/preguntas">Preguntas</a>
     <a href="/contacto">Contacto</a>
-    <span class="sesion">
-      <a href="/entrar">Entrar</a>
-      <a class="boton boton--principal" href="/registro">Crear cuenta</a>
-    </span>
   </nav>
+  <span class="sesion">
+    <a href="/entrar">Entrar</a>
+    <a class="boton boton--principal" href="/registro">Crear cuenta</a>
+  </span>
 </header>
 
 <main id="principal">

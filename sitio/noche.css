@@ -88,21 +88,28 @@
   padding: 0;
 }
 
+/* `min-height` y NO `height`. Es un piso, nunca un techo.
+
+   Con `height: 100svh` y `overflow: hidden` —como estuvo un rato— en teléfono
+   el contenido medía 1,018 px dentro de una caja de 812 y, al centrarlo, se
+   desbordaba por ARRIBA: el titular caía en y=130 debajo de una cabecera que
+   llega a y=176, y el recorte se comía el resto. En pantalla ancha no se
+   notaba porque ahí sí cabía. */
 .acto__pantalla {
-  position: sticky;
-  top: 0;
-  height: 100svh;
+  min-height: 100svh;
   display: grid;
   align-content: center;
-  overflow: hidden;
   padding: clamp(1.75rem, 5vw, 6rem) clamp(1.25rem, 5vw, 4rem);
 }
 
-/* La pista solo aparece donde la película de verdad corre. 2.6 pantallas dan
-   5 segundos de video en un recorrido que se siente natural: menos y el video
-   pasa volando, más y el visitante cree que la página se trabó. */
+/* La pista y el clavado solo existen donde la película de verdad corre. En
+   teléfono y con movimiento reducido /hero.js ni siquiera baja el video, así
+   que una pista larga sería scroll en vacío y un clavado no tendría contra
+   qué clavarse. 2.6 pantallas dan 5 segundos de video en un recorrido que se
+   siente natural: menos y pasa volando, más y parece que la página se trabó. */
 @media (min-width: 1000px) and (prefers-reduced-motion: no-preference) {
   .acto { min-height: 260svh; }
+  .acto__pantalla { position: sticky; top: 0; }
 }
 
 /* `position: relative` y `z-index` no son decorativos acá: un elemento
@@ -1148,9 +1155,55 @@
 .noche .menu a[aria-current="page"]:not(.boton) { color: var(--luz); }
 .noche .sesion { border-left-color: var(--filete); }
 
-/* El nombre no se parte en dos renglones: con el interruptor nuevo, a 684 px
-   la cabecera se apretaba y «Controle Wallet» caía en dos líneas. */
+/* El nombre no se parte en dos renglones: a 684 px la cabecera se apretaba y
+   «Controle Wallet» caía en dos líneas. */
 .noche .marca { white-space: nowrap; }
+
+/* ---------- la cabecera en teléfono ----------
+
+   Medido a 375: tres filas y 150 px de alto, el 18% de la pantalla gastado
+   antes de que empiece nada. Con las acciones de sesión fuera del <nav>, se
+   acomoda en dos filas — marca y «Crear cuenta» arriba, la navegación abajo. */
+@media (max-width: 46rem) {
+  .noche .cabecera {
+    flex-wrap: wrap;
+    row-gap: 0.65rem;
+    column-gap: 0.75rem;
+    padding-block: 0.85rem;
+  }
+
+  .noche .sesion {
+    margin-left: auto;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  /* Toda la fila de abajo, y sin el `margin-left: auto` que la empujaba a la
+     derecha en escritorio. */
+  .noche .menu {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    gap: 1.15rem;
+    font-size: 0.9375rem;
+  }
+}
+
+/* Los enlaces de navegación miden 22 px de alto: la mitad del objetivo táctil
+   que pide el proyecto. `marca.css` §5.6 le da 44 px a los botones, pero estos
+   no son botones y quedaban fuera.
+
+   El área se agranda con un pseudoelemento en vez de con relleno: así el dedo
+   recibe 44 px sin que la barra crezca 22 px más y sin mover una sola letra.
+   11 + 22 + 11 = 44. */
+@media (pointer: coarse) {
+  .noche .menu a { position: relative; }
+  .noche .menu a::after {
+    content: "";
+    position: absolute;
+    inset: -11px -8px;
+  }
+}
 
 @media (hover: hover) and (pointer: fine) {
   .noche .menu a:not(.boton):hover { color: var(--luz); }

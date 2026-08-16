@@ -1,0 +1,44 @@
+/* Solo para esta página de prueba: rejilla del especimen. No va a producción. */
+.envoltura { max-width: 72rem; margin: 0 auto; padding: var(--e3) var(--e2) var(--e5); display: grid; gap: var(--e3); }
+.cab { display: grid; gap: var(--e1); }
+.panel { padding: var(--e2); display: grid; gap: var(--e2); background: var(--superficie); }
+.panel__tope { font-size: var(--t-xs); color: var(--tenue); }
+.paleta { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem,1fr)); gap: var(--e1); }
+.chip-color { display: grid; gap: 2px; font-size: var(--t-xs); }
+.chip-color i { display:block; height: 3rem; border-radius: var(--radio-chico); border: 1px solid var(--borde); }
+.chip-color b { font-size: var(--t-xs); }
+.chip-color u { color: var(--tenue); text-decoration: none; }
+.chip-color:first-child i { background: var(--fondo); }
+.c-superficie{background:var(--superficie)} .c-elevado{background:var(--elevado)}
+.c-tinta{background:var(--tinta)} .c-tenue{background:var(--tenue)}
+.c-borde{background:var(--borde)} .c-bordef{background:var(--borde-fuerte)}
+.c-acento{background:var(--acento)} .c-suave{background:var(--suave)} .c-alerta{background:var(--alerta)}
+.escala { display: grid; gap: var(--e2); }
+.escala > div { display: grid; gap: 4px; border-top: 1px solid var(--borde); padding-top: var(--e1); }
+.fichas-app { display: grid; grid-template-columns: repeat(auto-fit,minmax(10rem,1fr)); gap: var(--e1); }
+.ficha-app { display: grid; gap: 4px; padding: var(--e2); background: var(--elevado); border-radius: var(--radio); }
+.ficha-app__v { font-size: var(--t-lg); }
+.pulso { display: grid; gap: var(--e2); }
+.pulso__fila em { display: flex; justify-content: space-between; font-style: normal; font-size: var(--t-sm); margin-bottom: 6px; }
+.pulso__via { height: 10px; background: var(--elevado); border-radius: var(--radio-pill); overflow: hidden; }
+.pulso__va { height: 100%; background: var(--acento); border-radius: var(--radio-pill); }
+.pulso__va--alerta { background: var(--alerta); }
+.va-63 { width: 63%; } .va-71 { width: 71%; }
+.movs-lista { display: grid; }
+.mov-fila { display: flex; justify-content: space-between; align-items: center; gap: var(--e2); padding: 0.7rem 0; border-bottom: 1px solid var(--borde); }
+.mov-fila__txt { display: grid; }
+.mov-fila__txt u { text-decoration: none; color: var(--tenue); font-size: var(--t-xs); }
+.controles { display: flex; flex-wrap: wrap; gap: var(--e1); align-items: center; }
+.campo { padding: 0.65rem 0.8rem; background: var(--superficie); color: var(--tinta); border: 1px solid var(--borde-fuerte); }
+.boton { padding: 0.65rem 1.1rem; border: 1px solid transparent; cursor: pointer; }
+.boton--principal { background: var(--acento); color: var(--acento-ct); }
+.boton--borde { background: transparent; border-color: var(--borde-fuerte); color: var(--tinta); }
+.chip { padding: 0.35rem 0.8rem; background: var(--suave); color: var(--acento); font-size: var(--t-xs); }
+.sello { padding: 0.35rem 0.8rem; border: 1px solid var(--borde-fuerte); font-size: var(--t-xs); color: var(--tenue); }
+.ejemplo__pie { font-size: var(--t-sm); color: var(--tenue); }
+body { background: var(--fondo); color: var(--tinta); margin: 0; }
+code { font-size: 0.9em; background: var(--elevado); padding: 1px 5px; border-radius: 4px; }
+/* La escala se muestra fuera del contexto .panel h2 { --t-md } de app.css,
+   que es una regla legítima suya para títulos DENTRO de un panel. */
+.escala-panel h2 { font-size: var(--t-xl); }
+.escala-panel h3 { font-size: var(--t-lg); }

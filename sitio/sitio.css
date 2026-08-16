@@ -145,12 +145,23 @@ h3.lectura { max-width: 32ch; }
 .sesion a { white-space: nowrap; }
 .sesion .boton { padding: 0.45rem 1rem; font-size: var(--t-xs); }
 
-/* En teléfono el menú pasa abajo del logo y se puede desplazar. */
-@media (max-width: 640px) {
-  .cabecera { flex-wrap: wrap; gap: var(--e1); position: static; }
+/* El menú pasa abajo del logo cuando deja de caber en una fila.
+   El corte está en 56rem y no en 640px por una razón medida: el encabezado
+   necesita 709 px para entrar en una sola línea, así que con el corte viejo
+   quedaba una zona muerta de 640 a 709 donde el menú envolvía POR DENTRO —los
+   enlaces en una línea, el logo en otra y las acciones en una tercera, cada
+   uno con su propia línea base. Se veía como un accidente, porque lo era. */
+@media (max-width: 56rem) {
+  .cabecera { flex-wrap: wrap; gap: var(--e1); }
   .menu { margin-left: 0; width: 100%; overflow-x: auto; padding-bottom: 2px; }
   .menu a { white-space: nowrap; }
   .sesion { margin-left: auto; padding-left: 0; border-left: 0; }
+}
+
+/* La barra deja de seguir el scroll solo en teléfono, donde ocupar alto fijo
+   cuesta más de lo que aporta. En tableta se queda pegada. */
+@media (max-width: 640px) {
+  .cabecera { position: static; }
 }
 
 /* ---------- botones ---------- */

@@ -76,9 +76,12 @@ a:hover { text-decoration-thickness: 2px; }
   position: absolute; left: var(--e2); top: -100px;
   background: var(--acento); color: var(--acento-ct);
   padding: var(--e1) var(--e2); border-radius: 8px; z-index: 10;
-  transition: top .15s;
+  /* Se mueve con `transform`, no con `top`: `top` recalcula el layout en cada
+     cuadro y este elemento aparece justo cuando alguien navega con teclado,
+     que es cuando menos se puede permitir un salto. */
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
 }
-.saltar:focus { top: var(--e2); }
+.saltar:focus { transform: translateY(calc(100px + var(--e2))); }
 
 /* Límite de lectura: se lo pone el BLOQUE, no la página. */
 .lectura { max-width: 68ch; }
@@ -158,10 +161,23 @@ h3.lectura { max-width: 32ch; }
   font-size: var(--t-sm); font-weight: 600; text-decoration: none;
   border: 1px solid transparent; cursor: pointer;
 }
+/* Se nombran las propiedades, nunca `all`: `all` transiciona cosas que uno no
+   pensó y termina animando el layout sin querer. */
+.boton { transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), filter 160ms ease, border-color 160ms ease; }
+
+/* El botón se hunde al apretarlo. Es lo más barato que existe para que el
+   sitio se sienta despierto: confirma que oyó, en el cuadro siguiente. */
+.boton:active { transform: scale(0.97); }
+
 .boton--principal { background: var(--acento); color: var(--acento-ct); }
-.boton--principal:hover { filter: brightness(1.08); }
 .boton--borde { border-color: var(--borde); color: var(--tinta); background: var(--superficie); }
-.boton--borde:hover { border-color: var(--acento); }
+
+/* El hover va detrás de esta consulta porque en pantalla táctil se dispara al
+   tocar y queda pegado después de soltar, que se lee como un botón trabado. */
+@media (hover: hover) and (pointer: fine) {
+  .boton--principal:hover { filter: brightness(1.08); }
+  .boton--borde:hover { border-color: var(--acento); }
+}
 
 .acciones { display: flex; flex-wrap: wrap; gap: var(--e1); margin-top: var(--e3); }
 

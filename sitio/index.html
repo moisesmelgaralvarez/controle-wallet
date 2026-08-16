@@ -46,10 +46,30 @@
       <p class="rotulo">Finanzas del hogar</p>
       <h1>El presupuesto del hogar, sin engañarse</h1>
       <p class="hero__entrada">
-        La mayoría de las apps suponen que ganás lo mismo todos los meses y que
-        la tarjeta es una deuda aparte. En un hogar real, ninguna de las dos
-        cosas es cierta.
+        Tu tarjeta no cobra por mes: cobra por ciclo. Y ese corrimiento es la
+        razón por la que el dinero alcanza en el papel y no alcanza en la casa.
       </p>
+
+      <!-- El desfase se enseña, no se explica: dos reglas de tiempo puestas una
+           sobre otra, y la costura marcada donde el ciclo cruza el mes. Está
+           DIBUJADO en CSS, así que sigue el modo claro u oscuro y no pesa. -->
+      <div class="ciclo" role="img"
+           aria-label="El mes va del 1 al 31 de agosto. El ciclo real de la tarjeta va del 7 de julio al 6 de agosto, así que empieza antes y termina antes.">
+        <div class="ciclo__pista">
+          <span class="ciclo__nombre">El mes</span>
+          <div class="ciclo__barra">
+            <span class="ciclo__tramo ciclo__tramo--mes">1 ago — 31 ago</span>
+          </div>
+        </div>
+        <div class="ciclo__pista">
+          <span class="ciclo__nombre">El ciclo real</span>
+          <div class="ciclo__barra">
+            <span class="ciclo__tramo ciclo__tramo--corte">7 jul — 6 ago</span>
+            <span class="ciclo__costura" aria-hidden="true"></span>
+          </div>
+        </div>
+      </div>
+
       <div class="acciones">
         <a class="boton boton--principal" href="/registro">Crear cuenta</a>
         <a class="boton boton--borde" href="/entrar">Ya tengo cuenta</a>
@@ -62,7 +82,7 @@
   </section>
 
   <!-- ── el corte de la tarjeta, con el visual clavado ──────── -->
-  <section class="franja franja--superficie">
+  <section class="franja">
     <div class="fijo">
 
       <div class="fijo__visual">
@@ -70,15 +90,28 @@
           <h3>Ciclo del 7 de julio al 6 de agosto</h3>
           <dl>
             <dt>Se cargó a la tarjeta</dt>
-            <dd>L 19,101.00</dd>
+            <dd class="cifra">L 19,101.00</dd>
             <dt>Lo paga: Comisiones</dt>
-            <dd>L 14,840.00</dd>
+            <dd class="cifra">L 14,840.00</dd>
+            <!-- El total ES el remate: la misma cifra impresa dos veces, una
+                 corrida detrás de la otra. El doble conteo hecho imagen — lo
+                 ves como disponible y ya se gastó. Va acá y no como un renglón
+                 aparte porque repetir la cifra debajo de sí misma se lee como
+                 un error, no como un recurso. El fantasma va aria-hidden: para
+                 un lector de pantalla sería el mismo monto dicho dos veces. -->
             <div class="total">
               <dt>Faltan</dt>
-              <dd class="falta">L 4,261.00</dd>
+              <dd class="falta">
+                <span class="doble">
+                  <span class="doble__fantasma cifra" aria-hidden="true">L 4,261</span>
+                  <span class="doble__real cifra">L 4,261</span>
+                </span>
+              </dd>
             </div>
           </dl>
+
           <p class="ejemplo__pie">
+            La misma plata, contada dos veces: una en el gasto y otra en el pago.
             Esa diferencia sale de las quincenas o se queda revolviendo con
             intereses.
           </p>
@@ -335,7 +368,6 @@
         <ul class="lista">
           <li><strong>Cierre de mes</strong> con el presupuesto congelado, para que bajar el gasto de septiembre no reescriba agosto hacia atrás.</li>
           <li><strong>Estados de cuenta</strong> de BAC y Ficohsa, o cualquier CSV, importados y conciliados sin duplicar nada.</li>
-          <li><strong>Facturas por foto</strong>: comercio, fecha, total y categoría leídos solos. Vos confirmás antes de que entre.</li>
           <li><strong>Proyectos con veredicto</strong>: viable, ajustado o no viable, con cuánto apartar al mes y en cuántos meses llegás.</li>
           <li><strong>Efectivo y retiros</strong> como lo que son: sacar plata del cajero no es un gasto, es un traslado.</li>
         </ul>

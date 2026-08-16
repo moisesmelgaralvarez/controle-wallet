@@ -60,6 +60,11 @@ Lo que hay que tener en la cabeza al escribir cada línea:
 - **Toda cifra de dinero va en `tabular-nums`.** Sin excepción.
 - **Un radio** (12px superficies, 8px controles, píldora en chips), **una sombra**,
   **44px de objetivo táctil** en pantalla táctil.
+- **Proporción 60-30-10**: 60% fondo, 30% superficies, 10% acento — y **8% en las
+  pantallas de la app**, donde el acento es semántico. No se juzga a ojo: se mide
+  pegando `herramientas/medir-proporcion.js` en la consola del navegador. Si las
+  cartas cubren más que el lienzo, la proporción está invertida — se arregla con
+  menos cartas y más aire, nunca agregando color.
 - `marca.css` se enlaza **de último** en cada página. Va de último para ganar por
   cascada sin necesitar `!important`.
 
@@ -147,9 +152,35 @@ de ella.
 
 ---
 
-## Antes de tocar producción
+## En qué etapa está el producto
 
-Producción **no tiene respaldo automático** (plan gratuito de Supabase) y ya hay
-datos reales. Si una tarea implica una migración destructiva o un borrado, **pará y
-decíselo al dueño antes de ejecutar**. La contratación de Supabase Pro es el único
-pendiente urgente del proyecto.
+**Hoy lo usan dos personas, no clientes.** Está publicado, pero no se está
+vendiendo ni se ha invitado a terceros. Eso baja el riesgo de todo, y hay que
+tenerlo presente al recomendar: no trates cada decisión como si hubiera cartera
+de clientes detrás.
+
+Lo que sí sigue siendo cierto: producción **no tiene respaldo automático** (plan
+gratuito de Supabase). Si una tarea implica una migración destructiva o un
+borrado, **pará y decíselo al dueño antes de ejecutar**. El respaldo se resuelve
+antes de abrirlo a terceros, no antes de cada cambio — el dueño ya tomó esa
+decisión y no hace falta repetírsela.
+
+## Las skills de diseño
+
+El proyecto tiene 13 skills instaladas en `.claude/skills/`: `impeccable`,
+`frontend-design`, `web-design-guidelines`, y las diez de Emil Kowalski
+(`emil-design-eng`, `animate`, `improve-animations`, `review-animations`,
+`find-animation-opportunities`, `animation-vocabulary`, `apple-design`,
+`prototype`, `pick-ui-library`, `ask-sonner`).
+
+**Usalas.** Aportan el oficio que este proyecto necesita: composición, ritmo,
+jerarquía y movimiento. Pero aportan **dentro del ADN, no encima de él**:
+
+- Si una skill propone otro color, otra tipografía u otro radio → gana `IDENTIDAD.md`.
+- Si una skill propone mejor composición, ritmo o movimiento → gana la skill.
+- Si dos skills se contradicen en composición, elegí y decí en una línea cuál
+  seguiste y por qué.
+
+Y una regla de comunicación: **no describas un diseño, mostralo.** Capturas
+renderizadas a 390, 768, 1024, 1440 y 1920, en claro y oscuro. Playwright ya está
+instalado para eso. Un diseño que el dueño no puede ver, no puede juzgarlo.

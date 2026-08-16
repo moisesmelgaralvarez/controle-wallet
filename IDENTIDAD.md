@@ -131,6 +131,59 @@ interfaz encajonada. Dos tokens: el fino separa, el fuerte delimita controles.
 - **Una sombra**, de un solo nivel. Dos niveles son un sistema; seis son un accidente.
 - **44px de objetivo táctil** en `pointer: coarse`. Los botones crecen, no se aprietan.
 
+### Proporción — la regla 60-30-10
+
+Los diez tokens dicen **qué** colores existen. Esta regla dice **cuánta pantalla**
+ocupa cada uno, que es una decisión distinta y la que más se descuida.
+
+| Papel | Meta | Qué es |
+|---|---|---|
+| **60 · dominante** | `--fondo` | El lienzo. El aire entre las cosas |
+| **30 · secundario** | `--superficie`, `--elevado`, bordes | Cartas, franjas, campos, filetes |
+| **10 · acento** | `--acento`, `--suave`, `--alerta` | Lo que significa algo |
+
+**Dos presupuestos, no uno:**
+
+- **El sitio que vende** — `60 / 30 / 10`. Ahí el acento es persuasión: portada,
+  llamadas a la acción, franjas teñidas. Puede y debe pintar.
+- **Las pantallas de la app** — `60 / 32 / 8`. Ahí el acento es **semántico**:
+  significa "a favor". Si el 10% de una pantalla de finanzas está verde, el verde
+  deja de significar nada. La restricción es lo que le da fuerza a la señal.
+
+**Estado medido hoy** (especimen a 1440, claro y oscuro dan lo mismo — la
+proporción es geométrica, no depende del modo):
+
+```
+  60 · dominante    46.2%   de menos
+  30 · secundario   51.0%   de más
+  10 · acento        1.7%   de menos
+```
+
+Dominante y secundario están **invertidos**: las cartas cubren más que el lienzo.
+
+Ojo con leer esto de más: el especimen envuelve cada bloque en un `.panel`, así
+que exagera el secundario a propósito. Las páginas reales van a dar distinto.
+Pero la dirección del arreglo es la misma, y **coincide exactamente con lo que
+buscás**: menos cartas y más grandes, más lienzo entre secciones. Aire.
+
+Es la misma corrección que pide el acabado tipo Apple. La regla 60-30-10 y la
+arquitectura de trece secciones apuntan al mismo lado — eso es buena señal.
+
+**No se juzga a ojo.** Un fondo se ve dominante mucho antes del 60%, y un acento
+se siente excesivo bastante antes del 10%. Se mide:
+
+```
+npx wrangler dev
+# abrí la página, y en la consola del navegador pegá:
+herramientas/medir-proporcion.js
+```
+
+Sin dependencias ni instalación. Muestrea la página en rejilla, pregunta qué
+elemento está arriba en cada punto, sube por los padres hasta el primer fondo
+opaco, y lo compara contra los tokens vivos de `marca.css` — no contra una copia
+que se pueda quedar atrás. Además avisa si aparece **cualquier color que no salga
+de un token**, que es la fuga por donde se pierde un ADN.
+
 ---
 
 ## 3. Cómo se instala
@@ -255,6 +308,15 @@ Color, modo oscuro:
 
 Un color, un significado: acento = a favor. alerta = en contra. Nada más.
 No inventes un tercer color. No uses "tertiary".
+
+PROPORCIÓN DE SUPERFICIE — regla 60-30-10, es obligatoria:
+  60% el fondo (lienzo, aire entre las cosas)
+  30% superficies (cartas, franjas, campos, filetes)
+  10% acento — y en pantallas de app bajalo a 8%: ahí el acento significa
+      "a favor", y si pinta demasiado deja de significar nada.
+Si al componer una pantalla las cartas cubren más que el lienzo, la proporción
+está invertida: hacé las cartas menos y más grandes, y ensanchá el aire entre
+ellas. Nunca compenses agregando color.
 
 Forma: radio 12px en cartas, 8px en controles, píldora en chips y sellos.
 UNA sombra, muy suave. Objetivo táctil mínimo 44px.

@@ -388,6 +388,14 @@
   .aparato__cabeza .tecnico:last-child { text-align: right; }
 }
 
+/* Medido a 1920: la banda de dos columnas repartía 880 px a cada lado, y el
+   hito de la derecha usa 42ch —unos 530— así que quedaban 350 px muertos
+   pegados al borde. Es el mismo principio que ya rige los párrafos: en
+   pantalla ancha crece el margen, no la mancha. */
+@media (min-width: 1600px) {
+  .noche .fijo { max-width: 1400px; margin-inline: auto; }
+}
+
 .medida { display: grid; gap: 0.8rem; }
 
 .medida__via {
@@ -906,6 +914,7 @@
        su propia línea de tiempo se congela. */
     @media (min-width: 1000px) {
       .fijo { view-timeline: --recorrido block; }
+
 
       /* Los tiempos NO son a ojo. Medido en el navegador, el centro de cada
          hito cruza el medio de la ventana en estos puntos del recorrido:

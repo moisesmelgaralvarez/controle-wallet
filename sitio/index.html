@@ -21,6 +21,9 @@
 <!-- Sin `defer` a propósito: aplica el tema guardado antes del primer
      pintado, o hay destello blanco en cada carga. -->
 <script src="/modo.js"></script>
+<!-- Con `defer`, al revés que modo.js: este no tiene nada que hacer antes del
+     primer pintado. La sección ya se ve completa sin él. -->
+<script src="/ciclo.js" defer></script>
 </head>
 <body class="noche">
 
@@ -124,25 +127,53 @@
   <section class="franja">
     <div class="fijo">
 
+      <!-- El aparato no ilustra los hitos: los MIDE. Mientras el texto pasa
+           al lado, la vía se llena con el scroll — la carga corre, el abono
+           la persigue y no la alcanza. El scroll es la aguja del instrumento,
+           no un ascensor. -->
       <div class="fijo__visual">
-        <div class="ejemplo revelar">
-          <h3>Ciclo del 7 de julio al 6 de agosto</h3>
-          <dl>
-            <dt>Se cargó a la tarjeta</dt>
-            <dd class="cifra">L 19,101.00</dd>
-            <dt>Lo paga: Comisiones</dt>
-            <dd class="cifra">L 14,840.00</dd>
+        <div class="vidrio aparato">
+          <div class="aparato__cabeza">
+            <span class="tecnico">El ciclo que te cobran</span>
+            <span class="tecnico">7 jul — 6 ago</span>
+          </div>
+
+          <!-- Solo la vía lleva `role="img"`: es dibujo puro. Las cifras de
+               abajo son contenido y se leen como lo que son. -->
+          <div class="medida">
+            <div class="medida__via" role="img"
+                 aria-label="De los 19,101 lempiras cargados en el ciclo, la quincena cubre 14,840. El tramo final, 4,261, queda sin cubrir.">
+              <span class="medida__carga"></span>
+              <span class="medida__falta"></span>
+              <span class="medida__abono"></span>
+              <span class="medida__costura"></span>
+            </div>
+            <div class="medida__pies">
+              <span class="tecnico">7 jul · abre</span>
+              <span class="tecnico">6 ago · corta</span>
+            </div>
+          </div>
+
+          <dl class="aparato__cifras">
+            <div class="renglon renglon--1">
+              <dt>Se cargó a la tarjeta</dt>
+              <dd class="cifra">L 19,101.00</dd>
+            </div>
+            <div class="renglon renglon--2">
+              <dt>Lo abona la quincena</dt>
+              <dd class="cifra">L 14,840.00</dd>
+            </div>
             <!-- Una sola cifra. La versión anterior imprimía este monto dos
                  veces, corrido, para «dibujar» el doble conteo: se leía como
                  un error de render, no como un recurso. El doble conteo lo
-                 dice el texto de abajo, que es donde funciona. -->
-            <div class="total">
+                 dice la vía, que es donde funciona. -->
+            <div class="renglon renglon--3 renglon--total">
               <dt>Faltan</dt>
-              <dd class="falta cifra">L 4,261.00</dd>
+              <dd class="cifra falta">L 4,261.00</dd>
             </div>
           </dl>
 
-          <p class="ejemplo__pie">
+          <p class="aparato__pie">
             La misma plata, contada dos veces: una en el gasto y otra en el pago.
             Esa diferencia sale de las quincenas o se queda revolviendo con
             intereses.
@@ -195,6 +226,90 @@
         </div>
       </div>
 
+    </div>
+  </section>
+
+  <!-- ── el ciclo propio ───────────────────────────────────── -->
+  <!-- El único momento de la página donde el visitante toca algo. No es un
+       adorno: es la pregunta que el producto contesta, hecha demostración
+       antes de pedir un correo.
+
+       Todo el dibujo va en SVG y lo mueve /ciclo.js cambiando atributos de
+       geometría (x, width, x1) — que no son CSS y por tanto no rozan la
+       regla de cero estilos en línea ni la CSP.
+
+       Sin JavaScript, la sección se ve completa con el ciclo del ejemplo y
+       el control no aparece. Nunca un control que no hace nada. -->
+  <section class="franja propio">
+    <div class="propio__intro revelar">
+      <h2 class="lectura">Ese corrimiento no es del ejemplo. Es del tuyo.</h2>
+      <p class="lectura">
+        Poné el día en que corta tu tarjeta y mirá cuánto se corre tu mes de
+        verdad respecto del mes del calendario.
+      </p>
+    </div>
+
+    <div class="vidrio propio__panel revelar" data-panel>
+      <!-- La leyenda rotula el dibujo y por eso carga los rangos: es lo que
+           evita meter texto dentro del SVG, que al escalar con el viewBox
+           quedaría en 8 px a 390 de ancho. -->
+      <div class="propio__leyenda">
+        <span class="leyenda leyenda--mes">
+          <i aria-hidden="true"></i>El mes del calendario <b>del 1 al 31</b>
+        </span>
+        <span class="leyenda leyenda--ciclo">
+          <i aria-hidden="true"></i>El ciclo que te cobran <b data-rango>del 7 al 6</b>
+        </span>
+      </div>
+
+      <!-- 62 días de ventana, del -31 al 31. La escala es 9.5 px por día y el
+           origen está en x = 15, que es lo que /ciclo.js reusa para no tener
+           dos veces la misma constante. -->
+      <svg class="reglas" viewBox="0 0 620 118" aria-hidden="true" focusable="false">
+        <!-- Los dos carriles: el mes arranca en el día 1 (x = 309.5) y no se
+             mueve nunca; el ciclo se corre entero según dónde caiga el corte. -->
+        <rect class="reglas__mes" x="309.5" y="26" width="294.5" height="6" rx="3"/>
+        <rect class="reglas__ciclo" data-ciclo x="72" y="62" width="294.5" height="6" rx="3"/>
+
+        <!-- La guía del día 1. Es la referencia contra la que se mide todo lo
+             demás, así que va neutra: el calendario no es el culpable. -->
+        <rect class="reglas__guia" x="309" y="14" width="1" height="68"/>
+
+        <!-- La costura va como <rect> y no como <line> a propósito: `x` es
+             propiedad CSS en SVG y se puede transicionar; `x1` es solo
+             atributo y saltaría de golpe mientras los carriles se deslizan. -->
+        <rect class="reglas__costura" data-costura x="365.75" y="14" width="1.5" height="68"/>
+        <circle class="reglas__nudo" data-nudo cx="366.5" cy="14" r="4"/>
+
+        <!-- La cota: los días que el ciclo ya lleva corriendo cuando el mes del
+             calendario apenas abre. Dibujo técnico y no bloque de color — un
+             rectángulo relleno de este tamaño se come los dos carriles. -->
+        <rect class="reglas__tope" data-tope x="72" y="91" width="1" height="11"/>
+        <rect class="reglas__cota" data-cota x="72" y="96" width="237.5" height="1"/>
+        <rect class="reglas__tope" x="309" y="91" width="1" height="11"/>
+      </svg>
+
+      <!-- Una sola frase, y la que importa. El rango ya lo dice la leyenda:
+           repetirlo acá haría que el lector de pantalla lea dos veces lo
+           mismo en cada movimiento del control. -->
+      <p class="propio__lectura" data-lectura aria-live="polite">
+        El día 1, cuando vos empezás el mes, tu tarjeta ya lleva
+        <b data-dias>25 días</b> cobrando.
+      </p>
+
+      <div class="dial">
+        <label class="dial__rotulo" for="corte">¿Qué día corta tu tarjeta?</label>
+        <div class="dial__fila">
+          <input class="dial__deslizador" id="corte" type="range"
+                 min="1" max="28" step="1" value="6" data-corte>
+          <output class="dial__dia" for="corte" data-dia>6</output>
+        </div>
+      </div>
+
+      <p class="propio__pie">
+        Ese tramo lo pagás con el sueldo que en tu cabeza es de este mes. Por eso
+        las cuentas cuadran en el papel y no cuadran en la casa.
+      </p>
     </div>
   </section>
 

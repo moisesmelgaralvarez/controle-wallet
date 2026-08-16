@@ -365,6 +365,322 @@
 .descenso svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; }
 
 /* ==========================================================================
+   ACTO II — EL APARATO QUE SE LLENA
+
+   La carta del ciclo dejó de ser una ficha quieta al lado de un texto que
+   pasa. Ahora es el instrumento: la vía se llena con el scroll, el abono
+   persigue a la carga y no la alcanza, y el hueco que queda es el faltante.
+   El scroll es la aguja, no un ascensor.
+   ========================================================================== */
+
+.aparato { display: grid; gap: clamp(1.5rem, 3vw, 2.25rem); }
+
+/* Mismo patrón que la cabecera de los carriles de la portada: apilada en
+   angosto, enfrentada en cuanto hay ancho. */
+.aparato__cabeza { display: grid; gap: 0.25rem; }
+
+@media (min-width: 30rem) {
+  .aparato__cabeza {
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 1rem;
+  }
+  .aparato__cabeza .tecnico:last-child { text-align: right; }
+}
+
+.medida { display: grid; gap: 0.8rem; }
+
+.medida__via {
+  position: relative;
+  height: 10px;
+  border-radius: 99px;
+  background: var(--vidrio-alto);
+  border: 0.5px solid var(--filete);
+}
+
+/* Las tres capas, en el orden en que se leen: lo que se cargó, lo que quedó
+   sin cubrir, y encima lo que la quincena sí abona. */
+.medida__carga,
+.medida__abono,
+.medida__falta {
+  position: absolute;
+  inset-block: 0;
+  border-radius: 99px;
+  transform-origin: left center;
+}
+
+.medida__carga { left: 0; right: 0; background: var(--filete-vivo); }
+
+/* 14,840 de 19,101 son el 77.69% del ciclo. El tramo empieza en esa cifra y
+   no en un número redondo porque el dibujo tiene que decir la verdad: si se
+   redondeara a 75%, el faltante se vería un 10% más grande de lo que es. */
+.medida__abono {
+  left: 0;
+  width: 77.69%;
+  background: linear-gradient(90deg, var(--verde-hondo), var(--verde));
+}
+
+.medida__falta { left: 77.69%; right: 0; background: var(--salmon); }
+
+/* La costura, el motivo que recorre la página: marca dónde la plata deja de
+   alcanzar. En la portada marcaba dónde el ciclo cruza al mes; acá, dónde el
+   abono se acaba. Siempre es el mismo gesto — una línea fina y un nudo. */
+.medida__costura {
+  position: absolute;
+  top: -9px; bottom: -9px;
+  left: 77.69%;
+  width: 1px;
+  background: var(--salmon);
+  transform-origin: center;
+}
+
+.medida__costura::after {
+  content: "";
+  position: absolute;
+  top: -4px; left: 50%;
+  width: 5px; height: 5px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: var(--salmon);
+  box-shadow: 0 0 12px rgba(255, 180, 169, 0.9);
+}
+
+.medida__pies { display: flex; justify-content: space-between; gap: 1rem; }
+
+.aparato__cifras { margin: 0; display: grid; gap: 0.9rem; }
+
+.renglon {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.renglon dt { color: var(--luz-baja); font-size: 0.875rem; }
+.renglon dd { margin: 0; color: var(--luz); font-size: 0.9375rem; }
+
+.renglon--total {
+  border-top: 0.5px solid var(--filete);
+  padding-top: 0.9rem;
+  margin-top: 0.2rem;
+}
+
+.renglon--total dt { color: var(--luz); font-weight: 600; font-size: 1rem; }
+.renglon--total dd { font-weight: 700; font-size: 1.1875rem; }
+.renglon--total .falta { color: var(--salmon); }
+
+/* `.noche p` gana por especificidad (0,2,0) sobre una clase sola, así que
+   este pie se nombra con el mismo prefijo o se queda gris medio. */
+.noche .aparato__pie {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: var(--luz-baja);
+  max-width: 46ch;
+}
+
+/* ==========================================================================
+   ACTO III — EL CICLO PROPIO
+
+   El único momento de la página donde el visitante toca algo. El dibujo es
+   SVG y lo mueve /ciclo.js por atributos de geometría; acá solo vive el
+   color, que es lo que permite que siga el modo claro u oscuro como todo
+   lo demás.
+   ========================================================================== */
+
+.propio { display: grid; justify-items: center; gap: clamp(2rem, 4vw, 3.25rem); }
+
+.propio__intro { max-width: 46rem; text-align: center; }
+.propio__intro .lectura { margin-inline: auto; }
+
+.propio__panel {
+  width: min(100%, 58rem);
+  display: grid;
+  gap: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+
+/* Mismo problema y misma solución que la cabecera de los carriles de la
+   portada: a 390 el rótulo en versalitas con 0.14em de interletrado no cabe
+   junto al rango, y enfrentarlos deja al rango partido en dos renglones. En
+   angosto va cada leyenda en su propia fila, con el rango alineado a la
+   derecha; en cuanto hay ancho vuelven a ir en línea. */
+.propio__leyenda { display: grid; gap: 0.6rem; }
+
+.leyenda {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--luz-baja);
+}
+
+/* El rango se separa del rótulo por color, no por otro tamaño ni otro peso:
+   son la misma línea de metadato y partirla en dos estilos la rompería. */
+.leyenda b { font-weight: 500; color: var(--luz-media); white-space: nowrap; text-align: right; }
+
+.leyenda i { width: 20px; height: 4px; border-radius: 99px; }
+
+@media (min-width: 46rem) {
+  .propio__leyenda { display: flex; flex-wrap: wrap; gap: 0.6rem 2rem; }
+  .leyenda { display: inline-flex; }
+  .leyenda b { text-align: left; }
+}
+.leyenda--mes i { background: var(--filete-vivo); }
+.leyenda--ciclo i { background: linear-gradient(90deg, var(--verde-hondo), var(--verde)); }
+
+.reglas { display: block; width: 100%; height: auto; }
+
+.reglas__mes { fill: var(--filete-vivo); }
+.reglas__ciclo { fill: var(--verde); }
+
+/* La guía del día 1 va neutra a propósito: el calendario no es el culpable,
+   es solo la referencia contra la que se mide el corrimiento.
+
+   `fill-opacity` y no `opacity` en todo este dibujo: la regla de movimiento
+   reducido de más abajo fuerza `opacity: 1 !important` en todo el mundo, y
+   cualquier atenuación hecha con `opacity` se perdería justo para quien pidió
+   menos estímulo. */
+.reglas__guia { fill: var(--luz); fill-opacity: 0.28; }
+
+.reglas__costura { fill: var(--salmon); }
+.reglas__nudo { fill: var(--salmon); }
+.reglas__cota,
+.reglas__tope { fill: var(--salmon); fill-opacity: 0.75; }
+
+/* Medido a 390: el dibujo entra en 302 px y el viewBox lo encoge a 0.487, así
+   que un pelo de 1.5 unidades sale a 0.73 px y el navegador lo desvanece. No
+   se arregla con otro viewBox — se arregla engrosando las piezas en unidades
+   de usuario, que es lo mismo que trazar más grueso un plano que se va a
+   imprimir más chico. Son propiedades CSS de geometría: donde no existan,
+   mandan los atributos del marcado y el dibujo se ve como hoy. */
+@media (max-width: 700px) {
+  .reglas__mes,
+  .reglas__ciclo { height: 10px; }
+  .reglas__guia,
+  .reglas__costura,
+  .reglas__tope { width: 3px; }
+  .reglas__cota { height: 2px; }
+  .reglas__nudo { r: 7px; }
+}
+
+/* El dibujo se recompone al mover el control. Sin esta transición los carriles
+   saltan de posición y se pierde la relación entre lo que se movió y lo que
+   cambió — que es exactamente lo único que esta sección tiene que enseñar. */
+@media (prefers-reduced-motion: no-preference) {
+  .reglas__ciclo,
+  .reglas__cota,
+  .reglas__tope,
+  .reglas__costura,
+  .reglas__nudo {
+    transition: x 260ms var(--curva), width 260ms var(--curva), cx 260ms var(--curva);
+  }
+}
+
+.noche .propio__lectura {
+  margin: 0;
+  font-size: clamp(1rem, 0.95rem + 0.35vw, 1.1875rem);
+  line-height: 1.6;
+  color: var(--luz-media);
+  max-width: 54ch;
+}
+
+.propio__lectura b { color: var(--luz); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.noche .propio__pie {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: var(--luz-baja);
+  max-width: 52ch;
+}
+
+/* ---------- el control ---------- */
+
+/* Escondido hasta que /ciclo.js lo enciende. Un deslizador visible que no
+   responde es peor que ningún deslizador. */
+.dial { display: none; }
+
+.vidrio.vivo .dial {
+  display: grid;
+  gap: 0.7rem;
+  padding-top: clamp(0.75rem, 2vw, 1.25rem);
+  border-top: 0.5px solid var(--filete);
+}
+
+.dial__rotulo { font-size: 0.875rem; color: var(--luz-media); }
+.dial__fila { display: flex; align-items: center; gap: 1.25rem; }
+
+.dial__dia {
+  min-width: 3.5rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 10px;
+  border: 0.5px solid var(--filete);
+  background: var(--vidrio-alto);
+  color: var(--luz);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* El deslizador se dibuja entero: los navegadores no comparten un solo
+   selector para la vía y el tirador, así que van los dos juegos. */
+.dial__deslizador {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.dial__deslizador::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 99px;
+  background: var(--filete-vivo);
+}
+
+.dial__deslizador::-moz-range-track {
+  height: 4px;
+  border-radius: 99px;
+  background: var(--filete-vivo);
+}
+
+.dial__deslizador::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px; height: 22px;
+  margin-top: -9px;
+  border: none;
+  border-radius: 50%;
+  background: var(--verde);
+  box-shadow: 0 0 0 4px var(--vacio), 0 0 24px rgba(var(--aura-tinte), 0.55);
+}
+
+.dial__deslizador::-moz-range-thumb {
+  width: 22px; height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: var(--verde);
+  box-shadow: 0 0 0 4px var(--vacio), 0 0 24px rgba(var(--aura-tinte), 0.55);
+}
+
+.dial__deslizador:focus-visible { outline: 2px solid var(--verde); outline-offset: 6px; border-radius: 12px; }
+
+/* En pantalla táctil el objetivo sube a 44 px sin agrandar el tirador: lo
+   que crece es la banda que recibe el dedo. */
+@media (pointer: coarse) {
+  .dial__deslizador { height: 44px; }
+}
+
+/* ==========================================================================
    EL MUNDO ENVUELVE LA PÁGINA ENTERA
 
    Sin esto la portada era el mundo nuevo y del segundo scroll para abajo
@@ -550,6 +866,66 @@
     @keyframes alejarse {
       from { opacity: 1; transform: none; filter: blur(0); }
       to   { opacity: 0; transform: translateY(-4rem) scale(0.965); filter: blur(6px); }
+    }
+
+    /* ---------- 4. el aparato del acto II ----------
+
+       Tres movimientos y nada más: los tramos crecen, la costura enciende,
+       los renglones llegan. Ninguno usa `filter`, a diferencia de la entrada
+       de la portada: aquello corre una vez al cargar y esto corre en CADA
+       cuadro del scroll, donde un desenfoque cuesta caro. */
+
+    @keyframes crecer   { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    @keyframes prender  { from { opacity: 0; transform: scaleY(0.15); } to { opacity: 1; transform: none; } }
+    @keyframes llegar   { from { opacity: 0; transform: translateY(0.9rem); } to { opacity: 1; transform: none; } }
+
+    .medida__carga,
+    .medida__abono,
+    .medida__falta { animation: crecer linear both; }
+    .medida__costura { animation: prender linear both; }
+    .renglon { animation: llegar linear both; }
+
+    /* En teléfono y tableta el panel no se clava, así que cada pieza corre
+       con su propia entrada en pantalla. Escalonadas, no todas de golpe. */
+    .medida__carga   { animation-timeline: view(); animation-range: entry 20% cover 26%; }
+    .medida__costura { animation-timeline: view(); animation-range: entry 30% cover 34%; }
+    .medida__abono   { animation-timeline: view(); animation-range: entry 34% cover 42%; }
+    .medida__falta   { animation-timeline: view(); animation-range: entry 44% cover 52%; }
+    .renglon--1      { animation-timeline: view(); animation-range: entry 25% cover 32%; }
+    .renglon--2      { animation-timeline: view(); animation-range: entry 35% cover 42%; }
+    .renglon--3      { animation-timeline: view(); animation-range: entry 45% cover 52%; }
+
+    /* De 1000 px para arriba el panel SÍ se clava, y ahí el instrumento se
+       cuelga del recorrido largo de la sección: el mismo scroll que hace
+       pasar los cuatro hitos es el que llena la vía.
+
+       La línea de tiempo se declara en `.fijo` —el ancestro— y no hace falta
+       `timeline-scope`: un nombre declarado arriba lo ven todos los
+       descendientes. Y no puede ir en `.fijo__visual`, que es el que se
+       clava: un elemento pegado no se mueve respecto de la ventana, así que
+       su propia línea de tiempo se congela. */
+    @media (min-width: 1000px) {
+      .fijo { view-timeline: --recorrido block; }
+
+      /* Los tiempos NO son a ojo. Medido en el navegador, el centro de cada
+         hito cruza el medio de la ventana en estos puntos del recorrido:
+
+           1  «Abre el ciclo» ................ −21%   (la vía todavía vacía)
+           2  «Corta, y aparece el número» ...  22%   (19,101 completo)
+           3  «Entra el pago, y no llena» ....  65%   (14,840, y el faltante)
+           4  «Y el sueldo ya se gastó» ...... 108%   (todo dibujado)
+
+         Cada tramo termina donde su hito se lee, nunca después: si el número
+         aparece antes que la barra que lo dibuja, el aparato deja de medir y
+         pasa a decorar. La carga arranca en `entry 85%` porque ahí es donde
+         el panel se clava, y no tiene sentido llenar algo que todavía sube. */
+      .medida__carga   { animation-timeline: --recorrido; animation-range: entry 85% contain 24%; }
+      .renglon--1      { animation-timeline: --recorrido; animation-range: contain 16% contain 24%; }
+      .medida__abono   { animation-timeline: --recorrido; animation-range: contain 40% contain 60%; }
+      .renglon--2      { animation-timeline: --recorrido; animation-range: contain 52% contain 60%; }
+      .medida__costura { animation-timeline: --recorrido; animation-range: contain 60% contain 66%; }
+      .medida__falta   { animation-timeline: --recorrido; animation-range: contain 62% contain 74%; }
+      .renglon--3      { animation-timeline: --recorrido; animation-range: contain 66% contain 76%; }
     }
   }
 }

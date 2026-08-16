@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es-HN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ADN de marca — Controle Wallet</title>
+<link rel="stylesheet" href="/sitio.css">
+<link rel="stylesheet" href="/app/app.css">
+<link rel="stylesheet" href="/marca.css">
+<link rel="stylesheet" href="/prueba-marca.css">
+</head>
+<body>
+
+<div class="envoltura">
+
+  <header class="cab">
+    <p class="rotulo">Controle Wallet</p>
+    <h1>El ADN, en una página</h1>
+    <p class="lectura">Todo lo que sigue usa las mismas clases que ya existen en
+      <code>sitio.css</code> y <code>app.css</code>. Ninguna es inventada.</p>
+  </header>
+
+  <!-- Paleta -->
+  <section class="panel">
+    <p class="panel__tope">Paleta</p>
+    <div class="paleta">
+      <div class="chip-color" data-c="fondo"><i style-hook="fondo"></i><b>--fondo</b><u>lienzo</u></div>
+      <div class="chip-color"><i class="c-superficie"></i><b>--superficie</b><u>cartas</u></div>
+      <div class="chip-color"><i class="c-elevado"></i><b>--elevado</b><u>franjas</u></div>
+      <div class="chip-color"><i class="c-tinta"></i><b>--tinta</b><u>texto</u></div>
+      <div class="chip-color"><i class="c-tenue"></i><b>--tenue</b><u>secundario</u></div>
+      <div class="chip-color"><i class="c-borde"></i><b>--borde</b><u>filete</u></div>
+      <div class="chip-color"><i class="c-bordef"></i><b>--borde-fuerte</b><u>controles</u></div>
+      <div class="chip-color"><i class="c-acento"></i><b>--acento</b><u>a favor</u></div>
+      <div class="chip-color"><i class="c-suave"></i><b>--suave</b><u>teñido</u></div>
+      <div class="chip-color"><i class="c-alerta"></i><b>--alerta</b><u>en contra</u></div>
+    </div>
+  </section>
+
+  <!-- Escala tipográfica -->
+  <section class="panel escala-panel">
+    <p class="panel__tope">Escala tipográfica · Geist Variable</p>
+    <div class="escala">
+      <div><span class="rotulo">rótulo · 12</span><p class="rotulo">Disponible real</p></div>
+      <div><span class="rotulo">cuerpo · 16</span><p class="lectura">Del 7 de julio al 6 de agosto se cargaron diecinueve mil. El corte lo paga un ingreso concreto.</p></div>
+      <div><span class="rotulo">sub · 20–24</span><h3>La tarjeta no es una deuda</h3></div>
+      <div><span class="rotulo">titular · 24–32</span><h2>El presupuesto del hogar, sin engañarse</h2></div>
+      <div><span class="rotulo">cifra madre · 36–56</span><p class="cifra__valor">L 12,480.00</p></div>
+    </div>
+  </section>
+
+  <!-- Fichas -->
+  <section class="panel">
+    <p class="panel__tope">Fichas · cifras tabulares</p>
+    <div class="fichas-app">
+      <div class="ficha-app"><span class="etiqueta">Disponible real</span><b class="ficha-app__v bien">L 12,480.00</b></div>
+      <div class="ficha-app"><span class="etiqueta">Ingreso neto</span><b class="ficha-app__v">L 42,300.00</b></div>
+      <div class="ficha-app"><span class="etiqueta">Gastos del mes</span><b class="ficha-app__v">L 28,600.00</b></div>
+      <div class="ficha-app"><span class="etiqueta">Faltan</span><b class="ficha-app__v mal">L 4,261.00</b></div>
+    </div>
+  </section>
+
+  <!-- Pulso -->
+  <section class="panel">
+    <p class="panel__tope">El pulso del mes</p>
+    <div class="pulso">
+      <div class="pulso__fila">
+        <em><span>Mes corrido</span><span>63%</span></em>
+        <div class="pulso__via"><div class="pulso__va va-63"></div></div>
+      </div>
+      <div class="pulso__fila">
+        <em><span>Presupuesto ido</span><span>71%</span></em>
+        <div class="pulso__via"><div class="pulso__va pulso__va--alerta va-71"></div></div>
+      </div>
+    </div>
+    <p class="ejemplo__pie">Vas gastando más rápido de lo que corre el mes.</p>
+  </section>
+
+  <!-- Movimientos -->
+  <section class="panel">
+    <p class="panel__tope">Movimientos · columna alineada</p>
+    <div class="movs-lista">
+      <div class="mov-fila"><span class="mov-fila__txt">Supermercado La Colonia<u>Alimentación</u></span><span class="mov-fila__monto">L 2,410.00</span></div>
+      <div class="mov-fila"><span class="mov-fila__txt">Combustible Uno<u>Transporte</u></span><span class="mov-fila__monto">L 1,180.00</span></div>
+      <div class="mov-fila"><span class="mov-fila__txt">Colegio<u>Hogar</u></span><span class="mov-fila__monto">L 3,900.00</span></div>
+      <div class="mov-fila"><span class="mov-fila__txt">Farmacia<u>Salud</u></span><span class="mov-fila__monto">L 640.00</span></div>
+      <div class="mov-fila"><span class="mov-fila__txt">Retiro cajero<u>Traslado</u></span><span class="mov-fila__monto">L 2,000.00</span></div>
+    </div>
+  </section>
+
+  <!-- Controles -->
+  <section class="panel">
+    <p class="panel__tope">Controles</p>
+    <div class="controles">
+      <input class="campo" type="text" value="Supermercado" aria-label="Comercio">
+      <input class="campo" type="text" value="L 2,410.00" aria-label="Monto">
+      <button class="boton boton--principal">Guardar</button>
+      <button class="boton boton--borde">Cancelar</button>
+      <span class="chip">Alimentación</span>
+      <span class="sello">Confirmado</span>
+    </div>
+  </section>
+
+</div>
+
+</body>
+</html>

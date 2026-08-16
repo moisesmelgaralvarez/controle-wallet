@@ -7,8 +7,10 @@ meses. Multiusuario, multiplataforma y con suscripción.
 Nace de una aplicación privada que dos personas usaron durante meses. El motor
 financiero de aquella app se rescata entero; lo que se rehace es todo lo demás.
 
-**Estado: fase 1, etapa 0.** Todavía no hay producto. Lo que existe hoy es la
-fundación: repositorio, publicación y vuelta atrás.
+**Estado: fase 1 cerrada.** En producción, en `v0.25.0`, con nueve pantallas:
+Resumen, Movimientos, Presupuesto, Proyectos, Historia, Cierre de mes, Importar,
+Informe y Tu cuenta. Lo que falta para venderlo no es código — está en
+[EL-SERVICIO.md](EL-SERVICIO.md).
 
 ---
 
@@ -16,18 +18,21 @@ fundación: repositorio, publicación y vuelta atrás.
 
 | Carpeta | Qué contiene |
 |---|---|
-| `nucleo/` | El motor financiero en módulos puros. Corre igual en el navegador, en el servidor y en las pruebas |
 | `sitio/` | Todo lo que se sirve al navegador. El sitio público en la raíz, la aplicación bajo `/app` |
-| `pruebas/` | Las pruebas del núcleo y las de aislamiento entre hogares |
-| `supabase/` | Migraciones numeradas y Edge Functions |
-| `herramientas/` | Guiones de mantenimiento y migración de datos |
+| `sitio/app/nucleo/` | El motor financiero en módulos puros. Corre igual en el navegador, en el servidor y en las pruebas. **No toca red, ni pantalla, ni almacenamiento** |
+| `sitio/app/datos/` | Lo que habla con la base: el cliente, el armador que convierte filas en el documento que el núcleo espera, y el importador |
+| `sitio/app/vistas/` | Una pantalla por archivo |
+| `pruebas/` | Las del núcleo, más las de aislamiento entre hogares y las de integración contra la base real |
+| `supabase/` | Migraciones numeradas, sus reversos en `supabase/reversos/`, y las Edge Functions |
 | `heredado/` | La aplicación anterior, congelada, como referencia. **No se edita.** Ver [heredado/LEEME-PRIMERO.md](heredado/LEEME-PRIMERO.md) |
 
 Documentos aparte:
 
+- [EL-SERVICIO.md](EL-SERVICIO.md) — dónde vive el servicio, qué cuesta y qué falta. Escrito para el dueño, no para un programador.
 - [CAMBIOS.md](CAMBIOS.md) — qué trajo cada versión.
 - [VUELTA-ATRAS.md](VUELTA-ATRAS.md) — cómo se deshace una actualización mala. Léelo antes de necesitarlo.
 - [SECRETOS.md](SECRETOS.md) — qué secretos existen y dónde vive cada uno. Sin sus valores.
+- [TRASPASO.md](TRASPASO.md) — para retomar el desarrollo desde cero, con las trampas que ya costaron caro.
 
 ---
 
@@ -44,10 +49,15 @@ gh pr create
 ```
 
 - Cada cambio en su propia rama: `feat/…` para lo nuevo, `fix/…` para lo que se arregla.
-- Cada rama genera su enlace de vista previa. Se prueba ahí, no en producción.
+- **Se prueba contra `controle-pruebas`, nunca contra producción.** Con `npx wrangler
+  dev` alcanza: todo lo que no sea `controlewallet.com` habla con la base de pruebas.
+  Para enseñarlo en línea, `npm run publicar:pruebas` publica el Worker de pruebas.
 - El Pull Request lleva descripción en español: qué cambia y **por qué**.
 - Las pruebas corren solas en cada PR. Si salen rojas, no se une.
-- Las versiones se etiquetan (`v1.0.0`) y se anotan en `CAMBIOS.md`.
+- Las versiones se etiquetan (`v1.0.0`) y se anotan en `CAMBIOS.md`. **Cada etiqueta
+  tiene su entrada**, y eso se comprueba comparando las dos listas.
+- Al publicar, el orden es **migración → Edge Function → Worker**. Si el Worker va
+  primero, la pantalla nueva se queda a medias en silencio.
 
 **Nunca se borra historial.** Deshacer un cambio se hace con `git revert`, que deja
 constancia de que hubo un problema y de cuándo se corrigió.
@@ -75,6 +85,16 @@ npm ci
 npm run pruebas
 ```
 
+Esas 336 no tocan la red y corren en menos de un segundo. Las otras dos suites sí
+hablan con la base de **pruebas**, así que necesitan sus credenciales en el
+ambiente (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`); en
+`TRASPASO.md` está cómo sacarlas sin escribirlas en ningún lado:
+
+```bash
+npm run pruebas:aislamiento
+npm run pruebas:integracion
+```
+
 Para ver el sitio como lo servirá Cloudflare, con sus cabeceras y todo:
 
 ```bash
@@ -100,4 +120,7 @@ la cabeza al escribir cada línea:
 7. **Todo cambio pasa por el repositorio.** Nada a mano en los paneles. La única
    excepción son los secretos, y por eso existe `SECRETOS.md`.
 8. **Nada se pierde.** Toda función que existía tiene que seguir existiendo.
-9. **Sin dependencias porque sí.** Cada librería se justifica. La CSP estricta se mantiene.
+9. **Sin dependencias porque sí.** Cada librería se justifica. Las únicas son `wrangler`
+   y `supabase`, y las dos son herramientas, no código que se envíe al navegador.
+10. **Ni un estilo en línea.** Es lo que permite sostener `style-src 'self'` sin
+    excepciones en la CSP.

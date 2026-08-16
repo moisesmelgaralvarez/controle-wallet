@@ -43,7 +43,6 @@
   <section class="escena hero">
     <div class="escena__halo" aria-hidden="true"></div>
     <div class="hero__contenido">
-      <p class="rotulo">Finanzas del hogar</p>
       <h1>El presupuesto del hogar, sin engañarse</h1>
       <p class="hero__entrada">
         Tu tarjeta no cobra por mes: cobra por ciclo. Y ese corrimiento es la
@@ -118,33 +117,47 @@
         </div>
       </div>
 
+      <!-- Los hitos van fechados, no numerados. Un 01/02/03 sería decoración;
+           acá el orden ES el dato — el ciclo pasa en ese orden y por eso el
+           dinero se cuenta dos veces. La fecha carga información que el
+           lector necesita; un número ordinal no. -->
       <div class="fijo__texto">
-        <div class="paso revelar">
-          <span class="paso__n">01</span>
-          <h3>La tarjeta no es una deuda</h3>
+        <div class="hito">
+          <span class="hito__fecha"><time datetime="2026-07-07">7 jul</time></span>
+          <h3>Abre el ciclo</h3>
           <p>
-            Es por dónde pasa el gasto. Si cargás el súper y la gasolina a la
-            tarjeta y después la pagás con el sueldo, restar el gasto
-            <em>y además</em> el pago cuenta el mismo dinero dos veces.
+            Desde hoy, todo lo que pase por la tarjeta se acumula acá. No es
+            deuda todavía: es gasto del hogar que va cayendo en un mismo bolsón.
           </p>
         </div>
 
-        <div class="paso revelar">
-          <span class="paso__n">02</span>
-          <h3>Se vigila por ciclo, no por mes</h3>
+        <div class="hito">
+          <span class="hito__fecha"><time datetime="2026-08-06">6 ago</time></span>
+          <h3>Corta, y aparece el número</h3>
           <p>
-            Del 7 de julio al 6 de agosto se cargaron diecinueve mil. El corte lo
-            paga un ingreso concreto. La pregunta no es cuánto debés: es si ese
-            ingreso alcanza.
+            <b class="cifra">L 19,101</b> cargados en el ciclo. Ese corte lo va a
+            pagar un ingreso concreto, no «el mes». La pregunta nunca fue cuánto
+            debés: es si ese ingreso alcanza.
           </p>
         </div>
 
-        <div class="paso revelar">
-          <span class="paso__n">03</span>
-          <h3>Saberlo el día 20 no es lo mismo</h3>
+        <div class="hito">
+          <span class="hito__fecha"><time datetime="2026-08-15">15 ago</time></span>
+          <h3>Entra el pago, y no llena</h3>
           <p>
-            Que enterarse el día 6, cuando ya no hay nada que hacer. Con el
-            faltante a la vista todavía se puede mover algo.
+            La quincena abona <b class="cifra">L 14,840</b>. Faltan
+            <b class="cifra hito__falta">L 4,261</b>, que salen de la siguiente o
+            se quedan revolviendo con intereses.
+          </p>
+        </div>
+
+        <div class="hito">
+          <span class="hito__fecha">Todo agosto</span>
+          <h3>Y el sueldo ya se gastó</h3>
+          <p>
+            Ese faltante sigue apareciendo como disponible en la cuenta. Es la
+            misma plata contada dos veces: una cuando la gastaste, otra cuando la
+            volvés a ver en el saldo.
           </p>
         </div>
       </div>
@@ -159,8 +172,7 @@
   <section class="franja franja--alta escena vitrina">
     <div class="escena__halo" aria-hidden="true"></div>
 
-    <div class="vitrina__intro revelar">
-      <p class="rotulo">Una cuenta, todas las pantallas</p>
+    <div class="vitrina__intro">
       <h2 class="lectura">El mismo hogar, se abra donde se abra</h2>
       <p class="lectura">
         En el teléfono, lo que se necesita de pie en la fila del súper. En la
@@ -287,9 +299,8 @@
   <!-- ── el pulso ──────────────────────────────────────────── -->
   <section class="escena franja franja--suave">
     <div class="escena__halo" aria-hidden="true"></div>
-    <div class="dos revelar">
+    <div class="dos">
       <div>
-        <p class="rotulo">El pulso del mes</p>
         <h2 class="lectura">Gastar el 26% es normal el día 20 y es alarma el día 4</h2>
         <p class="lectura">
           Esa comparación —cuánto mes ha corrido contra cuánto presupuesto se ha
@@ -309,8 +320,7 @@
 
   <!-- ── lo que cambia ─────────────────────────────────────── -->
   <section class="franja franja--alta">
-    <p class="rotulo revelar">Lo que cambia</p>
-    <h2 class="lectura revelar">Hecho para cómo se vive de verdad</h2>
+    <h2 class="lectura">Hecho para cómo se vive de verdad</h2>
 
     <div class="tarjetas tarjetas--densa">
       <article class="tarjeta">
@@ -356,15 +366,14 @@
   <!-- ── lo demás ──────────────────────────────────────────── -->
   <section class="franja franja--superficie">
     <div class="dos">
-      <div class="revelar">
-        <p class="rotulo">Y además</p>
+      <div>
         <h2 class="lectura">Lo que ya está resuelto</h2>
         <p class="lectura">
           Nada de esto es promesa: es lógica que una familia usó con dinero real
           durante meses antes de que existiera el producto.
         </p>
       </div>
-      <div class="revelar">
+      <div>
         <ul class="lista">
           <li><strong>Cierre de mes</strong> con el presupuesto congelado, para que bajar el gasto de septiembre no reescriba agosto hacia atrás.</li>
           <li><strong>Estados de cuenta</strong> de BAC y Ficohsa, o cualquier CSV, importados y conciliados sin duplicar nada.</li>
@@ -378,8 +387,7 @@
   <!-- ── cierre ────────────────────────────────────────────── -->
   <section class="escena franja cierre">
     <div class="escena__halo" aria-hidden="true"></div>
-    <div class="revelar">
-      <p class="rotulo">Empezá</p>
+    <div>
       <h2>Tu presupuesto, armado a tu manera</h2>
       <p>
         Sin costo mientras dure la construcción. Un asistente te guía en pocos

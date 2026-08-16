@@ -17,42 +17,25 @@
       o una fuente de sistema, y la referencia pide Geist igual.
    ========================================================================== */
 
-/* ---------- los dos modos ----------
+/* ---------- un solo modo ----------
 
-   CLARO por omisión, y el oscuro entra por tres caminos, en este orden:
-   preferencia del sistema, y después la elección explícita de la persona, que
-   siempre gana. Los tres bloques definen los MISMOS nombres: ninguna regla de
-   abajo sabe en qué modo está.
+   NEGRO SIEMPRE, sin importar lo que pida el sistema y sin interruptor.
 
-   El oscuro no es el claro invertido. El vidrio pasa de blanco translúcido a
-   negro translúcido, el verde sube a menta porque el verde hondo sobre negro
-   no se lee, y la sombra deja de ser una caída para volverse profundidad. */
+   Antes había tres caminos —preferencia del sistema, elección guardada,
+   omisión— y un botón en el encabezado. Se quitaron a propósito: la portada
+   ahora lleva una película de fondo, y un video no sigue un interruptor. O el
+   sitio se decide por un modo, o hay que generar y servir dos películas: el
+   doble de créditos, el doble de peso, y una carta negra apareciendo sobre
+   fondo claro cada vez que alguien cambia de modo a mitad de página.
+
+   Es también lo que hace Apple en sus páginas de producto: el fondo no lo
+   decide el visitante, lo decide la dirección de arte.
+
+   La paleta que queda es la que era la oscura. El verde sube a menta porque
+   el verde hondo sobre negro no se lee, y la sombra deja de ser una caída
+   para volverse profundidad. */
 
 .noche {
-  --vidrio:       rgba(9, 12, 11, 0.035);
-  --vidrio-alto:  rgba(9, 12, 11, 0.06);
-  --filete:       rgba(9, 12, 11, 0.12);
-  --filete-vivo:  rgba(9, 12, 11, 0.26);
-  --vacio:        #fbfbf9;
-  --luz:          #101112;
-  --luz-media:    #4f5257;
-  --luz-baja:     #6a6d72;
-  --verde:        #0b6b4f;
-  --verde-hondo:  #064e3b;
-  --salmon:       #a8341f;
-  --aura-tinte:   11, 107, 79;
-  --sombra-honda: 0 30px 80px rgba(16, 17, 18, 0.10);
-  --curva:        cubic-bezier(0.16, 1, 0.3, 1);
-
-  background: var(--vacio);
-  color: var(--luz);
-  position: relative;
-  isolation: isolate;
-}
-
-/* El truco para no escribir la paleta oscura dos veces: se define una sola vez
-   y se invoca desde los dos selectores. */
-.noche--oscuro {
   --vidrio:       rgba(255, 255, 255, 0.035);
   --vidrio-alto:  rgba(255, 255, 255, 0.06);
   --filete:       rgba(255, 255, 255, 0.10);
@@ -69,43 +52,17 @@
   --salmon:       #ffb4a9;
   --aura-tinte:   149, 211, 186;
   --sombra-honda: 0 40px 120px rgba(0, 0, 0, 0.75);
+  --curva:        cubic-bezier(0.16, 1, 0.3, 1);
+
+  background: var(--vacio);
+  color: var(--luz);
+  position: relative;
+  isolation: isolate;
 }
 
-/* 1. Lo que pide el sistema, mientras nadie haya elegido a mano. */
-@media (prefers-color-scheme: dark) {
-  .noche:not([data-tema="claro"]) {
-    --vidrio:       rgba(255, 255, 255, 0.035);
-    --vidrio-alto:  rgba(255, 255, 255, 0.06);
-    --filete:       rgba(255, 255, 255, 0.10);
-    --filete-vivo:  rgba(255, 255, 255, 0.22);
-    --vacio:        #000000;
-    --luz:          #f4f3f1;
-    --luz-media:    #a8a8ad;
-    --luz-baja:     #7e7e86;
-    --verde:        #95d3ba;
-    --verde-hondo:  #064e3b;
-    --salmon:       #ffb4a9;
-    --aura-tinte:   149, 211, 186;
-    --sombra-honda: 0 40px 120px rgba(0, 0, 0, 0.75);
-  }
-}
-
-/* 2. La elección explícita, que gana siempre — incluso contra el sistema. */
-.noche[data-tema="oscuro"] {
-  --vidrio:       rgba(255, 255, 255, 0.035);
-  --vidrio-alto:  rgba(255, 255, 255, 0.06);
-  --filete:       rgba(255, 255, 255, 0.10);
-  --filete-vivo:  rgba(255, 255, 255, 0.22);
-  --vacio:        #000000;
-  --luz:          #f4f3f1;
-  --luz-media:    #a8a8ad;
-  --luz-baja:     #7e7e86;
-  --verde:        #95d3ba;
-  --verde-hondo:  #064e3b;
-  --salmon:       #ffb4a9;
-  --aura-tinte:   149, 211, 186;
-  --sombra-honda: 0 40px 120px rgba(0, 0, 0, 0.75);
-}
+/* La barra del navegador y el fondo del sistema acompañan. Sin esto, al rebotar
+   el scroll en un teléfono aparece una franja blanca debajo del negro. */
+.noche { color-scheme: dark; }
 
 /* El recorte vive en el ACTO, no en el mundo: el aura mide 160vw y desborda,
    pero recortar en `body` dejaría fuera de juego el panel clavado de la
@@ -121,14 +78,51 @@
 
 /* ---------- el acto: una pantalla, una idea ---------- */
 
+/* El acto es la PISTA; la pantalla clavada adentro es lo que se ve. Por
+   omisión miden lo mismo —una ventana— y no hay raspado: eso es lo correcto
+   en teléfono y para quien pidió menos movimiento, donde /hero.js ni siquiera
+   baja el video y una pista larga sería scroll vacío. */
 .acto {
+  min-height: 100svh;
+  display: block;
+  padding: 0;
+}
+
+/* `min-height` y NO `height`. Es un piso, nunca un techo.
+
+   Con `height: 100svh` y `overflow: hidden` —como estuvo un rato— en teléfono
+   el contenido medía 1,018 px dentro de una caja de 812 y, al centrarlo, se
+   desbordaba por ARRIBA: el titular caía en y=130 debajo de una cabecera que
+   llega a y=176, y el recorte se comía el resto. En pantalla ancha no se
+   notaba porque ahí sí cabía. */
+.acto__pantalla {
   min-height: 100svh;
   display: grid;
   align-content: center;
   padding: clamp(1.75rem, 5vw, 6rem) clamp(1.25rem, 5vw, 4rem);
 }
 
-.acto__marco { width: 100%; max-width: 1440px; margin-inline: auto; }
+/* La pista y el clavado solo existen donde la película de verdad corre. En
+   teléfono y con movimiento reducido /hero.js ni siquiera baja el video, así
+   que una pista larga sería scroll en vacío y un clavado no tendría contra
+   qué clavarse. 2.6 pantallas dan 5 segundos de video en un recorrido que se
+   siente natural: menos y pasa volando, más y parece que la página se trabó. */
+@media (min-width: 1000px) and (prefers-reduced-motion: no-preference) {
+  .acto { min-height: 260svh; }
+  .acto__pantalla { position: sticky; top: 0; }
+}
+
+/* `position: relative` y `z-index` no son decorativos acá: un elemento
+   posicionado con z-index 0 —la película, el aura— se pinta DESPUÉS del
+   contenido estático, o sea encima. Con el aura no se notaba porque es un
+   degradado tenue; con una película opaca el titular desaparecía entero. */
+.acto__marco {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+}
 
 /* ---------- la luz ambiente ---------- */
 
@@ -179,6 +173,53 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--luz-baja);
+}
+
+/* ---------- la película ----------
+
+   El fondo del acto. Va debajo de todo (`z-index: 0`) y el contenido pasa por
+   encima gracias al `.noche > * { z-index: 1 }` de más arriba.
+
+   El póster se ve desde el primer pintado; el video, cuando /hero.js decide
+   que vale la pena bajarlo. Mientras tanto no hay hueco negro ni salto: el
+   póster ES el primer cuadro. */
+
+.pelicula {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #000 center / cover no-repeat url("/media/ciclo-hero-poster.jpg");
+}
+
+.pelicula__cinta {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  /* Aparece cuando el video ya tiene metadatos, no antes: si se muestra
+     mientras carga, se ve un rectángulo negro tapando el póster. */
+  opacity: 0;
+  transition: opacity 600ms var(--curva);
+}
+
+.acto--filmado .pelicula__cinta { opacity: 1; }
+
+/* El velo. Sin él, el titular blanco cae encima de un haz blanco y hay un
+   tramo donde no se lee. Medido: el peor cuadro daba 2.1:1 sobre la luz del
+   haz; con el velo queda en 9.6:1.
+
+   Va más denso a la izquierda, que es donde vive el texto, y se abre a la
+   derecha para no matar la película justo donde no estorba. */
+.pelicula__velo {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(100deg, rgba(0,0,0,0.94) 0%, rgba(0,0,0,0.82) 38%,
+                            rgba(0,0,0,0.55) 66%, rgba(0,0,0,0.42) 100%),
+    linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 22%,
+                               transparent 70%, rgba(0,0,0,0.75) 100%);
 }
 
 /* ---------- el panel de vidrio ---------- */
@@ -1104,53 +1145,6 @@
   border-bottom: 0.5px solid var(--filete);
 }
 
-/* ---------- el interruptor de modo ---------- */
-
-/* Va en el encabezado, junto a las acciones de sesión: es una preferencia de
-   lectura, no una función del producto, así que no compite con «Crear cuenta».
-   Es un <button> de verdad —no un checkbox disfrazado— porque tiene que poder
-   anunciar su estado a un lector de pantalla. */
-.modo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px; height: 38px;
-  border-radius: 10px;
-  border: 0.5px solid var(--filete);
-  background: var(--vidrio);
-  color: var(--luz-media);
-  cursor: pointer;
-  padding: 0;
-  transition: color 200ms var(--curva), border-color 200ms var(--curva),
-              background-color 200ms var(--curva), transform 160ms var(--curva);
-}
-
-.modo svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.6;
-            stroke-linecap: round; stroke-linejoin: round; }
-
-/* Solo se ve el icono del modo al que se va a cambiar. El otro no se esconde
-   con `hidden` —una clase con `display` le ganaría— sino con `display` propio. */
-.modo__sol { display: none; }
-.noche[data-tema="oscuro"] .modo__sol { display: block; }
-.noche[data-tema="oscuro"] .modo__luna { display: none; }
-
-@media (prefers-color-scheme: dark) {
-  .noche:not([data-tema="claro"]) .modo__sol { display: block; }
-  .noche:not([data-tema="claro"]) .modo__luna { display: none; }
-}
-
-.modo:active { transform: scale(0.94); }
-.modo:focus-visible { outline: 2px solid var(--verde); outline-offset: 3px; }
-
-@media (hover: hover) and (pointer: fine) {
-  .modo:hover { color: var(--luz); border-color: var(--filete-vivo); background: var(--vidrio-alto); }
-}
-
-/* En pantalla táctil el objetivo sube a 44 px sin agrandar el dibujo. */
-@media (pointer: coarse) {
-  .modo { width: 44px; height: 44px; }
-}
-
 .noche .cabecera .marca,
 .noche .cabecera .marca span { color: var(--luz); }
 /* `:not(.boton)` no es cosmético: sin él este selector (0,3,0) le gana al de
@@ -1161,9 +1155,55 @@
 .noche .menu a[aria-current="page"]:not(.boton) { color: var(--luz); }
 .noche .sesion { border-left-color: var(--filete); }
 
-/* El nombre no se parte en dos renglones: con el interruptor nuevo, a 684 px
-   la cabecera se apretaba y «Controle Wallet» caía en dos líneas. */
+/* El nombre no se parte en dos renglones: a 684 px la cabecera se apretaba y
+   «Controle Wallet» caía en dos líneas. */
 .noche .marca { white-space: nowrap; }
+
+/* ---------- la cabecera en teléfono ----------
+
+   Medido a 375: tres filas y 150 px de alto, el 18% de la pantalla gastado
+   antes de que empiece nada. Con las acciones de sesión fuera del <nav>, se
+   acomoda en dos filas — marca y «Crear cuenta» arriba, la navegación abajo. */
+@media (max-width: 46rem) {
+  .noche .cabecera {
+    flex-wrap: wrap;
+    row-gap: 0.65rem;
+    column-gap: 0.75rem;
+    padding-block: 0.85rem;
+  }
+
+  .noche .sesion {
+    margin-left: auto;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  /* Toda la fila de abajo, y sin el `margin-left: auto` que la empujaba a la
+     derecha en escritorio. */
+  .noche .menu {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    gap: 1.15rem;
+    font-size: 0.9375rem;
+  }
+}
+
+/* Los enlaces de navegación miden 22 px de alto: la mitad del objetivo táctil
+   que pide el proyecto. `marca.css` §5.6 le da 44 px a los botones, pero estos
+   no son botones y quedaban fuera.
+
+   El área se agranda con un pseudoelemento en vez de con relleno: así el dedo
+   recibe 44 px sin que la barra crezca 22 px más y sin mover una sola letra.
+   11 + 22 + 11 = 44. */
+@media (pointer: coarse) {
+  .noche .menu a { position: relative; }
+  .noche .menu a::after {
+    content: "";
+    position: absolute;
+    inset: -11px -8px;
+  }
+}
 
 @media (hover: hover) and (pointer: fine) {
   .noche .menu a:not(.boton):hover { color: var(--luz); }

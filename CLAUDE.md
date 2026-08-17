@@ -75,7 +75,7 @@ Lo que hay que tener en la cabeza al escribir cada línea:
 ```bash
 git switch -c feat/lo-que-sea
 # …cambios…
-npm run pruebas                      # 336 en verde, o no seguís
+npm run pruebas                      # 348 en verde, o no seguís
 git commit -m "qué cambia y por qué"
 git push -u origin feat/lo-que-sea
 gh pr create

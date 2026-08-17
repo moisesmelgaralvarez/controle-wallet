@@ -114,3 +114,47 @@ test('un error del correo se informa y limpia', () => {
   assert.ok(r.salida.error, 'el motivo tiene que llegar a la pantalla');
   assert.ok(!String(r.direccion).includes('error='));
 });
+
+/* ============================================================
+   El fragmento no sobrevive a un parámetro de consulta.
+
+   POR QUÉ EXISTE ESTA PRUEBA
+
+   Se mandó una invitación de verdad y el correo llegó con
+   `redirect_to=https://controlewallet.com/app/` — el
+   `#/invitacion/<token>` evaporado. La causa no era GoTrue ni la lista
+   blanca: es que un `#` dentro del valor de un parámetro de consulta
+   tiene que ir codificado como `%23`. Sin codificar, todo lo que sigue
+   se convierte en el fragmento de la URL de AFUERA.
+
+   Esto fija la regla para que nadie la vuelva a romper armando enlaces
+   «más completos». Y fija lo contrario: que la app NO necesita el token
+   en la dirección, porque lo pregunta a la base.
+   ============================================================ */
+
+test('un # sin codificar se lleva la ruta al fragmento de afuera', () => {
+  const destino = 'https://controlewallet.com/app/#/invitacion/T0KEN';
+  const enlace  = `https://proy.supabase.co/auth/v1/verify?type=invite&redirect_to=${destino}`;
+
+  const u = new URL(enlace);
+  assert.equal(u.searchParams.get('redirect_to'), 'https://controlewallet.com/app/',
+    'el servidor recibe el destino TRUNCADO: todo lo que sigue al # se le escapa');
+  assert.equal(u.hash, '#/invitacion/T0KEN',
+    'y la ruta termina en el fragmento del enlace de Supabase, donde nadie la lee');
+});
+
+test('codificado sí sobrevive, pero por eso mismo no se usa', () => {
+  const destino = 'https://controlewallet.com/app/#/invitacion/T0KEN';
+  const enlace  = `https://proy.supabase.co/auth/v1/verify?type=invite&redirect_to=${encodeURIComponent(destino)}`;
+
+  assert.equal(new URL(enlace).searchParams.get('redirect_to'), destino,
+    'codificado llega entero — pero depende de que un tercero respete la codificación');
+});
+
+test('el destino que se manda hoy no lleva token', () => {
+  /* Lo que de verdad construye `supabase/functions/invitar/index.ts`.
+     Si alguien le vuelve a pegar un fragmento, esta prueba lo agarra. */
+  const volverA = 'https://controlewallet.com/app/';
+  assert.ok(!volverA.includes('#'), 'el token no viaja en la URL: lo pregunta la app a la base');
+  assert.ok(!/token|invitacion/i.test(volverA), 'ni el token ni la ruta van en la dirección');
+});

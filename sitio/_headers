@@ -57,3 +57,31 @@
   # es donde tiene que estar para que nadie lo apague sin que quede
   # constancia.
   Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+  # ------------------------------------------------------------
+  # NADIE TRANSFORMA ESTAS PÁGINAS. NI SIQUIERA QUIEN LAS SIRVE.
+  #
+  # `no-transform` le dice a cualquier intermediario —Cloudflare
+  # incluido— que la respuesta llega como salió. No es teoría: la
+  # analítica web de Cloudflare INYECTABA su `beacon.min.js` en cada
+  # página, y como la CSP dice `script-src 'self'` el navegador lo
+  # rechazaba. Resultado medido en producción: un error de consola en
+  # cada visita, y una analítica que no funcionaba.
+  #
+  # Pero el motivo de fondo no es el error. Es que
+  # `sitio/privacidad.html` promete, con estas palabras: «No usamos
+  # publicidad ni rastreadores de terceros. No hay Google Analytics,
+  # ni píxeles, ni cookies de seguimiento». El beacon era exactamente
+  # eso, y estaba recolectando hasta las rutas de `/app/**`, donde hay
+  # sesión iniciada. El sitio contradecía su propia política.
+  #
+  # La documentación de Cloudflare dice que la inyección automática no
+  # puede aplicarse sobre respuestas `no-transform`. Así que esta línea
+  # apaga el beacon Y todo lo que venga después —Rocket Loader,
+  # ofuscación de correos, minificado— sin depender de que nadie
+  # recuerde dejar un interruptor apagado en un panel.
+  #
+  # Va solo en `/*`, que en este archivo son las PÁGINAS. La
+  # compresión no es una transformación en este sentido y no se ve
+  # afectada: se negocia por `Content-Encoding`.
+  Cache-Control: public, max-age=0, must-revalidate, no-transform

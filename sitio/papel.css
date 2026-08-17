@@ -343,6 +343,18 @@
    EL ENCABEZADO — una línea de imprenta
    ========================================================================== */
 
+/* NUNCA se envuelve. El corte de arriba la recoge antes de que haga falta,
+   pero esto es el cinturón: si alguien agrega una entrada y se olvida de
+   mover el corte, la cabecera se aprieta —fea— en vez de partirse en dos
+   renglones, que es un defecto que nadie reporta porque parece a propósito. */
+.papel .cabecera { flex-wrap: nowrap; }
+
+/* Y lo que pidió el dueño con estas palabras: «Entrar, crear cuenta, y el
+   botón de opciones debe de quedar siempre». `flex: none` se lo garantiza —
+   lo que se encoge es el menú, nunca las acciones. */
+.papel .sesion,
+.papel .tirador { flex: none; }
+
 .papel .cabecera {
   position: fixed;
   inset-inline: 0;
@@ -688,7 +700,16 @@
 
 /* ---------- de 46rem para abajo: el menú es un panel ---------- */
 
-@media (max-width: 46rem) {
+/* 57rem = 912px, Y EL NÚMERO ESTÁ MEDIDO. La cabecera deja de caber en una
+   línea por debajo de 898px; el corte estaba en 46rem = 736px. O sea que
+   había 162px de ancho —de 736 a 898— donde el menú seguía en línea, no
+   cabía, y se envolvía: la cabecera pasaba de 69px de alto a 135, y las
+   opciones se apilaban en un segundo renglón. Se ve al angostar la ventana
+   de escritorio, que es como lo encontró el dueño.
+
+   Los 14px de margen sobre 898 no son superstición: si mañana se agrega una
+   entrada al menú, el corte aguanta antes de volver a partirse. */
+@media (max-width: 57rem) {
   .papel .cabecera--con-tirador { flex-wrap: nowrap; gap: 0.6rem; }
   .papel .cabecera--con-tirador .tirador { display: inline-flex; }
 
@@ -737,7 +758,19 @@
   .papel .cabecera--con-tirador .menu a:last-child { border-bottom: 0; }
 
   /* La cabecera necesita ser el marco del panel colgado. */
-  .papel .cabecera { position: fixed; }
+  /* NUNCA se envuelve. El corte de arriba la recoge antes de que haga falta,
+   pero esto es el cinturón: si alguien agrega una entrada y se olvida de
+   mover el corte, la cabecera se aprieta —fea— en vez de partirse en dos
+   renglones, que es un defecto que nadie reporta porque parece a propósito. */
+.papel .cabecera { flex-wrap: nowrap; }
+
+/* Y lo que pidió el dueño con estas palabras: «Entrar, crear cuenta, y el
+   botón de opciones debe de quedar siempre». `flex: none` se lo garantiza —
+   lo que se encoge es el menú, nunca las acciones. */
+.papel .sesion,
+.papel .tirador { flex: none; }
+
+.papel .cabecera { position: fixed; }
 
   /* Y el rótulo de sesión se aprieta para que las dos acciones y el tirador
      entren en una sola fila de 390 px. */
@@ -755,7 +788,7 @@
 
 /* De 46rem para arriba el tirador no existe y los cuatro enlaces van sueltos:
    es lo correcto cuando hay lugar, y evita esconder navegación por gusto. */
-@media (min-width: 46.0625rem) {
+@media (min-width: 57.0625rem) {
   .papel .cabecera--con-tirador .tirador { display: none; }
 }
 

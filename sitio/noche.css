@@ -76,6 +76,175 @@
 
 .noche > * { position: relative; z-index: 1; }
 
+/* ==========================================================================
+   EL MUNDO — el lienzo vivo, detrás de todo
+
+   Fijo a la ventana y del tamaño de la ventana. No se mueve con el scroll: lo
+   que se mueve es lo que dibuja adentro, que es una cosa muy distinta y mucho
+   más barata — un elemento fijo no repinta la página al desplazarse.
+
+   `z-index: 0` con el contenido en 1: el lienzo queda debajo de todo sin
+   sacar a nadie del flujo.
+   ========================================================================== */
+
+.mundo {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  display: block;
+}
+
+/* ==========================================================================
+   LA PORTADA
+
+   Una sola declaración tipográfica, a escala de display, sobre el vacío.
+   Se fue la carta de vidrio con las tres cifras: en una portada, una carta
+   con datos es un tablero, y un tablero pide leerse. Lo que tiene que pasar
+   acá es que alguien SIENTA algo en tres segundos. Las cifras siguen en el
+   acto siguiente, que es donde se explican.
+   ========================================================================== */
+
+.portada {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  align-content: center;
+  padding: clamp(6rem, 14vh, 10rem) clamp(1.25rem, 5vw, 5rem) clamp(1.5rem, 4vh, 3rem);
+}
+
+.portada__marco {
+  align-self: center;
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+}
+
+/* De 64rem para arriba el texto se queda con la mitad izquierda y le deja la
+   derecha al instrumento que dibuja el lienzo. Antes las dos vías cruzaban
+   POR ENCIMA del titular: se leía como una raya sobre el texto, no como un
+   aparato al lado. Reparto, no superposición. */
+@media (min-width: 64rem) {
+  .portada__marco { max-width: min(1440px, 100%); }
+  .portada__titulo,
+  .noche .portada__bajada { max-width: 15ch; }
+  .noche .portada__bajada { max-width: 42ch; }
+}
+
+/* ---------- el rótulo ---------- */
+
+.portada__rotulo {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0 0 clamp(1.5rem, 3vh, 2.5rem);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--luz-baja);
+}
+
+.portada__punto {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--verde);
+  box-shadow: 0 0 12px rgba(var(--aura-tinte), 0.9);
+}
+
+/* ---------- el titular ----------
+
+   LA TIPOGRAFÍA ES LA OBRA. Geist es variable de 100 a 900 y el sitio venía
+   usando tres pesos del medio; a este tamaño el peso correcto es MENOS, no
+   más. Un titular de 10rem en 600 es un grito; en 380 es una declaración.
+
+   `line-height: 0.84` y `-0.055em` de interletrado: a escala de display el
+   espacio entre líneas y entre letras que se ve «normal» está de más. Se
+   aprieta hasta que las cuatro líneas se leen como un bloque, que es lo que
+   convierte un titular en una imagen. */
+
+.portada__titulo {
+  margin: 0;
+  /* EL TOPE ES EL ALTO, NO SOLO EL ANCHO. Con `10.5vw` a secas, a 1440 × 900
+     el titular salía en 151 px: cuatro renglones daban 508 px de bloque y la
+     portada medía 988 en una ventana de 900 — la bajada quedaba cortada y ni
+     el botón ni el pie llegaban a verse. Un titular de cuatro renglones se
+     mide contra el alto disponible, siempre. */
+  font-size: clamp(2.75rem, min(9.5vw, 12.5svh), 9rem);
+  font-weight: 380;
+  font-variation-settings: "wght" 380;
+  line-height: 0.84;
+  letter-spacing: -0.055em;
+  color: var(--luz);
+  display: grid;
+  justify-items: start;
+}
+
+/* La máscara. Cada renglón recorta, y su voz sube desde abajo: el titular se
+   ESCRIBE en vez de aparecer. `clip` y no `hidden` para no crear contenedor
+   de scroll —esa ya costó caro una vez en este archivo—, y un poco de
+   holgura abajo porque las colas de la «g» y la «y» viven debajo de la línea
+   base y con recorte exacto se decapitan. */
+.verso {
+  display: block;
+  overflow: clip;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+
+.verso__voz { display: block; }
+
+/* El eco: las dos últimas líneas bajan de luz. «El saldo todavía no lo sabe»
+   es la parte que acusa, y dicha más bajo pega más fuerte que gritada. */
+.verso--eco .verso__voz { color: var(--luz-media); }
+
+/* ---------- la bajada y el pie ---------- */
+
+.noche .portada__bajada {
+  margin: clamp(1.75rem, 4vh, 2.75rem) 0 clamp(2rem, 4.5vh, 3rem);
+  max-width: 46ch;
+  font-size: clamp(1.05rem, 0.95rem + 0.45vw, 1.3125rem);
+  line-height: 1.55;
+  color: var(--luz-media);
+}
+
+/* El pie rotula las dos vías que el lienzo dibuja detrás. Sin él son dos
+   hilos bonitos; con él, un instrumento. */
+.portada__pie {
+  align-self: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem clamp(1.5rem, 4vw, 3.5rem);
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-top: clamp(1.25rem, 3vh, 2rem);
+  border-top: 0.5px solid var(--filete);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--luz-baja);
+}
+
+.portada__via { display: flex; align-items: center; gap: 0.6rem; }
+.portada__via b,
+.portada__desfase b {
+  font-weight: 500;
+  color: var(--luz);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+}
+.portada__desfase { margin-left: auto; }
+.portada__desfase b { color: var(--salmon); }
+
+.portada__muestra { width: 22px; height: 2px; border-radius: 99px; }
+.portada__muestra--mes   { background: var(--filete-vivo); }
+.portada__muestra--ciclo { background: var(--verde); }
+
 /* ---------- el acto: una pantalla, una idea ---------- */
 
 /* El acto es la PISTA; la pantalla clavada adentro es lo que se ve. Por
@@ -827,18 +996,319 @@
 }
 
 /* ==========================================================================
-   ACTO IV — LA VITRINA
+   ACTO IV — LA VITRINA: UN APARATO A LA VEZ, Y GRANDE
 
-   No se rediseña la composición de los tres aparatos: ya funciona y es de lo
-   mejor que tiene el sitio. Lo que le faltaba era aire y una presentación —
-   el objeto llega, no aparece.
+   POR QUÉ SE REHIZO. Los tres aparatos juntos eran lo que peor funcionaba de
+   la página, y no por gusto: medido a 1440, el de escritorio salía en
+   816 × 510 con celdas de tabla de 9.5 px, y el teléfono en 168 × 345 con
+   texto de 7.5 px. La sección que el plan marca como la más importante del
+   recorrido no se podía leer. La única cura de un problema de escala es
+   escala, y escala significa uno a la vez.
+
+   EL REPARTO DEL TRABAJO. La carcasa —bisel, muesca, barra del navegador— se
+   sigue dibujando en CSS: es donde el dibujo gana, nítido a cualquier
+   resolución y sin un byte. El CONTENIDO de la pantalla es una película: es
+   donde el video gana, porque muestra la interfaz trabajando sin poner a
+   sesenta elementos a animarse en el hilo principal mientras la página hace
+   todo lo demás.
+
+   POR QUÉ ESTAS PELÍCULAS SE REPRODUCEN Y LA DE LA PORTADA SE RASPA. La de
+   la portada es movimiento continuo —dos haces de luz— y ahí el dedo puede
+   ser la aguja. Estas son una DEMOSTRACIÓN, con su tiempo propio: una cifra
+   que sube de 0 a 12,480 leída al revés no dice nada. Se raspa lo continuo y
+   se reproduce lo que demuestra.
+
+   EL REPOSO ES LA LISTA. Sin JavaScript, sin permiso de movimiento o en una
+   ventana chica, esto no se clava: son tres bloques apilados, cada aparato
+   con su texto y su póster. Y el póster es el ÚLTIMO cuadro —la pantalla
+   terminada—, así que lo que queda es la composición completa, nunca una
+   pantalla vacía esperando un video que no va a llegar.
    ========================================================================== */
 
 .noche .vitrina { padding-block: clamp(4.5rem, 11vw, 11rem); }
 
+/* Centrada, a diferencia del resto de los actos. No es capricho: la escena
+   que sigue va centrada —un objeto solo, en el medio— y una entrada alineada
+   a la izquierda encima de eso se lee como dos secciones pegadas. La
+   alineación la manda la composición de abajo, no la costumbre de la hoja. */
 .noche .vitrina__intro {
-  margin-bottom: clamp(2.75rem, 6vw, 6.5rem);
-  max-width: 48rem;
+  margin: 0 auto clamp(2.75rem, 6vw, 6.5rem);
+  max-width: 44rem;
+  text-align: center;
+}
+
+/* ---------- el reposo: tres bloques apilados ---------- */
+
+.vitrina__escena { display: grid; gap: clamp(4rem, 9vw, 7rem); }
+
+.tarima {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.25rem);
+  justify-items: center;
+}
+
+.tarima__voz { max-width: 46ch; text-align: center; }
+
+.noche .tarima__voz h3 {
+  font-size: clamp(1.35rem, 1.1rem + 1.1vw, 1.875rem);
+  letter-spacing: -0.03em;
+  margin: 0 0 0.6rem;
+}
+
+.noche .tarima__voz p { margin: 0; font-size: 1rem; line-height: 1.6; }
+
+/* El riel de pasos solo existe cuando /vitrina.js lo enciende: hasta
+   entonces los tres bloques están todos a la vista y un control que
+   «cambia» a algo que ya se ve no controla nada. */
+.pasos { display: none; }
+
+/* ---------- la carcasa ----------
+
+   El alto manda y el ancho sale de la proporción. Es al revés de lo
+   habitual y es a propósito: lo que se acaba en una escena clavada es el
+   alto de la ventana, así que es el alto el que tiene que ser la restricción
+   dura. El `min()` con el ancho evita que en una ventana angosta y alta el
+   aparato se salga de lado. */
+.chasis {
+  --alto: min(34rem, 62svh);
+  margin: 0;
+  position: relative;
+  border-radius: var(--curva-chasis, 20px);
+  border: 0.5px solid var(--filete);
+  background: var(--vidrio);
+  padding: var(--bisel, 8px);
+  box-shadow: var(--sombra-honda);
+  display: grid;
+  gap: 0;
+  /* EL ANCHO LO PONE LA CARCASA Y EL ALTO SALE DE LA PROPORCIÓN.
+
+     Dos intentos anteriores fallaron, cada uno por su lado:
+
+     1. Sin ancho, la carcasa se estiraba a su celda —medido: 620 px de bisel
+        alrededor de un teléfono de 248—, porque `width: auto` en una rejilla
+        significa estirarse.
+
+     2. Con el tope en `92vw`, a 390 la página desbordaba 11 px: la ventana no
+        sabe del relleno de la franja que la contiene, y el aparato se pasaba
+        justo por esos dos rellenos.
+
+     Contra `100%` las dos cosas se arreglan solas: el tope es el ANCHO
+     DISPONIBLE de verdad —relleno ya descontado— y el otro término del `min`
+     traduce el alto disponible a ancho. Lo que gane, gana; y como el ancho
+     queda definido, `aspect-ratio` sí puede dar el alto. */
+  width: min(100%, calc(var(--alto) * var(--w) / var(--h) + var(--bisel, 8px) * 2));
+  margin-inline: auto;
+}
+
+/* La pantalla llena la carcasa a lo ancho, y el alto lo da la proporción.
+   Acá `aspect-ratio` SÍ funciona —y en el intento anterior no— por una sola
+   razón: el ancho ya está definido por el `min()` de la carcasa. La
+   proporción solo se aplica cuando le queda una medida por resolver; con las
+   dos puestas, se ignora sin avisar. */
+.chasis__pantalla {
+  width: 100%;
+  aspect-ratio: var(--w) / var(--h);
+  overflow: hidden;
+  border-radius: calc(var(--curva-chasis, 20px) - var(--bisel, 8px));
+  background: var(--vacio);
+}
+
+/* `object-fit: fill` y no `cover`: la película se grabó exactamente con esta
+   proporción, así que recortar solo podría cortar una cifra. */
+.chasis__cinta { display: block; width: 100%; height: 100%; object-fit: fill; }
+
+.chasis--telefono   { --w: 300; --h: 580; --curva-chasis: 30px; --bisel: 9px; }
+.chasis--tableta    { --w: 420; --h: 545; --curva-chasis: 22px; --bisel: 10px; }
+.chasis--escritorio { --w: 880; --h: 540; --curva-chasis: 14px; --bisel: 0px; }
+
+/* La muesca del teléfono, dibujada. Va ENCIMA de la pantalla y no dentro de
+   la película: si fuera parte del video, escalaría con él y a media escala
+   se vería borrosa mientras el bisel de al lado se ve nítido. */
+.chasis__muesca {
+  position: absolute;
+  top: calc(var(--bisel) + 6px);
+  left: 50%;
+  translate: -50% 0;
+  width: 34%;
+  height: 5px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.14);
+  z-index: 2;
+}
+
+/* La barra del navegador del escritorio. */
+.chasis__barra {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 12px;
+  background: var(--vidrio-alto);
+  border-bottom: 0.5px solid var(--filete);
+  border-radius: 14px 14px 0 0;
+}
+.chasis__barra i { width: 8px; height: 8px; border-radius: 99px; background: var(--filete-vivo); }
+.chasis__barra span {
+  margin-left: 8px;
+  padding: 2px 12px;
+  border-radius: 99px;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--luz-baja);
+  font-size: 0.6875rem;
+  letter-spacing: 0.01em;
+}
+.chasis--escritorio .chasis__pantalla { border-radius: 0 0 14px 14px; }
+
+/* ==========================================================================
+   LA VITRINA VIVA — la escena se clava y los actos se relevan
+
+   Solo de 64rem y 44rem de alto para arriba. Debajo de eso el aparato de
+   escritorio tendría que encogerse tanto para caber que su tabla volvería a
+   ser ilegible, que es exactamente el defecto que esta sección vino a
+   arreglar. Antes que un cine que no se lee, la lista que sí.
+   ========================================================================== */
+
+@media (min-width: 64rem) and (min-height: 46rem) and (prefers-reduced-motion: no-preference) {
+  .vitrina--viva .vitrina__pista { position: relative; height: 320svh; }
+
+  /* Los tres tramos del vigía. Llenan la pista y miden un tercio cada uno,
+     así que en el medio de la ventana hay siempre exactamente uno y el acto
+     no puede quedar indefinido. No se ven ni reciben el puntero. */
+  .vitrina--viva .vitrina__tramos {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .vitrina--viva .vitrina__escena {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    display: grid;
+    grid-template-rows: auto auto;
+    align-content: center;
+    justify-items: center;
+    gap: clamp(1.25rem, 3vh, 2.25rem);
+    padding-block: clamp(3.5rem, 7vh, 5rem) clamp(1.5rem, 3vh, 2.5rem);
+  }
+
+  .vitrina--viva .pasos { grid-area: 1 / 1; }
+
+  /* Los tres actos comparten celda. Es lo que permite que se releven sin que
+     la escena cambie de alto ni el aparato salte de sitio. */
+  .vitrina--viva .tarima {
+    grid-area: 2 / 1;
+    align-content: start;
+    align-self: start;
+  }
+
+  /* EL PRESUPUESTO VERTICAL, MEDIDO Y NO ESTIMADO. Alrededor del aparato hay
+     que pagar: relleno arriba y abajo, el riel de pasos, dos huecos y el
+     texto de dos líneas. Suman ~17rem. Lo que sobra de la ventana es lo que
+     puede medir el aparato, y de ahí sale su ancho por proporción.
+
+     Este número es el que decide si la tabla del escritorio se lee. A 736 px
+     de alto el aparato queda en 464 y su celda de tabla en 10.6 px; por eso
+     el umbral de la escena clavada subió a 46rem. Debajo de eso el aparato
+     tendría que encogerse hasta volver a ser la mancha que esta sección vino
+     a arreglar, y entonces vale más la lista. */
+  .vitrina--viva .chasis { --alto: min(29rem, calc(100svh - 17rem)); }
+
+  /* El hueco entre el texto y el aparato se mide contra el ALTO, no contra el
+     ancho. Con `vw` una ventana ancha y baja —un portátil de 1440 × 800— se
+     regalaba 36 px de hueco que le hacían falta al aparato, y el teléfono,
+     que es el más alto de los tres, se salía 4 px por abajo. */
+  .vitrina--viva .tarima { gap: clamp(1rem, 2.4vh, 1.75rem); }
+
+  /* El relevo. Transición y no `@keyframes`: se puede interrumpir y
+     reapuntar a mitad de camino, que es justo lo que pasa cuando alguien
+     rueda el ratón de golpe y cruza dos tramos en un cuadro.
+
+     Y el desenfoque no es adorno: sin él se ven DOS objetos superpuestos
+     durante el cruce —un teléfono y una tableta a la vez— y se lee como un
+     error de dibujo. Con 8 px de desenfoque el ojo lee una sola cosa que se
+     transforma. */
+  .vitrina--viva .tarima {
+    opacity: 0;
+    transform: translateY(1.25rem) scale(0.97);
+    filter: blur(8px);
+    pointer-events: none;
+    transition: opacity 420ms var(--curva), transform 420ms var(--curva),
+                filter 420ms var(--curva);
+  }
+
+  .vitrina--viva .tarima[data-vivo] {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+    pointer-events: auto;
+  }
+
+  /* ---------- el riel de pasos ---------- */
+
+  .vitrina--viva .pasos {
+    grid-area: 1 / 1;
+    display: flex;
+    gap: 0.35rem;
+    list-style: none;
+    margin: 0;
+    padding: 0.35rem;
+    background: var(--vidrio);
+    border: 0.5px solid var(--filete);
+    border-radius: 999px;
+    backdrop-filter: blur(24px) saturate(140%);
+  }
+
+  .paso {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--luz-baja);
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    padding: 0.5rem 1.1rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color 200ms var(--curva), background-color 200ms var(--curva);
+  }
+
+  .paso[aria-current="true"] { color: var(--luz); background: var(--vidrio-alto); }
+
+  @media (hover: hover) and (pointer: fine) {
+    .paso:hover { color: var(--luz); }
+  }
+
+  /* Hundirse al apretar, como todo lo pulsable del sitio. */
+  .paso:active { transform: scale(0.97); }
+
+  /* ---------- la escena se retira ----------
+
+     Al acabarse la pista, el clavado suelta y el aparato —que mide media
+     pantalla— se iba de golpe hacia arriba. Se retira: se aleja y se
+     desenfoca sobre el último tramo del recorrido, igual que hace el marco
+     de la portada al terminar su acto. Mismo recurso, mismo vocabulario.
+
+     LA LÍNEA DE TIEMPO ES LA DE LA PISTA, NO LA SUYA. Un elemento pegado no
+     se mueve respecto de la ventana, así que su propia `view()` se congela y
+     la animación no correría nunca. Es la misma trampa que ya documenta el
+     aparato del acto II. */
+  @supports (animation-timeline: view()) {
+    .vitrina--viva .vitrina__pista { view-timeline: --vitrina block; }
+
+    .vitrina--viva .vitrina__escena {
+      animation: retirarse linear both;
+      animation-timeline: --vitrina;
+      animation-range: contain 90% contain 100%;
+    }
+    @keyframes retirarse {
+      from { opacity: 1; transform: none;                          filter: blur(0);   }
+      to   { opacity: 0; transform: translateY(-3rem) scale(0.96); filter: blur(6px); }
+    }
+  }
 }
 
 /* ==========================================================================
@@ -1138,8 +1608,20 @@
 .noche .escena { background: transparent; }
 
 /* Encabezado: vidrio flotante, no barra opaca. El contenido pasa por debajo,
-   que es lo que lo hace sentir una capa y no un recorte de pantalla. */
+   que es lo que lo hace sentir una capa y no un recorte de pantalla.
+
+   Y FLOTA DE VERDAD: `fixed`, no `sticky`. Un encabezado pegajoso sigue
+   ocupando su lugar en el flujo, así que la portada empezaba 70 px abajo y
+   con `min-height: 100svh` la sección medía 970 en una ventana de 900: el pie
+   de la portada caía fuera de cuadro. Medido, no supuesto.
+
+   Sacándolo del flujo, la portada arranca en 0 y mide exactamente una
+   ventana. El relleno superior que ya tenía —6rem como mínimo— alcanza de
+   sobra para no quedar debajo de la barra. */
 .noche .cabecera {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
   background: color-mix(in srgb, var(--vacio) 72%, transparent);
   backdrop-filter: blur(24px) saturate(140%);
   border-bottom: 0.5px solid var(--filete);
@@ -1197,11 +1679,58 @@
    recibe 44 px sin que la barra crezca 22 px más y sin mover una sola letra.
    11 + 22 + 11 = 44. */
 @media (pointer: coarse) {
+  /* Y ESTA LÍNEA ES LA QUE HACE QUE LO DE ARRIBA SIRVA.
+
+     `sitio.css` le pone `overflow-x: auto` al menú en pantalla angosta. Por
+     especificación, cuando un eje deja de ser `visible` el otro pasa a
+     `auto`: el menú quedaba recortando por arriba y por abajo, y con él los
+     11 px de pseudoelemento que son todo el objetivo táctil.
+
+     El arreglo de los 44 px ya estaba escrito y ya se había medido en 44 —
+     pero se midió leyendo la caja del pseudoelemento, no preguntando qué hay
+     en el punto. Preguntando: 23 px. La comprobación no podía fallar, así que
+     no estaba comprobando nada.
+
+     Y el desplazamiento horizontal no hacía falta: medido de 320 a 600 px, el
+     menú nunca desborda —cuatro palabras cortas en una fila de ancho
+     completo—, así que se apaga sin perder nada. */
+  .noche .menu { overflow: visible; }
+
   .noche .menu a { position: relative; }
   .noche .menu a::after {
     content: "";
     position: absolute;
     inset: -11px -8px;
+  }
+
+  /* El pie llevaba cinco enlaces de 22 px y ningún ensanche; la marca del
+     encabezado y «Entrar», 26. Son los mismos 44 px que el proyecto le exige
+     a todo lo demás. Mismo recurso y misma razón — el dedo recibe el área sin
+     que la barra crezca ni se mueva una letra. */
+  .noche .pie nav a,
+  .noche .cabecera .marca,
+  .noche .sesion a:not(.boton) { position: relative; }
+
+  .noche .pie nav a::after,
+  .noche .cabecera .marca::after,
+  .noche .sesion a:not(.boton)::after {
+    content: "";
+    position: absolute;
+    inset: -11px -6px;
+  }
+
+  /* Y los huecos entre renglones suben a 22 px, en el pie y en la cabecera.
+     DOS ÁREAS DE 44 PX PEGADAS SE COMEN ENTRE ELLAS: la de abajo se pinta
+     después, gana el punto, y la de arriba se queda corta. Medido: el primer
+     enlace del pie daba 38 px reales, y «Contacto» —el último del menú, justo
+     debajo de «Entrar»— daba 41.
+
+     A la cabecera le cuesta 11 px de alto, de 107 a 118. Se pagan: la sacaron
+     de 150 px para ganar pantalla, no para dejar los objetivos cortos. */
+  .noche .pie nav { row-gap: 1.5rem; }
+
+  @media (max-width: 46rem) {
+    .noche .cabecera { row-gap: 1.375rem; }
   }
 }
 
@@ -1275,6 +1804,48 @@
   .entra--3 { animation-delay: 240ms; }
   .entra--4 { animation-delay: 360ms; }
 
+  /* ---------- 1b. el titular se escribe ----------
+
+     Cada renglón sube desde detrás de su propia máscara, escalonado. Es la
+     entrada más vieja del oficio y sigue siendo la mejor por una razón
+     física: el texto no aparece de la nada, entra desde fuera de cuadro.
+
+     `transform` y nada más: es lo único que no toca composición ni pintura, y
+     acá se mueven cuatro renglones de hasta 10rem a la vez.
+
+     40 ms de escalón, no más. Con 120 se lee como cuatro cosas que llegan por
+     turno; con 40, como una sola frase que se termina de decir. */
+  .verso__voz {
+    animation: escribirse 1000ms var(--curva) both;
+  }
+  @keyframes escribirse {
+    from { transform: translateY(112%); }
+    to   { transform: none; }
+  }
+
+  .verso:nth-child(1) .verso__voz { animation-delay:  60ms; }
+  .verso:nth-child(2) .verso__voz { animation-delay: 100ms; }
+  .verso:nth-child(3) .verso__voz { animation-delay: 160ms; }
+  .verso:nth-child(4) .verso__voz { animation-delay: 200ms; }
+
+  /* EL PESO SE ASIENTA. Geist es variable y el sitio nunca usó el eje: el
+     titular entra en 200 —casi un trazo— y engorda hasta 380 mientras sube.
+     Es el detalle que hace que se lea como tipografía viva y no como texto
+     con una transición encima.
+
+     SOLO DE 64rem PARA ARRIBA, y no por gusto: `font-variation-settings`
+     rehace la composición del bloque en CADA cuadro. A 10rem y cuatro
+     renglones eso vale la pena una vez al cargar; en un teléfono el titular
+     mide 2.85rem, el efecto no se percibe, y el costo sí. Se paga donde se
+     ve. */
+  @media (min-width: 64rem) {
+    .verso__voz { animation-name: escribirse, asentar-peso; }
+    @keyframes asentar-peso {
+      from { font-variation-settings: "wght" 200; }
+      to   { font-variation-settings: "wght" 380; }
+    }
+  }
+
   /* 2. El ciclo se traza solo, de izquierda a derecha: la dirección en que
         pasa el tiempo y se acumula la deuda. */
   .carril__tramo--ciclo { animation: trazar 1200ms var(--curva) 420ms both; }
@@ -1347,25 +1918,40 @@
       .fijo { view-timeline: --recorrido block; }
 
 
-      /* Los tiempos NO son a ojo. Medido en el navegador, el centro de cada
-         hito cruza el medio de la ventana en estos puntos del recorrido:
+      /* Los tiempos NO son a ojo, y se volvieron a medir cuando el paso entre
+         hitos bajó de 60vh a 34vh. El centro de cada hito cruza el medio de
+         la ventana en estos puntos:
 
-           1  «Abre el ciclo» ................ −21%   (la vía todavía vacía)
-           2  «Corta, y aparece el número» ...  22%   (19,101 completo)
-           3  «Entra el pago, y no llena» ....  65%   (14,840, y el faltante)
-           4  «Y el sueldo ya se gastó» ...... 108%   (todo dibujado)
+           1  «Abre el ciclo» ................ 25%   (la vía todavía vacía)
+           2  «Corta, y aparece el número» ... 42%   (19,101 completo)
+           3  «Entra el pago, y no llena» .... 58%   (14,840, y el faltante)
+           4  «Y el saldo engaña» ............ 74%   (todo dibujado)
+
+         VAN EN `cover` Y YA NO EN `contain`. Con la separación anterior los
+         hitos cruzaban dentro de la fase `contain`; con esta, los dos
+         primeros cruzan ANTES de que esa fase empiece, y un rango en
+         `contain` se quedaba clavado en 0% sin avisar. `cover` cubre todo el
+         tiempo que la sección está a la vista, de 0 a 100, y no tiene ese
+         borde donde el reloj se detiene.
+
+         Cómo se midió: se cuelga una sonda de la MISMA línea de tiempo, con
+         rango `cover 0%` a `cover 100%`, animando la opacidad; su opacidad
+         computada es el progreso. Se pregunta al navegador en vez de rehacer
+         la aritmética de las fases a mano. (Y hay que leerla dos cuadros
+         después del scroll: las animaciones de scroll se resuelven al pintar,
+         y leer antes devuelve el valor anterior — salía en mesetas.)
 
          Cada tramo termina donde su hito se lee, nunca después: si el número
          aparece antes que la barra que lo dibuja, el aparato deja de medir y
-         pasa a decorar. La carga arranca en `entry 85%` porque ahí es donde
-         el panel se clava, y no tiene sentido llenar algo que todavía sube. */
-      .medida__carga   { animation-timeline: --recorrido; animation-range: entry 85% contain 24%; }
-      .renglon--1      { animation-timeline: --recorrido; animation-range: contain 16% contain 24%; }
-      .medida__abono   { animation-timeline: --recorrido; animation-range: contain 40% contain 60%; }
-      .renglon--2      { animation-timeline: --recorrido; animation-range: contain 52% contain 60%; }
-      .medida__costura { animation-timeline: --recorrido; animation-range: contain 60% contain 66%; }
-      .medida__falta   { animation-timeline: --recorrido; animation-range: contain 62% contain 74%; }
-      .renglon--3      { animation-timeline: --recorrido; animation-range: contain 66% contain 76%; }
+         pasa a decorar. Los tres tramos del faltante caen entre el hito 3 y
+         el 4 porque es el hito 3 el que dice las dos cifras, en ese orden. */
+      .medida__carga   { animation-timeline: --recorrido; animation-range: cover 10% cover 40%; }
+      .renglon--1      { animation-timeline: --recorrido; animation-range: cover 32% cover 42%; }
+      .medida__abono   { animation-timeline: --recorrido; animation-range: cover 44% cover 56%; }
+      .renglon--2      { animation-timeline: --recorrido; animation-range: cover 48% cover 58%; }
+      .medida__costura { animation-timeline: --recorrido; animation-range: cover 56% cover 61%; }
+      .medida__falta   { animation-timeline: --recorrido; animation-range: cover 58% cover 66%; }
+      .renglon--3      { animation-timeline: --recorrido; animation-range: cover 60% cover 68%; }
     }
 
     /* ---------- 5. la voz de los actos ----------
@@ -1378,11 +1964,14 @@
     .regla-viva { animation: crecer linear both; animation-timeline: view(); animation-range: entry 20% cover 45%; }
 
     /* ---------- 6. la vitrina se presenta ----------
-       El objeto llega en vez de aparecer. Va en `.aparatos` y no en cada
-       aparato: los tres ya flotan a distinta velocidad —ese es el parallax de
-       `dispositivos.css`— y sumarle una entrada a cada uno los haría pelear.
-       El escenario entero se presenta, y adentro cada pieza sigue su ritmo. */
-    .aparatos {
+       El objeto llega en vez de aparecer.
+
+       Solo en REPOSO —la lista apilada—. En la escena clavada el relevo de
+       actos ya mueve `opacity`, `transform` y `filter` por transición, y una
+       animación de scroll sobre las mismas tres propiedades le ganaría
+       siempre: la animación pisa a la transición, no se turnan. El aparato
+       activo se habría quedado tieso en el cuadro que le tocara al scroll. */
+    .vitrina:not(.vitrina--viva) .tarima {
       animation: presentar linear both;
       animation-timeline: view();
       animation-range: entry 5% cover 34%;

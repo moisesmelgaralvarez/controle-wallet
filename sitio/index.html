@@ -13,22 +13,33 @@
 <meta property="og:locale" content="es_HN">
 <link rel="stylesheet" href="/sitio.css">
 <link rel="stylesheet" href="/inicio.css">
-<link rel="stylesheet" href="/dispositivos.css">
+<!-- `dispositivos.css` salió de acá. Dibujaba los tres aparatos chicos de la
+     vitrina vieja, y esa composición ya no existe: la pantalla de cada
+     aparato ahora es una película. La hoja no se borró —se mudó a
+     `herramientas/plato.css`, que es donde vive su único consumidor, el
+     plató donde se filman esas películas. Dejarla enlazada acá eran 10 KB
+     que ya no dibujaban nada. -->
 <link rel="stylesheet" href="/marca.css">
-<!-- El mundo visual nuevo de la portada. Va de último: gana por cascada sin
-     necesitar un solo !important. -->
-<link rel="stylesheet" href="/noche.css">
-<!-- Sin `defer` a propósito: aplica el tema guardado antes del primer
-     pintado, o hay destello blanco en cada carga. -->
-<!-- Los dos con `defer`: ninguno tiene nada que hacer antes del primer
-     pintado, porque la página ya se ve completa sin ellos. El sitio ya no
-     necesita `modo.js` — un solo modo, negro, decidido y no preguntado. -->
+<!-- El mundo visual del sitio. Va de último: gana por cascada sin necesitar
+     un solo !important. Reemplaza a `noche.css` — tinta sobre papel en vez de
+     luz sobre el vacío. El porqué está escrito en la cabecera del archivo. -->
+<link rel="stylesheet" href="/papel.css">
+<!-- Todos con `defer`: ninguno tiene nada que hacer antes del primer pintado,
+     porque la página se ve completa sin ellos. Un solo modo, negro, decidido
+     y no preguntado — por eso tampoco hay `modo.js`.
+
+     `hero.js` y `mundo.js` salieron los dos. El primero raspaba un mp4 contra
+     el scroll; el segundo lo reemplazó por un lienzo de luz. Ninguno sobrevive
+     al cambio de idioma: sobre papel, el instrumento se IMPRIME. -->
+<script src="/menu.js" defer></script>
+<script src="/portada.js" defer></script>
 <script src="/ciclo.js" defer></script>
-<script src="/hero.js" defer></script>
+<script src="/vitrina.js" defer></script>
 </head>
-<body class="noche">
+<body class="papel">
 
 <a class="saltar" href="#principal">Saltar al contenido</a>
+
 
 <header class="cabecera">
   <a class="marca" href="/">
@@ -37,114 +48,168 @@
   </a>
   <!-- «Entrar» y «Crear cuenta» salen del <nav>: son acciones de sesión, no
        navegación. Además de ser lo correcto para un lector de pantalla, es lo
-       que permite acomodarlas aparte en teléfono, donde metidas adentro
-       obligaban a la cabecera a partirse en tres filas de 150 px. -->
-  <nav class="menu" aria-label="Principal">
+       que permite dejarlas SIEMPRE a la vista mientras la navegación se
+       recoge — que es justo lo que hay que conservar en un teléfono. -->
+  <nav class="menu" id="menu-principal" aria-label="Principal">
     <a href="/" aria-current="page">Inicio</a>
     <a href="/precios">Precios</a>
     <a href="/preguntas">Preguntas</a>
     <a href="/contacto">Contacto</a>
   </nav>
+
   <span class="sesion">
     <a href="/entrar">Entrar</a>
     <a class="boton boton--principal" href="/registro">Crear cuenta</a>
   </span>
+
+  <!-- El tirador del menú. Va en el MARCADO y no lo agrega JavaScript, porque
+       tiene que existir antes del primer pintado: si apareciera después, la
+       cabecera daría un salto en cada carga.
+
+       Nace con `hidden`: sin /menu.js el botón no abriría nada, y un control
+       que no hace nada es peor que ningún control. `menu.js` le quita el
+       `hidden` y recién ahí la navegación se recoge. Sin JavaScript quedan
+       los cuatro enlaces a la vista, que es una cabecera correcta. -->
+  <button class="tirador" type="button" hidden
+          aria-expanded="false" aria-controls="menu-principal">
+    <span class="tirador__caja" aria-hidden="true">
+      <span class="tirador__raya"></span>
+      <span class="tirador__raya"></span>
+    </span>
+    <span class="tirador__dicho">Menú</span>
+  </button>
 </header>
 
 <main id="principal">
 
-  <!-- ── acto I · la portada ───────────────────────────────── -->
-  <!-- Una pantalla, una idea. El instrumento del ciclo no ilustra el titular:
-       lo demuestra. Todo dibujado en CSS — pesa cero y se ve nítido a
-       cualquier resolución. -->
-  <!-- El acto es más alto que la pantalla y su contenido se clava adentro. Esa
-       diferencia ES la pista contra la que se raspa la película: sin ella el
-       acto medía exactamente una ventana y no había recorrido que medir. La
-       composición que se ve sigue siendo de una sola pantalla. -->
-  <section class="acto">
-   <div class="acto__pantalla">
-    <div class="aura" aria-hidden="true"></div>
+  <!-- ── la portada ────────────────────────────────────────── -->
+  <!-- Una declaración y un instrumento. Nada más.
 
-    <!-- La película. El `src` NO va acá: lo pone /hero.js, y solo cuando de
-         verdad se va a usar. Así el teléfono y quien pidió menos movimiento
-         no descargan 311 KB que no van a ver — les queda el póster, que pesa
-         19 KB y ya es una composición terminada. -->
-    <div class="pelicula" aria-hidden="true">
-      <video class="pelicula__cinta" data-hero="/media/ciclo-hero.mp4"
-             poster="/media/ciclo-hero-poster.jpg"
-             muted playsinline preload="none"></video>
-      <div class="pelicula__velo"></div>
-    </div>
+       El instrumento no ilustra el titular: lo DEMUESTRA. Dos reglas de días
+       impresas, que no calzan, con la diferencia acotada como en un plano. Es
+       el producto entero dicho sin una cifra.
 
-    <div class="acto__marco">
-      <h1 class="acto__titulo entra">El dinero ya se gastó. El saldo todavía no lo sabe.</h1>
+       Va dibujado con `repeating-linear-gradient` y no con 62 elementos: los
+       días son marcas de imprenta, no contenido, y ninguno tiene nada que
+       decirle a un lector de pantalla. La lectura entera va en el texto. -->
+  <section class="portada">
+    <div class="hoja portada__dicho">
 
-      <p class="acto__bajada entra entra--2">
+      <p class="rotulo llega">Presupuesto del hogar · Honduras</p>
+
+      <!-- Cada renglón va detrás de su propia máscara y sube desde abajo: el
+           titular se ESCRIBE en vez de aparecer. El corte de línea es a mano
+           porque es una decisión de composición, no de ancho disponible. -->
+      <h1 class="display">
+        <span class="verso"><span class="verso__voz">El dinero ya se gastó.</span></span>
+        <span class="verso"><span class="verso__voz"><em>El saldo todavía no lo sabe.</em></span></span>
+      </h1>
+
+      <p class="entrada llega llega--3">
         Tu tarjeta no cobra por mes calendario: cobra por ciclo de corte. Ese
         desfase es la razón por la que las cuentas cuadran en el papel y no
         cuadran en la casa.
       </p>
 
-      <div class="vidrio entra entra--3">
-        <div class="instrumento" role="img"
-             aria-label="El mes calendario va del 1 al 31 de agosto. El ciclo real de la tarjeta va del 7 de julio al 6 de agosto: empieza antes y termina antes. En ese ciclo se cargaron 19,101 lempiras, se abonaron 14,840 y faltan 4,261.">
-
-          <div class="carril">
-            <div class="carril__cabeza">
-              <span class="tecnico">Mes calendario</span>
-              <span class="tecnico">1 ago — 31 ago</span>
-            </div>
-            <div class="carril__via">
-              <span class="carril__tramo carril__tramo--mes"></span>
-            </div>
-          </div>
-
-          <div class="carril">
-            <div class="carril__cabeza">
-              <span class="tecnico">Ciclo de corte</span>
-              <span class="tecnico">7 jul — 6 ago</span>
-            </div>
-            <div class="carril__via">
-              <span class="carril__tramo carril__tramo--ciclo"></span>
-              <span class="carril__corte" aria-hidden="true"></span>
-            </div>
-          </div>
-
-        </div>
-
-        <div class="lectura-cifras">
-          <div class="dato">
-            <span class="dato__v"><i>L</i>19,101</span>
-            <span class="dato__k">Cargado al ciclo</span>
-          </div>
-          <div class="dato">
-            <span class="dato__v"><i>L</i>14,840</span>
-            <span class="dato__k">Cubierto</span>
-          </div>
-          <div class="dato">
-            <span class="dato__v dato__v--falta"><i>L</i>4,261</span>
-            <span class="dato__k">Aún figura como disponible</span>
-          </div>
-        </div>
+      <div class="portada__acciones llega llega--4">
+        <a class="pulsar pulsar--tinta" href="/registro">Crear cuenta</a>
+        <a class="pulsar pulsar--borde" href="/entrar">Entrar</a>
       </div>
-
-      <div class="acciones-noche entra entra--4">
-        <a class="pulsar pulsar--luz" href="/registro">Crear cuenta</a>
-        <a class="pulsar pulsar--vidrio" href="/entrar">Entrar</a>
-      </div>
-
-      <!-- Un rótulo que dice qué viene, no una instrucción. «Seguí bajando» le
-           explica al lector cómo usar una página web; esto le adelanta el
-           contenido, que es lo único que puede hacerlo bajar. -->
-      <p class="descenso entra entra--4">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-        El ciclo, en cuatro fechas
-      </p>
     </div>
-   </div>
+
+
+    <!-- UN SOLO EJE PARA LAS DOS REGLAS.
+
+         La primera versión corría la regla del ciclo con `translate`, y se
+         salía de su celda: pisaba su propio rótulo y sangraba fuera de la
+         hoja. El modelo correcto no es «una regla desplazada», es UN EJE DE
+         56 DÍAS donde cada regla ocupa su tramo. El ciclo va del día 0 al 31;
+         el mes, del 25 al 56. La diferencia —esos 25 días— es el desfase, y
+         queda dibujada porque es verdad, no porque se empujó algo. -->
+    <div class="hoja desfase" role="img"
+         aria-label="Dos reglas de días sobre un mismo eje. El ciclo de la tarjeta corre del 7 de julio al 6 de agosto; el mes calendario, del 1 al 31 de agosto, arranca 25 días después. Cuando el mes abre, el ciclo ya lleva 25 días de consumo acumulado.">
+
+      <div class="regla">
+        <span class="regla__nombre">Mes calendario</span>
+        <span class="regla__eje" aria-hidden="true">
+          <span class="regla__cinta regla__cinta--mes"></span>
+        </span>
+        <span class="regla__rango">1 — 31 ago</span>
+      </div>
+
+      <div class="regla regla--ciclo">
+        <span class="regla__nombre">Ciclo de corte</span>
+        <span class="regla__eje" aria-hidden="true">
+          <span class="regla__cinta regla__cinta--ciclo"></span>
+        </span>
+        <span class="regla__rango">7 jul — 6 ago</span>
+      </div>
+
+      <div class="regla regla--cota">
+        <span class="regla__nombre"></span>
+        <span class="regla__eje" aria-hidden="true">
+          <span class="cota">
+            <span class="cota__linea"></span>
+            <span class="cota__texto">25 días ya consumidos cuando abre el mes</span>
+          </span>
+        </span>
+        <span class="regla__rango"></span>
+      </div>
+    </div>
   </section>
 
   <!-- ── el corte de la tarjeta, con el visual clavado ──────── -->
+
+  <!-- ── el acto de la pantalla ─────────────────────────────────
+       LA PELÍCULA ARRANCA OCUPANDO LA PANTALLA Y SE ENCOGE CON EL SCROLL
+       hasta quedar dentro del marco del aparato. No es un adorno: es lo que
+       ordena el acto. Primero se ve la película sola, sin nada alrededor que
+       compita; después la página se vuelve a armar en torno a ella —el
+       aparato, su barra, el rótulo— y lo que quedó en el marco es el
+       producto.
+
+       De ahí la estructura de tres piezas, que es la única que permite
+       encoger algo mientras el scroll avanza:
+
+         .acto-pantalla        la PISTA. Mide 220vh, y esa altura es el
+                               recorrido durante el cual la película se encoge.
+         .acto-pantalla__pin   lo que se queda CLAVADO mientras la pista pasa.
+         .acto-pantalla__caja  lo que se encoge y se vuelve a armar.
+
+       LO QUE SE VE ADENTRO SON DOS COSAS UNIDAS. Los primeros seis segundos
+       son generados —un documento deshaciéndose en luz, sin una sola letra en
+       el cuadro, que es lo único que un modelo de video no puede arruinar—.
+       Los últimos tres y medio son la INTERFAZ REAL, grabada de la app con
+       `herramientas/filmar.js`: categorías en español, lempiras, el ciclo
+       7 ago – 6 sep. El empalme es invisible porque las columnas de luz y las
+       barras de la gráfica son la misma forma, y las cifras están a medio
+       contar justo cuando la luz aterriza.
+
+       El `src` no va en el marcado: lo pone /portada.js, y solo cuando de
+       verdad se va a usar. Abajo de 1080 el acto entero no existe —a esa
+       escala el tablero no se lee y la vitrina ya enseña la app en un
+       teléfono—, así que nadie descarga 6.3 MB para nada. -->
+  <section class="franja acto-pantalla">
+    <div class="acto-pantalla__pin">
+      <div class="acto-pantalla__caja">
+        <p class="rotulo acto-pantalla__rotulo">Lo que ve, de verdad</p>
+
+        <figure class="pantalla">
+          <div class="pantalla__marco">
+            <div class="pantalla__barra" aria-hidden="true">
+              <i></i><i></i><i></i><span>controlewallet.com/app</span>
+            </div>
+            <div class="pantalla__vidrio">
+              <video class="pantalla__cinta" data-cinta="/media/hero-scrub.mp4"
+                     muted playsinline preload="none"
+                     aria-hidden="true" tabindex="-1"></video>
+            </div>
+          </div>
+        </figure>
+      </div>
+    </div>
+  </section>
+
   <section class="franja">
     <div class="fijo">
 
@@ -335,133 +400,121 @@
   </section>
 
   <!-- ── vitrina de dispositivos ───────────────────────────── -->
-  <!-- Las pantallas están DIBUJADAS en HTML y CSS, no son capturas. Pesan
-       casi nada, se ven nítidas en cualquier resolución y siguen el modo
-       claro u oscuro de quien mira. Una imagen no hace ninguna de las tres. -->
-  <section class="franja franja--alta escena vitrina">
-    <div class="escena__halo" aria-hidden="true"></div>
+  <!-- UN APARATO A LA VEZ, Y GRANDE.
 
+       Antes iban los tres juntos y ninguno se podía leer: medido a 1440, el
+       de escritorio salía en 816 × 510 con celdas de tabla de 9.5 px y el
+       teléfono en 168 × 345 con texto de 7.5 px. La sección que el plan marca
+       como la más importante del recorrido era una mancha. La cura es escala,
+       y escala significa uno a la vez.
+
+       LO QUE SE VE DENTRO DE CADA PANTALLA ES UNA PELÍCULA. La carcasa —el
+       bisel, la muesca, la barra del navegador— sigue dibujada en CSS, que es
+       donde el dibujo gana: nítida a cualquier resolución y sin un byte. La
+       película es solo el contenido, que es donde el video gana: la interfaz
+       trabajando, sin que el hilo principal tenga que animar sesenta
+       elementos por cuadro mientras la página hace todo lo demás.
+
+       Las películas se generan con `node herramientas/filmar.js`, del MISMO
+       marcado y las MISMAS cifras del ejemplo. Ni una cifra inventada, y
+       nunca la app real: eso pondría el saldo de un hogar de verdad en un
+       video de mercadeo.
+
+       SIN JAVASCRIPT, SIN MOVIMIENTO O EN PANTALLA CHICA esto se lee como
+       tres bloques apilados, cada aparato con su texto y su póster —que es el
+       ÚLTIMO cuadro, la pantalla terminada—. Completo y quieto. -->
+  <!-- SIN la clase `escena`, y no es un olvido: `inicio.css` le pone
+       `overflow: hidden`, y un ancestro con overflow distinto de `visible`
+       crea contenedor de scroll — ahí `position: sticky` deja de pegar, en
+       silencio y sin error. La escena clavada no se clavaba por eso. Lo único
+       que aportaba la clase era el halo, que este mundo ya apaga. -->
+  <section class="franja franja--alta vitrina">
     <div class="vitrina__intro">
       <h2 class="titular">El mismo hogar, se abra donde se abra</h2>
       <p class="bajada">
-        En el teléfono, la decisión del momento. En la computadora, el tablero
-        completo con el historial al lado. Cada tamaño muestra lo que
-        corresponde, no la misma pantalla estirada.
+        Cada tamaño muestra lo que corresponde, no la misma pantalla estirada.
       </p>
     </div>
 
-    <div class="aparatos">
+    <div class="vitrina__pista">
+      <div class="vitrina__escena">
 
-      <!-- Escritorio -->
-      <div class="disp disp--escritorio">
-        <div class="pantalla">
-          <div class="barra" aria-hidden="true">
-            <i></i><i></i><i></i>
-            <span>controlewallet.com/app</span>
+        <!-- El riel de pasos. Sin JavaScript no aparece: un control que no
+             lleva a ningún lado es peor que ningún control. -->
+        <ol class="pasos" aria-label="Los tres tamaños">
+          <li><button class="paso" type="button" data-va="0" aria-current="true">Teléfono</button></li>
+          <li><button class="paso" type="button" data-va="1">Tableta</button></li>
+          <li><button class="paso" type="button" data-va="2">Computadora</button></li>
+        </ol>
+
+        <article class="tarima" data-acto="0">
+          <div class="tarima__voz">
+            <h3>En el teléfono, la decisión del momento</h3>
+            <p>
+              Cuánto queda de verdad hoy, cuánto mes ha corrido y qué corta en
+              cuatro días. Lo que se mira de pie en la fila del súper.
+            </p>
           </div>
-          <div class="ui ui--con-riel" aria-hidden="true">
-            <nav class="riel">
-              <b>Controle</b>
-              <u class="on">Resumen</u>
-              <u>Presupuesto</u>
-              <u>Proyectos</u>
-              <u>Movimientos</u>
-              <u>Historia</u>
-            </nav>
-            <div class="ui">
-              <div class="ui__cabeza">
-                <span class="ui__titulo">Resumen</span>
-                <span class="ui__mes">Agosto 2026 · 7 ago – 6 sep</span>
-              </div>
-
-              <div class="fichas fichas--4">
-                <div class="ficha"><em>Disponible real</em><b class="bien">L 12,480</b></div>
-                <div class="ficha"><em>Ingreso neto</em><b>L 42,300</b></div>
-                <div class="ficha"><em>Gastos del mes</em><b>L 28,600</b></div>
-                <div class="ficha"><em>Cuotas</em><b>L 1,220</b></div>
-              </div>
-
-              <div class="grafica">
-                <i></i><i></i><i></i><i></i><i></i><i></i>
-                <i></i><i></i><i></i><i></i><i></i><i class="act"></i>
-              </div>
-
-              <table class="tabla">
-                <thead>
-                  <tr><th>Categoría</th><th>Plan</th><th>Real</th><th>Diferencia</th></tr>
-                </thead>
-                <tbody>
-                  <tr><td>Alimentación</td><td class="num">L 12,000</td><td class="num">L 12,840</td><td class="num">+840</td></tr>
-                  <tr><td>Servicios</td><td class="num">L 6,400</td><td class="num">L 6,180</td><td class="num baja">−220</td></tr>
-                  <tr><td>Transporte</td><td class="num">L 4,200</td><td class="num">L 4,910</td><td class="num">+710</td></tr>
-                  <tr><td>Salud</td><td class="num">L 3,000</td><td class="num">L 2,470</td><td class="num baja">−530</td></tr>
-                </tbody>
-              </table>
+          <figure class="chasis chasis--telefono">
+            <span class="chasis__muesca" aria-hidden="true"></span>
+            <div class="chasis__pantalla">
+              <video class="chasis__cinta" data-cinta="/media/app-telefono.mp4"
+                     poster="/media/app-telefono-poster.jpg"
+                     muted playsinline preload="none"
+                     aria-label="La pantalla de Resumen en el teléfono: disponible real 12,480 lempiras, el mes corrido al 63% contra el presupuesto ido al 71%, y 4,261 lempiras que faltan para el corte."></video>
             </div>
+          </figure>
+        </article>
+
+        <article class="tarima" data-acto="1">
+          <div class="tarima__voz">
+            <h3>En la tableta, el ciclo de la tarjeta</h3>
+            <p>
+              Lo consumido, lo abonado y lo que queda sin cubrir — medido sobre
+              el ciclo real, no sobre el mes calendario.
+            </p>
           </div>
-        </div>
-        <p class="pie-disp">Computadora · tablero completo</p>
+          <figure class="chasis chasis--tableta">
+            <div class="chasis__pantalla">
+              <video class="chasis__cinta" data-cinta="/media/app-tableta.mp4"
+                     poster="/media/app-tableta-poster.jpg"
+                     muted playsinline preload="none"
+                     aria-label="La pantalla de Tarjeta en la tableta: del ciclo del 7 de julio al 6 de agosto, 19,101 lempiras consumidos, 14,840 abonados y 4,261 adeudados, con los movimientos del ciclo."></video>
+            </div>
+          </figure>
+        </article>
+
+        <article class="tarima" data-acto="2">
+          <div class="tarima__voz">
+            <h3>En la computadora, el tablero completo</h3>
+            <p>
+              Las doce barras del año, cada categoría contra su plan y la
+              diferencia. El trabajo de sentarse a cuadrar el mes.
+            </p>
+          </div>
+          <figure class="chasis chasis--escritorio">
+            <div class="chasis__barra" aria-hidden="true">
+              <i></i><i></i><i></i><span>controlewallet.com/app</span>
+            </div>
+            <div class="chasis__pantalla">
+              <video class="chasis__cinta" data-cinta="/media/app-escritorio.mp4"
+                     poster="/media/app-escritorio-poster.jpg"
+                     muted playsinline preload="none"
+                     aria-label="El Resumen completo en la computadora: disponible real 12,480 lempiras, ingreso neto 42,300, gastos del mes 28,600 y cuotas 1,220, con las doce barras del año y la tabla de categorías contra su plan."></video>
+            </div>
+          </figure>
+        </article>
+
       </div>
 
-      <!-- Tableta -->
-      <div class="disp disp--tableta">
-        <div class="pantalla">
-          <div class="ui" aria-hidden="true">
-            <div class="ui__cabeza">
-              <span class="ui__titulo">Tarjeta</span>
-            </div>
-            <div class="corte">
-              <span class="corte__t">Ciclo 7 jul – 6 ago</span>
-              <span class="corte__f"><em>Consumido</em><span>L 19,101</span></span>
-              <span class="corte__f"><em>Abonado</em><span>L 14,840</span></span>
-              <span class="corte__f total"><em>Adeudado</em><span>L 4,261</span></span>
-            </div>
-            <div class="movs">
-              <div class="mov"><i></i><em><b>Supermercado</b><u>Alimentación</u></em><span>L 2,410</span></div>
-              <div class="mov"><i></i><em><b>Combustible</b><u>Transporte</u></em><span>L 1,180</span></div>
-              <div class="mov"><i></i><em><b>Farmacia</b><u>Salud</u></em><span>L 640</span></div>
-              <div class="mov"><i></i><em><b>Colegio</b><u>Hogar</u></em><span>L 3,900</span></div>
-            </div>
-          </div>
-        </div>
-        <p class="pie-disp">Tableta</p>
+      <!-- Los tres tramos del recorrido. No se ven: son contra lo que el
+           observador decide qué acto va. Cada uno mide un tercio de la pista,
+           así que en el medio de la ventana siempre hay exactamente uno. -->
+      <div class="vitrina__tramos" aria-hidden="true">
+        <div class="vitrina__tramo" data-tramo="0"></div>
+        <div class="vitrina__tramo" data-tramo="1"></div>
+        <div class="vitrina__tramo" data-tramo="2"></div>
       </div>
-
-      <!-- Teléfono -->
-      <div class="disp disp--telefono">
-        <div class="pantalla">
-          <div class="muesca" aria-hidden="true"></div>
-          <div class="ui" aria-hidden="true">
-            <div class="ui__cabeza">
-              <span class="ui__titulo">Resumen</span>
-            </div>
-            <div class="ficha"><em>Disponible real</em><b class="bien">L 12,480</b></div>
-
-            <div class="pulso">
-              <div class="pulso__fila">
-                <em><span>Mes corrido</span><span>63%</span></em>
-                <div class="pulso__via"><div class="pulso__va va-63"></div></div>
-              </div>
-              <div class="pulso__fila">
-                <em><span>Presupuesto ido</span><span>71%</span></em>
-                <div class="pulso__via"><div class="pulso__va pulso__va--alerta va-71"></div></div>
-              </div>
-            </div>
-
-            <div class="corte">
-              <span class="corte__t">Corta en 4 días</span>
-              <span class="corte__f total"><em>Faltan</em><span>L 4,261</span></span>
-            </div>
-
-            <div class="movs">
-              <div class="mov"><i></i><em><b>Supermercado</b><u>Hoy</u></em><span>L 2,410</span></div>
-              <div class="mov"><i></i><em><b>Combustible</b><u>Ayer</u></em><span>L 1,180</span></div>
-            </div>
-          </div>
-        </div>
-        <p class="pie-disp">Teléfono</p>
-      </div>
-
     </div>
   </section>
 
@@ -613,9 +666,9 @@
         tu hogar en pocos pasos y cualquier cosa se puede cambiar después.
       </p>
 
-      <div class="acciones-noche acciones-noche--centro">
-        <a class="pulsar pulsar--luz" href="/registro">Crear cuenta</a>
-        <a class="pulsar pulsar--vidrio" href="/entrar">Entrar</a>
+      <div class="portada__acciones portada__acciones--centro">
+        <a class="pulsar pulsar--tinta" href="/registro">Crear cuenta</a>
+        <a class="pulsar pulsar--borde" href="/entrar">Entrar</a>
       </div>
     </div>
   </section>

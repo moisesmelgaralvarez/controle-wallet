@@ -1,0 +1,264 @@
+<!-- ============================================================
+     EL PLATÓ — el decorado donde se filman las pantallas de la app.
+
+     Esto NO se publica. Vive en herramientas/ porque es una máquina,
+     no una página: `wrangler.toml` solo sirve `sitio/`, así que nada
+     de este archivo llega jamás al navegador de nadie.
+
+     POR QUÉ EXISTE
+     La vitrina del sitio dibujaba tres aparatos a la vez y ninguno se
+     podía leer: medido a 1440, el escritorio salía en 816 × 510 con
+     celdas de tabla de 9.5 px y el teléfono en 168 × 345 con texto de
+     7.5 px. La sección más importante del recorrido era una mancha.
+
+     La cura es escala, y escala significa un aparato a la vez. Pero un
+     aparato a la vez y quieto no dice nada: hay que verlo trabajar. De
+     ahí la película.
+
+     POR QUÉ SE FILMA LA INTERFAZ DE VERDAD Y NO SE GENERA
+     Un modelo al que se le pide «una pantalla de presupuesto» inventa
+     las cifras. Esta página entera se sostiene en que ninguna cifra es
+     inventada —«Nada de esto es promesa»— y meterle capturas falsas
+     sería la contradicción más cara posible. Acá se filma el MISMO
+     marcado que ya dibuja `dispositivos.css`, con las MISMAS cifras
+     del ejemplo que ya están en index.html.
+
+     Y no se filma la app real, que exigiría una sesión: eso pondría
+     saldos, cuentas y nombres de un hogar de verdad en un video de
+     mercadeo. `.gitignore` ya prohíbe hasta las capturas por eso.
+
+     CÓMO SE ANIMA
+     Nada de `@keyframes`. Cada pieza declara su ventana en el tiempo
+     —`data-de` y `data-a`, de 0 a 1— y `herramientas/filmar.js` llama
+     a `pintar(t)` cuadro por cuadro. Determinista: la misma t da
+     siempre el mismo cuadro, así que la película se puede volver a
+     generar idéntica dentro de un año.
+     ============================================================ -->
+
+<!-- ── el teléfono · Resumen ──────────────────────────────────── -->
+<div class="plato" data-plato="telefono" data-ancho="300" data-alto="580">
+  <div class="ui">
+    <div class="ui__cabeza" data-llega data-de="0.02" data-a="0.14">
+      <span class="ui__titulo">Resumen</span>
+    </div>
+
+    <div class="ficha" data-llega data-de="0.06" data-a="0.18">
+      <em>Disponible real</em>
+      <b class="bien" data-cuenta data-hasta="12480" data-de="0.10" data-a="0.44">L 0</b>
+    </div>
+
+    <!-- Estas dos cifras ya están en la página, en el aparato de escritorio.
+         No se inventa ninguna: el teléfono muestra menos que la computadora,
+         no cosas distintas. -->
+    <div class="fichas">
+      <div class="ficha" data-llega data-de="0.14" data-a="0.26">
+        <em>Ingreso neto</em><b data-cuenta data-hasta="42300" data-de="0.18" data-a="0.46">L 0</b>
+      </div>
+      <div class="ficha" data-llega data-de="0.18" data-a="0.30">
+        <em>Gastos del mes</em><b data-cuenta data-hasta="28600" data-de="0.22" data-a="0.50">L 0</b>
+      </div>
+    </div>
+
+    <div class="pulso">
+      <div class="pulso__fila" data-llega data-de="0.28" data-a="0.40">
+        <em><span>Mes corrido</span><span data-cuenta data-hasta="63" data-sufijo="%" data-crudo data-de="0.30" data-a="0.56">0%</span></em>
+        <div class="pulso__via"><div class="pulso__va" data-crece data-hasta="63" data-de="0.30" data-a="0.56"></div></div>
+      </div>
+      <div class="pulso__fila" data-llega data-de="0.34" data-a="0.46">
+        <em><span>Presupuesto ido</span><span data-cuenta data-hasta="71" data-sufijo="%" data-crudo data-de="0.36" data-a="0.64">0%</span></em>
+        <div class="pulso__via"><div class="pulso__va pulso__va--alerta" data-crece data-hasta="71" data-de="0.36" data-a="0.64"></div></div>
+      </div>
+    </div>
+
+    <div class="corte" data-llega data-de="0.56" data-a="0.68">
+      <span class="corte__t">Corta en 4 días</span>
+      <span class="corte__f total"><em>Faltan</em><span data-cuenta data-hasta="4261" data-de="0.60" data-a="0.82">L 0</span></span>
+    </div>
+
+    <div class="movs">
+      <div class="mov" data-llega data-de="0.72" data-a="0.84">
+        <i></i><em><b>Supermercado</b><u>Hoy</u></em><span>L 2,410</span>
+      </div>
+      <div class="mov" data-llega data-de="0.78" data-a="0.90">
+        <i></i><em><b>Combustible</b><u>Ayer</u></em><span>L 1,180</span>
+      </div>
+      <div class="mov" data-llega data-de="0.84" data-a="0.96">
+        <i></i><em><b>Farmacia</b><u>Ayer</u></em><span>L 640</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── la tableta · Tarjeta ───────────────────────────────────── -->
+<div class="plato" data-plato="tableta" data-ancho="420" data-alto="545">
+  <div class="ui">
+    <div class="ui__cabeza" data-llega data-de="0.02" data-a="0.14">
+      <span class="ui__titulo">Tarjeta</span>
+      <span class="ui__mes">Ciclo 7 jul — 6 ago</span>
+    </div>
+
+    <div class="corte" data-llega data-de="0.08" data-a="0.20">
+      <span class="corte__t">Consumo del ciclo</span>
+      <span class="corte__f"><em>Consumido</em><span data-cuenta data-hasta="19101" data-de="0.14" data-a="0.42">L 0</span></span>
+      <span class="corte__f"><em>Abonado</em><span data-cuenta data-hasta="14840" data-de="0.30" data-a="0.58">L 0</span></span>
+      <span class="corte__f total"><em>Adeudado</em><span data-cuenta data-hasta="4261" data-de="0.46" data-a="0.74">L 0</span></span>
+    </div>
+
+    <div class="pulso">
+      <div class="pulso__fila" data-llega data-de="0.52" data-a="0.64">
+        <em><span>Mes corrido</span><span data-cuenta data-hasta="63" data-sufijo="%" data-crudo data-de="0.54" data-a="0.74">0%</span></em>
+        <div class="pulso__via"><div class="pulso__va" data-crece data-hasta="63" data-de="0.54" data-a="0.74"></div></div>
+      </div>
+      <div class="pulso__fila" data-llega data-de="0.56" data-a="0.68">
+        <em><span>Presupuesto ido</span><span data-cuenta data-hasta="71" data-sufijo="%" data-crudo data-de="0.58" data-a="0.78">0%</span></em>
+        <div class="pulso__via"><div class="pulso__va pulso__va--alerta" data-crece data-hasta="71" data-de="0.58" data-a="0.78"></div></div>
+      </div>
+    </div>
+
+    <div class="movs">
+      <div class="mov" data-llega data-de="0.60" data-a="0.72"><i></i><em><b>Supermercado</b><u>Alimentación</u></em><span>L 2,410</span></div>
+      <div class="mov" data-llega data-de="0.66" data-a="0.78"><i></i><em><b>Combustible</b><u>Transporte</u></em><span>L 1,180</span></div>
+      <div class="mov" data-llega data-de="0.72" data-a="0.84"><i></i><em><b>Farmacia</b><u>Salud</u></em><span>L 640</span></div>
+      <div class="mov" data-llega data-de="0.78" data-a="0.90"><i></i><em><b>Colegio</b><u>Hogar</u></em><span>L 3,900</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── el escritorio · Resumen completo ───────────────────────── -->
+<div class="plato" data-plato="escritorio" data-ancho="880" data-alto="540">
+  <div class="ui ui--con-riel">
+    <nav class="riel" data-llega data-de="0.02" data-a="0.14">
+      <b>Controle</b>
+      <u class="on">Resumen</u>
+      <u>Presupuesto</u>
+      <u>Proyectos</u>
+      <u>Movimientos</u>
+      <u>Historia</u>
+    </nav>
+
+    <div class="ui">
+      <div class="ui__cabeza" data-llega data-de="0.06" data-a="0.18">
+        <span class="ui__titulo">Resumen</span>
+        <span class="ui__mes">Agosto 2026 · 7 ago – 6 sep</span>
+      </div>
+
+      <div class="fichas fichas--4">
+        <div class="ficha" data-llega data-de="0.12" data-a="0.24">
+          <em>Disponible real</em><b class="bien" data-cuenta data-hasta="12480" data-de="0.16" data-a="0.44">L 0</b>
+        </div>
+        <div class="ficha" data-llega data-de="0.16" data-a="0.28">
+          <em>Ingreso neto</em><b data-cuenta data-hasta="42300" data-de="0.20" data-a="0.48">L 0</b>
+        </div>
+        <div class="ficha" data-llega data-de="0.20" data-a="0.32">
+          <em>Gastos del mes</em><b data-cuenta data-hasta="28600" data-de="0.24" data-a="0.52">L 0</b>
+        </div>
+        <div class="ficha" data-llega data-de="0.24" data-a="0.36">
+          <em>Cuotas</em><b data-cuenta data-hasta="1220" data-de="0.28" data-a="0.56">L 0</b>
+        </div>
+      </div>
+
+      <!-- Las doce barras crecen escalonadas de izquierda a derecha: es el
+           orden en que pasa el año, no un adorno. Las alturas finales son
+           las mismas que `dispositivos.css` ya declara. -->
+      <div class="grafica">
+        <i data-alza data-hasta="42" data-de="0.38" data-a="0.52"></i>
+        <i data-alza data-hasta="58" data-de="0.40" data-a="0.54"></i>
+        <i data-alza data-hasta="51" data-de="0.42" data-a="0.56"></i>
+        <i data-alza data-hasta="67" data-de="0.44" data-a="0.58"></i>
+        <i data-alza data-hasta="45" data-de="0.46" data-a="0.60"></i>
+        <i data-alza data-hasta="72" data-de="0.48" data-a="0.62"></i>
+        <i data-alza data-hasta="61" data-de="0.50" data-a="0.64"></i>
+        <i data-alza data-hasta="80" data-de="0.52" data-a="0.66"></i>
+        <i data-alza data-hasta="55" data-de="0.54" data-a="0.68"></i>
+        <i data-alza data-hasta="69" data-de="0.56" data-a="0.70"></i>
+        <i data-alza data-hasta="63" data-de="0.58" data-a="0.72"></i>
+        <i class="act" data-alza data-hasta="88" data-de="0.60" data-a="0.76"></i>
+      </div>
+
+      <table class="tabla">
+        <thead>
+          <tr data-llega data-de="0.66" data-a="0.76"><th>Categoría</th><th>Plan</th><th>Real</th><th>Diferencia</th></tr>
+        </thead>
+        <tbody>
+          <tr data-llega data-de="0.72" data-a="0.82"><td>Alimentación</td><td class="num">L 12,000</td><td class="num">L 12,840</td><td class="num">+840</td></tr>
+          <tr data-llega data-de="0.76" data-a="0.86"><td>Servicios</td><td class="num">L 6,400</td><td class="num">L 6,180</td><td class="num baja">−220</td></tr>
+          <tr data-llega data-de="0.80" data-a="0.90"><td>Transporte</td><td class="num">L 4,200</td><td class="num">L 4,910</td><td class="num">+710</td></tr>
+          <tr data-llega data-de="0.84" data-a="0.94"><td>Salud</td><td class="num">L 3,000</td><td class="num">L 2,470</td><td class="num baja">−530</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── el hero · 16:9, para el híbrido ────────────────────────
+     Mismo tablero que el de escritorio, pero en 16:9 y a 1280 × 720, que es
+     la proporción del plano generado con el que se empalma. Se filma en
+     OSCURO: es la mitad real de un híbrido cuya primera mitad es luz sobre
+     fondo carbón, y un corte de oscuro a claro en mitad de un plano se lee
+     como un error, no como una transición.
+
+     La acción vive a la DERECHA y el tercio izquierdo queda tranquilo,
+     igual que en el plano generado, porque ahí va el titular. -->
+<div class="plato plato--hero" data-plato="hero" data-ancho="1280" data-alto="720">
+  <div class="ui ui--con-riel">
+    <nav class="riel" data-llega data-de="0.00" data-a="0.10">
+      <b>Controle</b>
+      <u class="on">Resumen</u>
+      <u>Presupuesto</u>
+      <u>Proyectos</u>
+      <u>Movimientos</u>
+      <u>Historia</u>
+    </nav>
+
+    <div class="ui">
+      <div class="ui__cabeza" data-llega data-de="0.02" data-a="0.12">
+        <span class="ui__titulo">Resumen</span>
+        <span class="ui__mes">Agosto 2026 · 7 ago – 6 sep</span>
+      </div>
+
+      <div class="fichas fichas--4">
+        <div class="ficha" data-llega data-de="0.06" data-a="0.18">
+          <em>Disponible real</em><b class="bien" data-cuenta data-hasta="12480" data-de="0.10" data-a="0.40">L 0</b>
+        </div>
+        <div class="ficha" data-llega data-de="0.09" data-a="0.21">
+          <em>Ingreso neto</em><b data-cuenta data-hasta="42300" data-de="0.13" data-a="0.43">L 0</b>
+        </div>
+        <div class="ficha" data-llega data-de="0.12" data-a="0.24">
+          <em>Gastos del mes</em><b data-cuenta data-hasta="28600" data-de="0.16" data-a="0.46">L 0</b>
+        </div>
+        <div class="ficha" data-llega data-de="0.15" data-a="0.27">
+          <em>Cuotas</em><b data-cuenta data-hasta="1220" data-de="0.19" data-a="0.49">L 0</b>
+        </div>
+      </div>
+
+      <!-- Las doce barras crecen escalonadas. Son las que recogen las columnas
+           de luz con las que termina el plano generado. -->
+      <div class="grafica">
+        <i data-alza data-hasta="42" data-de="0.30" data-a="0.46"></i>
+        <i data-alza data-hasta="58" data-de="0.32" data-a="0.48"></i>
+        <i data-alza data-hasta="51" data-de="0.34" data-a="0.50"></i>
+        <i data-alza data-hasta="67" data-de="0.36" data-a="0.52"></i>
+        <i data-alza data-hasta="45" data-de="0.38" data-a="0.54"></i>
+        <i data-alza data-hasta="72" data-de="0.40" data-a="0.56"></i>
+        <i data-alza data-hasta="61" data-de="0.42" data-a="0.58"></i>
+        <i data-alza data-hasta="80" data-de="0.44" data-a="0.60"></i>
+        <i data-alza data-hasta="55" data-de="0.46" data-a="0.62"></i>
+        <i data-alza data-hasta="69" data-de="0.48" data-a="0.64"></i>
+        <i data-alza data-hasta="63" data-de="0.50" data-a="0.66"></i>
+        <i class="act" data-alza data-hasta="88" data-de="0.52" data-a="0.70"></i>
+      </div>
+
+      <table class="tabla">
+        <thead>
+          <tr data-llega data-de="0.60" data-a="0.70"><th>Categoría</th><th>Plan</th><th>Real</th><th>Diferencia</th></tr>
+        </thead>
+        <tbody>
+          <tr data-llega data-de="0.66" data-a="0.76"><td>Alimentación</td><td class="num">L 12,000</td><td class="num">L 12,840</td><td class="num">+840</td></tr>
+          <tr data-llega data-de="0.70" data-a="0.80"><td>Servicios</td><td class="num">L 6,400</td><td class="num">L 6,180</td><td class="num baja">−220</td></tr>
+          <tr data-llega data-de="0.74" data-a="0.84"><td>Transporte</td><td class="num">L 4,200</td><td class="num">L 4,910</td><td class="num">+710</td></tr>
+          <tr data-llega data-de="0.78" data-a="0.88"><td>Salud</td><td class="num">L 3,000</td><td class="num">L 2,470</td><td class="num baja">−530</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -2013,3 +2013,279 @@
   line-height: 1.5;
   color: var(--alerta);
 }
+
+/* ==========================================================================
+   LAS PÁGINAS INTERIORES — Precios, Preguntas, Contacto, Términos,
+   Privacidad y el 404
+
+   Ninguna estaba rota: sus 22, 17, 17, 13, 13 y 15 clases tienen todas regla
+   en `sitio.css`. Lo que les faltaba era el ESCUDO y la VOZ.
+
+   El escudo: sin `class="papel"` heredaban el vuelco de `marca.css` bajo
+   `prefers-color-scheme: dark`, así que en una máquina con el sistema en
+   oscuro salían negras mientras la portada seguía siendo papel. El sitio
+   partido en dos a mitad de visita.
+
+   La voz: sus titulares salían en 56 px con el peso del mundo base, o sea
+   sin relación con los 103 px en peso 400 de la portada.
+
+   Y UNA TRAMPA QUE SE MIDIÓ AL PONER EL ESCUDO. `.portada` significa dos
+   cosas distintas en este sitio: en la home es el ACTO de apertura —una
+   ventana entera, con el instrumento del desfase abajo— y en las interiores
+   es un simple encabezado de página. Al enlazar la hoja, las seis heredaron
+   `min-height: 100svh` y su encabezado pasó a medir 900 px: media pantalla
+   vacía antes de cualquier contenido.
+   ========================================================================== */
+
+/* La cura, sin tocar el marcado de nadie: el tratamiento alto se acota a la
+   portada que TIENE el bloque del héroe. `.portada__dicho` solo existe en la
+   home, así que la condición es un hecho estructural y no una convención que
+   alguien pueda romper sin enterarse. */
+.papel .portada:not(:has(.portada__dicho)) {
+  min-height: 0;
+  display: block;
+  padding-block: clamp(4.5rem, 14vh, 9rem) clamp(2rem, 6vh, 4rem);
+}
+
+/* ---------- el encabezado de una página interior ---------- */
+
+.papel .portada:not(:has(.portada__dicho)) h1 {
+  margin: 0;
+  font-size: clamp(2.25rem, 1.6rem + 2.6vw, 3.75rem);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+  color: var(--tinta);
+}
+
+.papel .portada:not(:has(.portada__dicho)) .entrada {
+  margin-top: clamp(1.25rem, 3vh, 1.75rem);
+  max-width: 54ch;
+}
+
+/* La franja de superficie era un fondo de color alternado. En papel eso no
+   existe: lo que separa un acto de otro es un filete, no un cambio de tono.
+   El tono se conserva apenas —el papel elevado— para que se lea como una
+   hoja distinta y no como una sección pintada. */
+.papel .franja--superficie {
+  background: var(--superficie);
+  border-block: 1px solid var(--filete);
+}
+
+/* ---------- las listas ----------
+   Sin viñeta redonda: una raya corta, como la marca de un impreso. */
+.papel .lista {
+  margin: clamp(1.25rem, 3vh, 1.75rem) 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+}
+.papel .lista li {
+  position: relative;
+  padding-left: 1.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--tenue);
+}
+.papel .lista li::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0.7em;
+  width: 0.75rem; height: 1px;
+  background: var(--borde-fuerte);
+}
+.papel .lista strong { color: var(--tinta); font-weight: 500; }
+
+/* ==========================================================================
+   PRECIOS — dos planes, y el precio es la imagen
+   ========================================================================== */
+
+.papel .planes {
+  width: var(--hoja);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: clamp(1.25rem, 3vw, 2rem);
+}
+
+.papel .plan {
+  background: var(--fondo);
+  border: 1px solid var(--filete);
+  border-radius: 12px;
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  display: grid;
+  align-content: start;
+}
+/* El plan vigente se marca con el filete, no con un fondo ni una sombra: en
+   un impreso, lo que está en vigor se recuadra. */
+.papel .plan--destacado { border-color: var(--acento); }
+
+.papel .plan h2 {
+  margin: 0.25rem 0 0;
+  font-size: 1.375rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--tinta);
+}
+
+/* La cifra es la imagen, también acá — aunque hoy diga «Sin costo». */
+.papel .plan__precio {
+  margin: clamp(0.75rem, 2vh, 1.25rem) 0 0;
+  font-size: clamp(1.875rem, 1.4rem + 1.8vw, 2.75rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinta);
+}
+.papel .plan--destacado .plan__precio { color: var(--acento); }
+
+.papel .plan__nota {
+  margin: 0.5rem 0 0;
+  padding-bottom: clamp(1rem, 2.5vh, 1.5rem);
+  border-bottom: 1px solid var(--filete);
+  font-size: 0.875rem;
+  color: var(--tenue);
+}
+
+.papel .plan .acciones { margin-top: clamp(1.5rem, 4vh, 2.25rem); }
+
+/* ==========================================================================
+   PREGUNTAS — un pliego que se abre
+
+   Van con `<details>`, así que abren y cierran sin una línea de JavaScript.
+   El triángulo del navegador se quita: en su lugar, un signo que gira.
+   ========================================================================== */
+
+.papel .pregunta {
+  border-bottom: 1px solid var(--filete);
+}
+.papel .pregunta:first-of-type { border-top: 1px solid var(--filete); }
+
+.papel .pregunta summary {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding-block: clamp(1rem, 2.5vh, 1.5rem);
+  min-height: 44px;                 /* objetivo táctil */
+  cursor: pointer;
+  list-style: none;
+  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--tinta);
+  transition: color 160ms var(--curva);
+}
+.papel .pregunta summary::-webkit-details-marker { display: none; }
+.papel .pregunta summary:hover { color: var(--acento); }
+.papel .pregunta summary:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* El signo. Gira 45° al abrir: una cruz se vuelve una equis, que es el mismo
+   gesto de cerrar. 200 ms, dentro del presupuesto de un control. */
+.papel .pregunta summary::after {
+  content: "";
+  flex: none;
+  margin-left: auto;
+  align-self: center;
+  width: 12px; height: 12px;
+  background:
+    linear-gradient(var(--borde-fuerte) 0 0) center / 100% 1px no-repeat,
+    linear-gradient(var(--borde-fuerte) 0 0) center / 1px 100% no-repeat;
+  transition: rotate 200ms var(--curva);
+}
+.papel .pregunta[open] summary::after { rotate: 45deg; }
+
+.papel .pregunta p {
+  margin: 0 0 clamp(1rem, 2.5vh, 1.5rem);
+  max-width: 62ch;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--tenue);
+}
+
+/* ==========================================================================
+   TÉRMINOS Y PRIVACIDAD — documentos largos, y se leen como tales
+
+   Acá manda la comprensión: medida de lectura acotada, jerarquía por
+   tamaño y filete, y aire entre apartados. Nada más.
+   ========================================================================== */
+
+.papel .legal { padding-block: clamp(4.5rem, 12vh, 8rem); }
+
+.papel .legal .lectura { max-width: 68ch; }
+
+.papel .legal h1 {
+  margin: 0;
+  font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  color: var(--tinta);
+}
+
+.papel .fecha {
+  margin: 1rem 0 clamp(2.5rem, 6vh, 4rem);
+  padding-bottom: clamp(1.25rem, 3vh, 2rem);
+  border-bottom: 1px solid var(--filete);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tenue);
+}
+
+.papel .legal h2 {
+  margin: clamp(2.5rem, 6vh, 3.5rem) 0 0.875rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--tinta);
+}
+.papel .legal h3 {
+  margin: clamp(1.75rem, 4vh, 2.25rem) 0 0.625rem;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  color: var(--tinta);
+}
+.papel .legal p,
+.papel .legal li {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--tenue);
+}
+.papel .legal a {
+  color: var(--acento);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+}
+
+/* Las listas de estos documentos son `<ul>` pelados, sin `class="lista"`, así
+   que salían con la viñeta redonda del navegador mientras el resto del sitio
+   marca con una raya corta. Dos marcas distintas para la misma cosa en la
+   misma visita es de las inconsistencias que nadie nombra y todos sienten. */
+.papel .legal ul {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.625rem;
+}
+.papel .legal ul li {
+  position: relative;
+  padding-left: 1.5rem;
+}
+.papel .legal ul li::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0.75em;
+  width: 0.75rem; height: 1px;
+  background: var(--borde-fuerte);
+}
+.papel .legal strong { color: var(--tinta); font-weight: 500; }

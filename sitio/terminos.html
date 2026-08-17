@@ -8,8 +8,15 @@
 <link rel="canonical" href="https://controlewallet.com/terminos">
 <link rel="stylesheet" href="/sitio.css">
 <link rel="stylesheet" href="/marca.css">
+<!-- `papel.css` va de último: gana por cascada sin necesitar un !important.
+     Y no es solo estética. `marca.css` voltea sus once tokens dentro de un
+     `@media (prefers-color-scheme: dark)`, y `.papel` los vuelve a declarar
+     en el <body> para blindarse de eso. Sin esta hoja, esta página salía
+     NEGRA en una máquina con el sistema en oscuro mientras la portada seguía
+     siendo papel: el mismo sitio partido en dos a mitad de visita. -->
+<link rel="stylesheet" href="/papel.css">
 </head>
-<body>
+<body class="papel">
 
 <a class="saltar" href="#principal">Saltar al contenido</a>
 

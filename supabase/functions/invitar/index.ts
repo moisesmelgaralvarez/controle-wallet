@@ -82,11 +82,29 @@ Deno.serve(async (req: Request) => {
       ? String(destino) : 'https://controlewallet.com/app/';
     const volverA = `${base}#/invitacion/${inv.token}`;
 
+    /* `redirect_to` FALTABA, Y ERA EL DEFECTO QUE ROMPÍA TODO.
+       `volverA` se calculaba acá abajo y no se mandaba a ninguna parte,
+       así que `{{ .ConfirmationURL }}` del correo apuntaba al `site_url`
+       pelado: la persona invitada caía en la raíz de la app SIN el token
+       y la app, que no tenía cómo saber de la invitación, le ofrecía
+       armar un hogar. Se vio en un hogar de verdad antes que en ninguna
+       prueba.
+
+       `data.invitacion` se queda además del `redirect_to`, y no es
+       repetición: son dos caminos para dos casos distintos. El de los
+       metadatos lo lee el disparador `al_crear_usuario` en la base, para
+       NO crearle un hogar propio a quien viene invitado. El del
+       `redirect_to` lo lee la app cuando la persona abre el enlace. Si
+       falta cualquiera de los dos, el defecto vuelve por la otra mitad. */
     const enviado = await fetch(`${url}/auth/v1/invite`, {
       method: 'POST',
       headers: { apikey: servicio, Authorization: `Bearer ${servicio}`,
                  'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: inv.correo, data: { invitacion: inv.token } })
+      body: JSON.stringify({
+        email: inv.correo,
+        data: { invitacion: inv.token },
+        redirect_to: volverA
+      })
     });
 
     if (enviado.ok) return responder({ mandado: true, correo: inv.correo, volverA });

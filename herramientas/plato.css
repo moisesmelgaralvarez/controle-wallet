@@ -192,7 +192,13 @@
 /* Lista de movimientos */
 .movs { display: grid; gap: 0.55em; }
 .mov { display: grid; grid-template-columns: 1.7em 1fr auto; gap: 0.7em; align-items: center; }
-.mov i { width: 1.7em; height: 1.7em; border-radius: 0.5em; background: var(--suave); }
+/* `--suave` sobre `--superficie` en oscuro son casi el mismo color: la casilla
+   del movimiento desaparecía y la fila quedaba con una sangría sin causa. Mismo
+   remedio que ya llevaba `.grafica i`, y por la misma razón. */
+.mov i {
+  width: 1.7em; height: 1.7em; border-radius: 0.5em;
+  background: color-mix(in oklab, var(--acento) 30%, var(--elevado));
+}
 .mov em { font-style: normal; display: grid; }
 .mov em b { font-weight: 600; font-size: 1em; color: var(--tinta); }
 .mov em u { text-decoration: none; font-size: 0.85em; color: var(--tenue); }
@@ -201,7 +207,12 @@
 /* El corte de la tarjeta, dentro del mock */
 .corte { background: var(--elevado); border-radius: 0.7em; padding: 1em; display: grid; gap: 0.55em; }
 .corte__t { font-size: 0.9em; color: var(--tenue); }
+/* El `<em>` va como rótulo, no como énfasis: el elemento se eligió por
+   semántica y arrastraba la cursiva del navegador. En todo el producto no hay
+   una sola cursiva — es lo que la delataba como ajena. */
 .corte__f { display: flex; justify-content: space-between; font-size: 1em; color: var(--tinta); }
+.corte__f em { font-style: normal; color: var(--tenue); }
+.corte__f.total em { color: var(--tinta); }
 .corte__f.total { border-top: 1px solid var(--borde); padding-top: 0.55em; font-weight: 700; }
 .corte__f.total span { color: var(--alerta); }
 

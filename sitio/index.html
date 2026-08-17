@@ -13,7 +13,12 @@
 <meta property="og:locale" content="es_HN">
 <link rel="stylesheet" href="/sitio.css">
 <link rel="stylesheet" href="/inicio.css">
-<link rel="stylesheet" href="/dispositivos.css">
+<!-- `dispositivos.css` salió de acá. Dibujaba los tres aparatos chicos de la
+     vitrina vieja, y esa composición ya no existe: la pantalla de cada
+     aparato ahora es una película. La hoja no se borró —se mudó a
+     `herramientas/plato.css`, que es donde vive su único consumidor, el
+     plató donde se filman esas películas. Dejarla enlazada acá eran 10 KB
+     que ya no dibujaban nada. -->
 <link rel="stylesheet" href="/marca.css">
 <!-- El mundo visual nuevo de la portada. Va de último: gana por cascada sin
      necesitar un solo !important. -->
@@ -25,6 +30,7 @@
      necesita `modo.js` — un solo modo, negro, decidido y no preguntado. -->
 <script src="/ciclo.js" defer></script>
 <script src="/hero.js" defer></script>
+<script src="/vitrina.js" defer></script>
 </head>
 <body class="noche">
 
@@ -335,133 +341,121 @@
   </section>
 
   <!-- ── vitrina de dispositivos ───────────────────────────── -->
-  <!-- Las pantallas están DIBUJADAS en HTML y CSS, no son capturas. Pesan
-       casi nada, se ven nítidas en cualquier resolución y siguen el modo
-       claro u oscuro de quien mira. Una imagen no hace ninguna de las tres. -->
-  <section class="franja franja--alta escena vitrina">
-    <div class="escena__halo" aria-hidden="true"></div>
+  <!-- UN APARATO A LA VEZ, Y GRANDE.
 
+       Antes iban los tres juntos y ninguno se podía leer: medido a 1440, el
+       de escritorio salía en 816 × 510 con celdas de tabla de 9.5 px y el
+       teléfono en 168 × 345 con texto de 7.5 px. La sección que el plan marca
+       como la más importante del recorrido era una mancha. La cura es escala,
+       y escala significa uno a la vez.
+
+       LO QUE SE VE DENTRO DE CADA PANTALLA ES UNA PELÍCULA. La carcasa —el
+       bisel, la muesca, la barra del navegador— sigue dibujada en CSS, que es
+       donde el dibujo gana: nítida a cualquier resolución y sin un byte. La
+       película es solo el contenido, que es donde el video gana: la interfaz
+       trabajando, sin que el hilo principal tenga que animar sesenta
+       elementos por cuadro mientras la página hace todo lo demás.
+
+       Las películas se generan con `node herramientas/filmar.js`, del MISMO
+       marcado y las MISMAS cifras del ejemplo. Ni una cifra inventada, y
+       nunca la app real: eso pondría el saldo de un hogar de verdad en un
+       video de mercadeo.
+
+       SIN JAVASCRIPT, SIN MOVIMIENTO O EN PANTALLA CHICA esto se lee como
+       tres bloques apilados, cada aparato con su texto y su póster —que es el
+       ÚLTIMO cuadro, la pantalla terminada—. Completo y quieto. -->
+  <!-- SIN la clase `escena`, y no es un olvido: `inicio.css` le pone
+       `overflow: hidden`, y un ancestro con overflow distinto de `visible`
+       crea contenedor de scroll — ahí `position: sticky` deja de pegar, en
+       silencio y sin error. La escena clavada no se clavaba por eso. Lo único
+       que aportaba la clase era el halo, que este mundo ya apaga. -->
+  <section class="franja franja--alta vitrina">
     <div class="vitrina__intro">
       <h2 class="titular">El mismo hogar, se abra donde se abra</h2>
       <p class="bajada">
-        En el teléfono, la decisión del momento. En la computadora, el tablero
-        completo con el historial al lado. Cada tamaño muestra lo que
-        corresponde, no la misma pantalla estirada.
+        Cada tamaño muestra lo que corresponde, no la misma pantalla estirada.
       </p>
     </div>
 
-    <div class="aparatos">
+    <div class="vitrina__pista">
+      <div class="vitrina__escena">
 
-      <!-- Escritorio -->
-      <div class="disp disp--escritorio">
-        <div class="pantalla">
-          <div class="barra" aria-hidden="true">
-            <i></i><i></i><i></i>
-            <span>controlewallet.com/app</span>
+        <!-- El riel de pasos. Sin JavaScript no aparece: un control que no
+             lleva a ningún lado es peor que ningún control. -->
+        <ol class="pasos" aria-label="Los tres tamaños">
+          <li><button class="paso" type="button" data-va="0" aria-current="true">Teléfono</button></li>
+          <li><button class="paso" type="button" data-va="1">Tableta</button></li>
+          <li><button class="paso" type="button" data-va="2">Computadora</button></li>
+        </ol>
+
+        <article class="tarima" data-acto="0">
+          <div class="tarima__voz">
+            <h3>En el teléfono, la decisión del momento</h3>
+            <p>
+              Cuánto queda de verdad hoy, cuánto mes ha corrido y qué corta en
+              cuatro días. Lo que se mira de pie en la fila del súper.
+            </p>
           </div>
-          <div class="ui ui--con-riel" aria-hidden="true">
-            <nav class="riel">
-              <b>Controle</b>
-              <u class="on">Resumen</u>
-              <u>Presupuesto</u>
-              <u>Proyectos</u>
-              <u>Movimientos</u>
-              <u>Historia</u>
-            </nav>
-            <div class="ui">
-              <div class="ui__cabeza">
-                <span class="ui__titulo">Resumen</span>
-                <span class="ui__mes">Agosto 2026 · 7 ago – 6 sep</span>
-              </div>
-
-              <div class="fichas fichas--4">
-                <div class="ficha"><em>Disponible real</em><b class="bien">L 12,480</b></div>
-                <div class="ficha"><em>Ingreso neto</em><b>L 42,300</b></div>
-                <div class="ficha"><em>Gastos del mes</em><b>L 28,600</b></div>
-                <div class="ficha"><em>Cuotas</em><b>L 1,220</b></div>
-              </div>
-
-              <div class="grafica">
-                <i></i><i></i><i></i><i></i><i></i><i></i>
-                <i></i><i></i><i></i><i></i><i></i><i class="act"></i>
-              </div>
-
-              <table class="tabla">
-                <thead>
-                  <tr><th>Categoría</th><th>Plan</th><th>Real</th><th>Diferencia</th></tr>
-                </thead>
-                <tbody>
-                  <tr><td>Alimentación</td><td class="num">L 12,000</td><td class="num">L 12,840</td><td class="num">+840</td></tr>
-                  <tr><td>Servicios</td><td class="num">L 6,400</td><td class="num">L 6,180</td><td class="num baja">−220</td></tr>
-                  <tr><td>Transporte</td><td class="num">L 4,200</td><td class="num">L 4,910</td><td class="num">+710</td></tr>
-                  <tr><td>Salud</td><td class="num">L 3,000</td><td class="num">L 2,470</td><td class="num baja">−530</td></tr>
-                </tbody>
-              </table>
+          <figure class="chasis chasis--telefono">
+            <span class="chasis__muesca" aria-hidden="true"></span>
+            <div class="chasis__pantalla">
+              <video class="chasis__cinta" data-cinta="/media/app-telefono.mp4"
+                     poster="/media/app-telefono-poster.jpg"
+                     muted playsinline preload="none"
+                     aria-label="La pantalla de Resumen en el teléfono: disponible real 12,480 lempiras, el mes corrido al 63% contra el presupuesto ido al 71%, y 4,261 lempiras que faltan para el corte."></video>
             </div>
+          </figure>
+        </article>
+
+        <article class="tarima" data-acto="1">
+          <div class="tarima__voz">
+            <h3>En la tableta, el ciclo de la tarjeta</h3>
+            <p>
+              Lo consumido, lo abonado y lo que queda sin cubrir — medido sobre
+              el ciclo real, no sobre el mes calendario.
+            </p>
           </div>
-        </div>
-        <p class="pie-disp">Computadora · tablero completo</p>
+          <figure class="chasis chasis--tableta">
+            <div class="chasis__pantalla">
+              <video class="chasis__cinta" data-cinta="/media/app-tableta.mp4"
+                     poster="/media/app-tableta-poster.jpg"
+                     muted playsinline preload="none"
+                     aria-label="La pantalla de Tarjeta en la tableta: del ciclo del 7 de julio al 6 de agosto, 19,101 lempiras consumidos, 14,840 abonados y 4,261 adeudados, con los movimientos del ciclo."></video>
+            </div>
+          </figure>
+        </article>
+
+        <article class="tarima" data-acto="2">
+          <div class="tarima__voz">
+            <h3>En la computadora, el tablero completo</h3>
+            <p>
+              Las doce barras del año, cada categoría contra su plan y la
+              diferencia. El trabajo de sentarse a cuadrar el mes.
+            </p>
+          </div>
+          <figure class="chasis chasis--escritorio">
+            <div class="chasis__barra" aria-hidden="true">
+              <i></i><i></i><i></i><span>controlewallet.com/app</span>
+            </div>
+            <div class="chasis__pantalla">
+              <video class="chasis__cinta" data-cinta="/media/app-escritorio.mp4"
+                     poster="/media/app-escritorio-poster.jpg"
+                     muted playsinline preload="none"
+                     aria-label="El Resumen completo en la computadora: disponible real 12,480 lempiras, ingreso neto 42,300, gastos del mes 28,600 y cuotas 1,220, con las doce barras del año y la tabla de categorías contra su plan."></video>
+            </div>
+          </figure>
+        </article>
+
       </div>
 
-      <!-- Tableta -->
-      <div class="disp disp--tableta">
-        <div class="pantalla">
-          <div class="ui" aria-hidden="true">
-            <div class="ui__cabeza">
-              <span class="ui__titulo">Tarjeta</span>
-            </div>
-            <div class="corte">
-              <span class="corte__t">Ciclo 7 jul – 6 ago</span>
-              <span class="corte__f"><em>Consumido</em><span>L 19,101</span></span>
-              <span class="corte__f"><em>Abonado</em><span>L 14,840</span></span>
-              <span class="corte__f total"><em>Adeudado</em><span>L 4,261</span></span>
-            </div>
-            <div class="movs">
-              <div class="mov"><i></i><em><b>Supermercado</b><u>Alimentación</u></em><span>L 2,410</span></div>
-              <div class="mov"><i></i><em><b>Combustible</b><u>Transporte</u></em><span>L 1,180</span></div>
-              <div class="mov"><i></i><em><b>Farmacia</b><u>Salud</u></em><span>L 640</span></div>
-              <div class="mov"><i></i><em><b>Colegio</b><u>Hogar</u></em><span>L 3,900</span></div>
-            </div>
-          </div>
-        </div>
-        <p class="pie-disp">Tableta</p>
+      <!-- Los tres tramos del recorrido. No se ven: son contra lo que el
+           observador decide qué acto va. Cada uno mide un tercio de la pista,
+           así que en el medio de la ventana siempre hay exactamente uno. -->
+      <div class="vitrina__tramos" aria-hidden="true">
+        <div class="vitrina__tramo" data-tramo="0"></div>
+        <div class="vitrina__tramo" data-tramo="1"></div>
+        <div class="vitrina__tramo" data-tramo="2"></div>
       </div>
-
-      <!-- Teléfono -->
-      <div class="disp disp--telefono">
-        <div class="pantalla">
-          <div class="muesca" aria-hidden="true"></div>
-          <div class="ui" aria-hidden="true">
-            <div class="ui__cabeza">
-              <span class="ui__titulo">Resumen</span>
-            </div>
-            <div class="ficha"><em>Disponible real</em><b class="bien">L 12,480</b></div>
-
-            <div class="pulso">
-              <div class="pulso__fila">
-                <em><span>Mes corrido</span><span>63%</span></em>
-                <div class="pulso__via"><div class="pulso__va va-63"></div></div>
-              </div>
-              <div class="pulso__fila">
-                <em><span>Presupuesto ido</span><span>71%</span></em>
-                <div class="pulso__via"><div class="pulso__va pulso__va--alerta va-71"></div></div>
-              </div>
-            </div>
-
-            <div class="corte">
-              <span class="corte__t">Corta en 4 días</span>
-              <span class="corte__f total"><em>Faltan</em><span>L 4,261</span></span>
-            </div>
-
-            <div class="movs">
-              <div class="mov"><i></i><em><b>Supermercado</b><u>Hoy</u></em><span>L 2,410</span></div>
-              <div class="mov"><i></i><em><b>Combustible</b><u>Ayer</u></em><span>L 1,180</span></div>
-            </div>
-          </div>
-        </div>
-        <p class="pie-disp">Teléfono</p>
-      </div>
-
     </div>
   </section>
 

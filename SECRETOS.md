@@ -115,6 +115,31 @@ describiendo la realidad aunque no la imponga:
 | Campo | Valor |
 |---|---|
 | Site URL | `https://controlewallet.com/app/` |
+| Redirect URLs | ver la lista de abajo — **incluidas las de `**`** |
+
+**Las entradas con `**` no son opcionales y su ausencia rompe las invitaciones
+en silencio.** El enlace de invitación lleva la ruta pegada
+—`…/app/#/invitacion/<token>`— porque es lo único que le dice a la app a qué
+hogar entra la persona. Esta lista se compara por patrón: una entrada exacta
+`…/app/` **no** autoriza `…/app/#/invitacion/…`, y GoTrue devuelve a la persona
+al `Site URL` pelado. Eso fue exactamente el defecto de agosto de 2026: la
+persona invitada caía en la raíz sin el token, la app no tenía cómo saber de la
+invitación, y le ofrecía armar un hogar que ya existía.
+
+El comodín no afloja nada: lo que esta lista impide es que la sesión vuelva a un
+**dominio** ajeno, y el dominio sigue clavado en cada entrada. Lo que se abre es
+la ruta dentro de un sitio que ya es nuestro.
+
+```
+https://controlewallet.com/app/
+https://controlewallet.com/app/**
+https://www.controlewallet.com/app/
+https://www.controlewallet.com/app/**
+```
+
+> Esto se pone **a mano en el panel**, como todo lo de esta sección. `config.toml`
+> ya las trae, pero ese archivo es referencia: `supabase config push` sobre
+> producción ya rompió el servicio tres veces.
 
 > **Nunca escribas una clave dentro de un comando.** Las tres veces que el correo
 > se rompió en este proyecto fue por eso: un comando con un hueco que se puede

@@ -689,3 +689,151 @@ test('la invitación correcta sí deja entrar, y una sola vez', async () => {
   const otra = await aceptar(suSesion, inv.token);
   assert.ok(!otra.ok, 'la misma invitación se pudo usar dos veces');
 });
+
+/* ============================================================
+   8. La invitación no puede terminar en dos hogares
+
+   POR QUÉ ESTÁ ACÁ Y NO EN LAS PRUEBAS DEL NÚCLEO
+
+   Porque lo que se comprueba es un DISPARADOR de la base sobre
+   `auth.users`, y eso no existe fuera de un proyecto de verdad.
+
+   EL DEFECTO QUE FIJA, encontrado por un hogar de verdad antes que por
+   ninguna prueba: `al_crear_usuario` le creaba un hogar a TODO usuario
+   nuevo, sin preguntar si venía invitado. La persona invitada terminaba
+   con el suyo además del que la invitó, y como la app toma
+   `(hogares)[0]` sin ordenar ni ofrecer selector, cuál de los dos veía
+   quedaba al azar.
+
+   ESTE BLOQUE NO USA NI A NI B, Y ESO NO ES CAPRICHO. Las pruebas de
+   borrado de cuenta, más arriba, eliminan a A de verdad: apoyarse en
+   `sesionA` acá hacía fallar estas cinco por una razón que no tenía
+   nada que ver con lo que comprueban. Cada una se arma su propio
+   invitador.
+   ============================================================ */
+
+/** Un usuario nuevo por la puerta de administración, con metadatos.
+
+    NO por `/auth/v1/signup`: esa puerta valida el dominio del correo y
+    rechaza `@controlewallet.test`, que es el que usa toda esta suite.
+    La de administración inserta igual en `auth.users` —o sea dispara
+    `al_crear_usuario`, que es lo que se está probando— y además deja
+    poner `user_metadata`, que es donde viaja el token de invitación
+    cuando la manda `/auth/v1/invite`. */
+async function altaCon(correo, metadatos = {}) {
+  const clave = 'Prueba-' + Math.random().toString(36).slice(2, 10);
+  const r = await admin('/auth/v1/admin/users', {
+    method: 'POST',
+    body: JSON.stringify({
+      email: correo, password: clave, email_confirm: true, user_metadata: metadatos
+    })
+  });
+  const u = await json(r);
+  if (!r.ok) throw new Error(`No se pudo crear ${correo}: ${JSON.stringify(u)}`);
+  nacidos.push(u.id);
+  return { ...u, clave };
+}
+
+/** Cuántos hogares tiene esa persona, preguntado con la clave de servicio. */
+async function hogaresDe(usuarioId) {
+  const filas = await json(await admin(
+    `/rest/v1/miembros?usuario_id=eq.${usuarioId}&select=hogar_id,rol`));
+  return Array.isArray(filas) ? filas : [];
+}
+
+const nacidos = [];
+let anfitrion, sesionAnfitrion, hogarAnfitrion;
+
+before(async () => {
+  const correo = `anfitrion-${Date.now()}@controlewallet.test`;
+  anfitrion = await altaCon(correo);
+  sesionAnfitrion = await entrar(correo, anfitrion.clave);
+  hogarAnfitrion = (await hogaresDe(anfitrion.id))[0].hogar_id;
+});
+
+after(async () => {
+  for (const id of nacidos) {
+    await admin(`/auth/v1/admin/users/${id}`, { method: 'DELETE' });
+  }
+});
+
+/** El anfitrión invita a ese correo a su hogar y devuelve la invitación. */
+async function invitarA(correo) {
+  const filas = await json(await como(sesionAnfitrion, '/invitaciones', {
+    method: 'POST',
+    body: JSON.stringify({ hogar_id: hogarAnfitrion, correo, rol: 'miembro' })
+  }));
+  assert.ok(Array.isArray(filas) && filas[0]?.token,
+    'no se pudo crear la invitación: ' + JSON.stringify(filas));
+  return filas[0];
+}
+
+test('quien se da de alta SIN invitación sigue recibiendo su hogar', async () => {
+  /* La mitad que no hay que romper arreglando la otra. Sin esta, un
+     `al_crear_usuario` que nunca creara hogar pasaría la prueba de
+     abajo y dejaría a todo el mundo sin hogar. */
+  const u = await altaCon(`solo-${Date.now()}@controlewallet.test`);
+  const suyos = await hogaresDe(u.id);
+  assert.equal(suyos.length, 1, 'quien llega por su cuenta tiene que recibir un hogar');
+  assert.equal(suyos[0].rol, 'propietario');
+});
+
+test('quien se da de alta CON una invitación válida no recibe hogar propio', async () => {
+  const correo = `inv-${Date.now()}@controlewallet.test`;
+  const inv = await invitarA(correo);
+  const u = await altaCon(correo, { invitacion: inv.token });
+
+  const suyos = await hogaresDe(u.id);
+  assert.equal(suyos.length, 0,
+    'no puede tener hogar propio: la app toma (hogares)[0] y con dos, cuál ve queda al azar');
+});
+
+test('y al aceptar entra al hogar que la invitó, a ese y a ninguno más', async () => {
+  const correo = `acepta-${Date.now()}@controlewallet.test`;
+  const inv = await invitarA(correo);
+  const u = await altaCon(correo, { invitacion: inv.token });
+  const suSesion = await entrar(correo, u.clave);
+
+  const r = await aceptar(suSesion, inv.token);
+  assert.ok(r.ok, 'la invitación tenía que dejarla entrar: ' + JSON.stringify(await json(r)));
+
+  const suyos = await hogaresDe(u.id);
+  assert.equal(suyos.length, 1, 'uno solo: el que la invitó');
+  assert.equal(suyos[0].hogar_id, hogarAnfitrion);
+
+  // Y lo que de verdad quería el dueño cuando reportó esto: que se vean.
+  const hogares = await json(await como(suSesion, '/hogares?select=id'));
+  assert.equal(hogares.length, 1);
+  assert.equal(hogares[0].id, hogarAnfitrion, 'tiene que ver el hogar que la invitó, no uno vacío suyo');
+});
+
+test('un token ajeno en los metadatos no le quita el hogar a nadie', async () => {
+  /* La condición del correo, del lado del disparador. Sin ella,
+     cualquiera podría darse de alta con un token que no es suyo y
+     quedarse sin hogar a propósito para confundir el arranque. */
+  const inv = await invitarA(`otro-${Date.now()}@controlewallet.test`);
+  const u = await altaCon(`ajeno-${Date.now()}@controlewallet.test`, { invitacion: inv.token });
+
+  const suyos = await hogaresDe(u.id);
+  assert.equal(suyos.length, 1, 'el token no era para su correo: le toca su propio hogar');
+  assert.equal(suyos[0].rol, 'propietario');
+});
+
+test('mi_invitacion_pendiente solo muestra lo del propio correo', async () => {
+  const correo = `mia-${Date.now()}@controlewallet.test`;
+  const inv = await invitarA(correo);
+  const u = await altaCon(correo, { invitacion: inv.token });
+  const suSesion = await entrar(correo, u.clave);
+
+  const mia = await json(await como(suSesion, '/rpc/mi_invitacion_pendiente', {
+    method: 'POST', body: '{}'
+  }));
+  assert.ok(mia && mia.id, 'tiene que encontrar la invitación que la espera');
+  assert.equal(mia.id, inv.id);
+
+  // Y el anfitrión, que no fue invitado a nada, no ve ninguna.
+  const suya = await json(await como(sesionAnfitrion, '/rpc/mi_invitacion_pendiente', {
+    method: 'POST', body: '{}'
+  }));
+  assert.equal(suya, null, 'no fue invitado a nada y no puede ver la invitación de otra persona');
+});

@@ -198,12 +198,31 @@ site_url = "https://controlewallet.com/app/"
 # Lista de destinos permitidos. Es una lista blanca: un destino que no
 # esté aquí se rechaza, y eso es lo que impide que alguien arme un
 # enlace de confirmación que devuelva la sesión a un sitio suyo.
+#
+# LAS ENTRADAS CON `**` NO SON UN DESCUIDO, Y SIN ELLAS LA INVITACIÓN
+# SE ROMPE EN SILENCIO. El enlace de invitación ahora lleva la ruta
+# pegada —`…/app/#/invitacion/<token>`— porque es lo único que le dice
+# a la app a qué hogar entra la persona. La comparación de esta lista
+# es por patrón, no por prefijo: una entrada exacta `…/app/` NO
+# autoriza `…/app/#/invitacion/…`, y GoTrue rechazaría el destino
+# devolviendo a la gente al `site_url` pelado — que es exactamente el
+# defecto que se está arreglando.
+#
+# El comodín NO afloja la seguridad: lo que esta lista impide es que
+# la sesión vuelva a un DOMINIO ajeno, y el dominio sigue clavado en
+# cada entrada. Lo que se abre es la ruta dentro de un sitio que ya es
+# nuestro.
 additional_redirect_urls = [
   "https://controlewallet.com/app/",
+  "https://controlewallet.com/app/**",
   "https://www.controlewallet.com/app/",
+  "https://www.controlewallet.com/app/**",
   "https://controle-wallet-pruebas.workers.dev/app/",
+  "https://controle-wallet-pruebas.workers.dev/app/**",
   "http://127.0.0.1:8788/app/",
-  "http://localhost:8788/app/"
+  "http://127.0.0.1:8788/app/**",
+  "http://localhost:8788/app/",
+  "http://localhost:8788/app/**"
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600

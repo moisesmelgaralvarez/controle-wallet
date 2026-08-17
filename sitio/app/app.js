@@ -25,7 +25,7 @@
    menú.
    ============================================================ */
 
-import { haySesion, salir, capturarSesionDeURL, ErrorDatos, llamar } from './datos/api.js';
+import { haySesion, salir, capturarSesionDeURL, ErrorDatos, llamar, ponerClave } from './datos/api.js';
 import { cargarHogar, datosDelHogar, mesDeHoy, olvidar } from './datos/hogar.js';
 import { olvidarHistorico } from './datos/historico.js';
 import * as A from './nucleo/index.js';
@@ -191,6 +191,18 @@ async function aceptarInvitacion(token) {
     await llamar('aceptar_invitacion', { p_token: token });
     olvidar();
     olvidarHistorico();
+
+    /* Quien llega por el enlace de una invitación NO TIENE CONTRASEÑA:
+       `/auth/v1/invite` crea la cuenta sin ninguna. Si se la manda al
+       resumen sin pedírsela, entra hoy y mañana no puede volver. Se le
+       pide acá, con el hogar ya resuelto. */
+    if (delCorreo && delCorreo.tipo === 'invite') {
+      // El token ya se usó; sacarlo de la dirección antes de seguir.
+      history.replaceState(null, '', '/app/#/resumen');
+      ({ ruta, elegido, extra } = leerHash());
+      return pedirClave({ alTerminar: () => arrancar({ refrescar: true }) });
+    }
+
     // Sin el token en la dirección: ya se usó, y dejarlo invita a
     // compartir un enlace que ya no sirve.
     location.replace('/app/#/resumen');
@@ -205,6 +217,118 @@ async function aceptarInvitacion(token) {
       <button class="boton boton--borde" type="button" id="alResumen">Ir a mi hogar</button>`;
     $('#alResumen').addEventListener('click', () => { location.hash = '#/resumen'; });
   }
+}
+
+/**
+ * Elegir contraseña, para quien entró por invitación.
+ *
+ * `/auth/v1/invite` crea la cuenta SIN contraseña. El enlace del correo
+ * la deja adentro una vez y, si no elige una acá, no puede volver a
+ * entrar nunca — y encima no tiene cómo enterarse de por qué. Se vio en
+ * un hogar de verdad: «le pide iniciar sesión» y no había con qué.
+ *
+ * Va DESPUÉS de entrar al hogar y no antes: primero se resuelve lo que
+ * la trajo —quedar adentro—, y recién entonces se le pide algo. Al
+ * revés, un error al elegir contraseña la dejaría fuera del hogar
+ * habiendo hecho todo bien.
+ */
+function pedirClave({ alTerminar }) {
+  marcar('ok');
+  document.body.dataset.asistente = 'si';
+  $('#titulo').textContent = 'Elegí tu contraseña';
+  $('#mesNav').hidden = true;
+  vista.innerHTML = `
+    <div class="asistente">
+      <p class="asistente__entrada">
+        Ya estás dentro del hogar. Elegí una contraseña para poder volver a
+        entrar sin depender del correo.
+      </p>
+      <form class="asistente__forma" id="formaClave" novalidate>
+        <label class="campo">
+          <span class="campo__nombre">Contraseña</span>
+          <input class="campo__caja" type="password" name="clave" required
+                 minlength="8" autocomplete="new-password">
+          <span class="campo__ayuda">Ocho caracteres o más.</span>
+        </label>
+        <p class="aviso aviso--malo" id="claveMal" hidden></p>
+        <button class="boton boton--principal" type="submit">Guardar y entrar</button>
+      </form>
+    </div>`;
+
+  $('#formaClave').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const boton = $('#formaClave button[type="submit"]');
+    const clave = $('#formaClave [name="clave"]').value;
+    const mal = $('#claveMal');
+    if (!clave || clave.length < 8) {
+      mal.hidden = false; mal.textContent = 'Tiene que ser de ocho caracteres o más.';
+      return;
+    }
+    boton.disabled = true; boton.textContent = 'Guardando…';
+    try {
+      await ponerClave(clave);
+      document.body.dataset.asistente = 'no';
+      alTerminar();
+    } catch (err) {
+      mal.hidden = false;
+      mal.textContent = err.message || 'No se pudo guardar la contraseña.';
+      boton.disabled = false; boton.textContent = 'Guardar y entrar';
+    }
+  });
+}
+
+/**
+ * Ofrecerle el hogar a quien fue invitada y llegó sin el enlace.
+ *
+ * Pasa más de lo que parece: se pierde el correo, se entra directo por
+ * la dirección, se cambia de aparato. Sin esto la persona queda con una
+ * cuenta sin hogar y SIN FORMA DE ENTERARSE de que hay una invitación
+ * esperándola — que es peor que el defecto original, porque no tiene ni
+ * un asistente que la distraiga.
+ *
+ * La app no puede leer `invitaciones` por su cuenta: RLS lo impide, y
+ * correctamente, porque todavía no es miembro de ese hogar. De ahí que
+ * la pregunta la conteste `mi_invitacion_pendiente`, que solo devuelve
+ * lo del propio correo de quien pregunta.
+ */
+async function ofrecerInvitacion(inv) {
+  marcar('ok');
+  document.body.dataset.asistente = 'si';
+  $('#titulo').textContent = 'Te invitaron a un hogar';
+  $('#mesNav').hidden = true;
+  vista.innerHTML = `
+    <div class="asistente">
+      <p class="asistente__entrada">
+        Te invitaron al hogar <strong>${esc(inv.hogar)}</strong>. Al entrar vas a
+        ver sus ingresos, gastos y metas — y ellos van a ver lo que registrés vos.
+      </p>
+      <p class="aviso aviso--malo" id="invMal" hidden></p>
+      <div class="asistente__forma">
+        <button class="boton boton--principal" type="button" id="entrarAlHogar">Entrar al hogar</button>
+        <button class="boton boton--borde" type="button" id="hogarPropio">Prefiero armar el mío</button>
+      </div>
+    </div>`;
+
+  $('#entrarAlHogar').addEventListener('click', async (e) => {
+    e.target.disabled = true; e.target.textContent = 'Entrando…';
+    try {
+      await llamar('aceptar_invitacion_mia', { p_id: inv.id });
+      olvidar(); olvidarHistorico();
+      document.body.dataset.asistente = 'no';
+      arrancar({ refrescar: true });
+    } catch (err) {
+      const mal = $('#invMal');
+      mal.hidden = false; mal.textContent = err.message || 'No se pudo entrar al hogar.';
+      e.target.disabled = false; e.target.textContent = 'Entrar al hogar';
+    }
+  });
+
+  /* La salida. Sin ella, quien no quiera entrar a ese hogar se queda
+     trancada en esta pantalla sin poder usar la app. */
+  $('#hogarPropio').addEventListener('click', () => {
+    document.body.dataset.asistente = 'no';
+    abrirAsistente();
+  });
 }
 
 async function arrancar({ refrescar = false } = {}) {
@@ -241,6 +365,15 @@ async function arrancar({ refrescar = false } = {}) {
        La política de privacidad promete poder llevarse los datos y
        borrar la cuenta «cuando querás»; mandar al asistente a quien
        viene justo a eso lo dejaría atrapado. */
+    /* SIN HOGAR NO SIGNIFICA «ARMÁ UNO». Puede significar que la
+       invitaron y todavía no entró — que es justo el caso que este
+       arreglo persigue. Se pregunta ANTES de abrir el asistente, porque
+       abrirlo es lo que la llevaba a armar un hogar de más. */
+    if (ruta !== 'cuenta' && !hogar) {
+      const inv = await llamar('mi_invitacion_pendiente').catch(() => null);
+      if (inv && inv.id) return ofrecerInvitacion(inv);
+    }
+
     if (ruta !== 'cuenta' && A.faltantes(D).length) return abrirAsistente();
 
     document.body.dataset.asistente = 'no';

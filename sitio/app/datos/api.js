@@ -77,7 +77,25 @@ export function capturarSesionDeURL() {
   if (!hash.includes('access_token') && !hash.includes('error')) return null;
 
   const p = new URLSearchParams(hash.slice(1));
-  const limpiar = () => history.replaceState(null, '', location.pathname + location.search);
+
+  /* SE CONSERVA LA RUTA DE LA APP, Y ESTE ERA UN DEFECTO CARO.
+     Antes esto hacía `location.pathname + location.search` a secas, o
+     sea borraba el hash ENTERO. Y como el enlace de invitación llega
+     justamente como `#/invitacion/<token>&access_token=…`, la ruta se
+     perdía antes de que nadie la leyera: la persona invitada caía en el
+     cargador de hogar, no tenía ninguno, y le tocaba armar uno.
+     Se vio en un hogar de verdad antes que en ninguna prueba.
+
+     Lo que se borra son los parámetros de sesión, que es de lo que se
+     trataba: no tienen por qué quedar en el historial ni en una captura
+     de pantalla. Lo que se queda es a dónde iba la persona. */
+  const RUTA = /^\/?[a-z-]+(\/[^&]*)?/i;
+  const limpiar = () => {
+    const cruda = hash.replace(/^#/, '');
+    const m = cruda.startsWith('/') ? cruda.match(RUTA) : null;
+    const ruta = m ? m[0] : '';
+    history.replaceState(null, '', location.pathname + location.search + (ruta ? '#' + ruta : ''));
+  };
 
   if (p.get('error')) {
     limpiar();
@@ -287,6 +305,29 @@ export async function entrar(correo, clave) {
 
 export async function recuperar(correo) {
   await auth('/recover', { email: correo });
+}
+
+/**
+ * Ponerle contraseña a la sesión que ya está abierta.
+ *
+ * Hace falta para quien entra por invitación: `/auth/v1/invite` crea la
+ * cuenta SIN contraseña, así que el enlace del correo la deja adentro
+ * una vez y, si no elige una, no puede volver a entrar nunca — ni
+ * siquiera sabe que le falta. Se vio en un hogar de verdad: «le pide
+ * iniciar sesión» y no había con qué.
+ *
+ * Va contra `/auth/v1/user` con la sesión en curso, así que no manda
+ * ningún correo ni pide la contraseña anterior — que no existe.
+ */
+export async function ponerClave(clave) {
+  const r = await fetch(`${CONFIG.url}/auth/v1/user`, {
+    method: 'PUT',
+    headers: cabeceras({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ password: clave })
+  });
+  const datos = await cuerpoDe(r);
+  if (!r.ok) throw new ErrorDatos(traducir(r.status, datos), { estado: r.status, causa: datos });
+  return datos;
 }
 
 /** Cierra la sesión de este dispositivo. */

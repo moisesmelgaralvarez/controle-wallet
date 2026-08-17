@@ -31,6 +31,7 @@
      `hero.js` y `mundo.js` salieron los dos. El primero raspaba un mp4 contra
      el scroll; el segundo lo reemplazó por un lienzo de luz. Ninguno sobrevive
      al cambio de idioma: sobre papel, el instrumento se IMPRIME. -->
+<script src="/menu.js" defer></script>
 <script src="/ciclo.js" defer></script>
 <script src="/vitrina.js" defer></script>
 </head>
@@ -46,18 +47,36 @@
   </a>
   <!-- «Entrar» y «Crear cuenta» salen del <nav>: son acciones de sesión, no
        navegación. Además de ser lo correcto para un lector de pantalla, es lo
-       que permite acomodarlas aparte en teléfono, donde metidas adentro
-       obligaban a la cabecera a partirse en tres filas de 150 px. -->
-  <nav class="menu" aria-label="Principal">
+       que permite dejarlas SIEMPRE a la vista mientras la navegación se
+       recoge — que es justo lo que hay que conservar en un teléfono. -->
+  <nav class="menu" id="menu-principal" aria-label="Principal">
     <a href="/" aria-current="page">Inicio</a>
     <a href="/precios">Precios</a>
     <a href="/preguntas">Preguntas</a>
     <a href="/contacto">Contacto</a>
   </nav>
+
   <span class="sesion">
     <a href="/entrar">Entrar</a>
     <a class="boton boton--principal" href="/registro">Crear cuenta</a>
   </span>
+
+  <!-- El tirador del menú. Va en el MARCADO y no lo agrega JavaScript, porque
+       tiene que existir antes del primer pintado: si apareciera después, la
+       cabecera daría un salto en cada carga.
+
+       Nace con `hidden`: sin /menu.js el botón no abriría nada, y un control
+       que no hace nada es peor que ningún control. `menu.js` le quita el
+       `hidden` y recién ahí la navegación se recoge. Sin JavaScript quedan
+       los cuatro enlaces a la vista, que es una cabecera correcta. -->
+  <button class="tirador" type="button" hidden
+          aria-expanded="false" aria-controls="menu-principal">
+    <span class="tirador__caja" aria-hidden="true">
+      <span class="tirador__raya"></span>
+      <span class="tirador__raya"></span>
+    </span>
+    <span class="tirador__dicho">Menú</span>
+  </button>
 </header>
 
 <main id="principal">

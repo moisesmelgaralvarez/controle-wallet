@@ -34,15 +34,50 @@
       pierde exactamente lo que tiene que ganar.
    ========================================================================== */
 
+/* ---------- la paleta se declara, no se hereda ----------
+
+   ESTE BLOQUE ES UN ARREGLO, Y EL DEFECTO ERA GRAVE.
+
+   `marca.css` voltea los diez tokens dentro de un
+   `@media (prefers-color-scheme: dark)`. `noche.css` era inmune porque
+   declaraba su propia paleta entera; `papel.css` los CONSUME, así que en una
+   máquina con el sistema en oscuro el mundo de papel salía invertido: fondo
+   #131315, tinta clara y el acento en menta. El diseño entero al revés.
+
+   Y no lo vi porque medí con Playwright en `colorScheme: 'light'` y nunca
+   probé el otro. Una comprobación que solo mira el caso que funciona no está
+   comprobando nada.
+
+   `color-scheme: light` NO alcanza: eso le dice al navegador cómo pintar sus
+   controles, no anula una media query. Hay que volver a declarar los valores.
+   Van en `.papel` —el <body>— y no en `:root`: el elemento más cercano gana
+   para sí y para todos sus descendientes, sin pelear con la media query.
+
+   Es la misma decisión que ya tenía el sitio, solo que del otro lado: un solo
+   modo, y lo decide la dirección de arte, no el sistema del visitante. */
 .papel {
+  --fondo:        #FBF9F9;
+  --superficie:   #FFFFFF;
+  --elevado:      #F1EFEE;
+  --tinta:        #131315;
+  --tenue:        #5B5F5D;
+  --borde:        #CFCBC8;
+  --borde-fuerte: #87847F;
+  --acento:       #064E3B;
+  --acento-ct:    #FFFFFF;
+  --suave:        #E6F2EC;
+  --alerta:       #B3261E;
+  --sombra: 0 1px 2px rgb(19 19 21 / 0.04), 0 8px 24px -12px rgb(19 19 21 / 0.10);
+
   /* El papel no es blanco puro: #FBF9F9 tiene un punto de calor. En pantalla
      el blanco absoluto se lee como «sin terminar», y en una página larga
      cansa la vista. */
   background: var(--fondo);
   color: var(--tinta);
 
-  /* Un solo modo, y es el claro. Igual que antes había un solo modo negro:
-     el fondo lo decide la dirección de arte, no el visitante. */
+  /* Que los controles nativos —barras de scroll, casillas, el calendario de
+     un campo de fecha— acompañen. No pinta la página; pinta lo que dibuja el
+     navegador por su cuenta. */
   color-scheme: light;
 
   --filete:     var(--borde);
@@ -72,25 +107,12 @@
    ========================================================================== */
 
 .papel .rotulo {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
   margin: 0 0 clamp(1.75rem, 4vh, 3rem);
   font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--tenue);
-}
-
-/* La barrita del rótulo. Es un signo de imprenta, no un adorno: marca el
-   principio de un bloque igual que el filete marca el final. */
-.rotulo::before {
-  content: "";
-  width: 2.5rem;
-  height: 1px;
-  background: var(--tinta);
-  flex: none;
 }
 
 .papel .display {
@@ -602,3 +624,137 @@
 /* Centrados, el tope se reparte a los dos lados en vez de dejar el bloque
    pegado a la izquierda dentro de su caja. */
 .papel :where(.bajada--centro, .tarima__voz p, .vitrina__intro p) { margin-inline: auto; }
+
+/* ==========================================================================
+   EL TIRADOR — la navegación se recoge, las acciones se quedan
+
+   En un teléfono los cuatro enlaces de navegación se comían una fila entera
+   de la cabecera, y son lo MENOS urgente que hay ahí: quien llega no viene a
+   leer «Preguntas», viene a entrar o a abrir una cuenta. Esas dos se quedan
+   siempre a la vista y la navegación pasa detrás del tirador.
+   ========================================================================== */
+
+.tirador {
+  display: none;          /* /menu.js lo enciende */
+  align-items: center;
+  gap: 0.55rem;
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-chico);
+  color: var(--tinta);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 550;
+  min-height: 44px;
+  padding: 0 0.85rem;
+  cursor: pointer;
+  transition: border-color 200ms var(--curva), background-color 200ms var(--curva);
+}
+
+/* 18 × 14 y no 16 × 12: con las rayas a 8 px de distancia el dibujo se leía
+   como un signo «igual», no como un menú. A 11 px ya se lee como dos
+   renglones, que es lo que tiene que sugerir. */
+.tirador__caja {
+  position: relative;
+  width: 18px;
+  height: 14px;
+  flex: none;
+}
+
+/* Dos rayas que se cruzan. La equis no es un icono aparte: son las MISMAS dos
+   rayas girando, y por eso el cambio se lee como un movimiento y no como un
+   reemplazo de dibujo. */
+.tirador__raya {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 1.5px;
+  border-radius: 2px;
+  background: currentColor;
+  transition: transform 260ms var(--curva), opacity 160ms var(--curva);
+}
+.tirador__raya:nth-child(1) { top: 1px; }
+.tirador__raya:nth-child(2) { bottom: 1px; }
+
+.tirador[aria-expanded="true"] .tirador__raya:nth-child(1) { transform: translateY(5.25px) rotate(45deg); }
+.tirador[aria-expanded="true"] .tirador__raya:nth-child(2) { transform: translateY(-5.25px) rotate(-45deg); }
+
+.tirador:active { transform: scale(0.97); }
+
+@media (hover: hover) and (pointer: fine) {
+  .tirador:hover { border-color: var(--tinta); background: var(--elevado); }
+}
+
+/* ---------- de 46rem para abajo: el menú es un panel ---------- */
+
+@media (max-width: 46rem) {
+  .papel .cabecera--con-tirador { flex-wrap: nowrap; gap: 0.6rem; }
+  .papel .cabecera--con-tirador .tirador { display: inline-flex; }
+
+  /* El <nav> se convierte en panel. Va `position: absolute` colgado de la
+     cabecera y no dentro del flujo: metido en el flujo, abrirlo empujaría la
+     página hacia abajo y el contenido daría un salto de 200 px. */
+  .papel .cabecera--con-tirador .menu {
+    position: absolute;
+    top: 100%;
+    inset-inline: 0;
+    display: grid;
+    gap: 0;
+    width: auto;
+    margin: 0;
+    padding: 0.5rem clamp(1.25rem, 5vw, 5rem) 1rem;
+    background: var(--fondo);
+    border-bottom: 1px solid var(--borde);
+    overflow: visible;
+
+    /* Cerrado no es `display: none`: se recorta. Así la altura se puede
+       animar y, sobre todo, `visibility: hidden` lo saca del orden de
+       tabulación — con solo opacidad, el teclado sigue entrando a cuatro
+       enlaces invisibles. */
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-0.5rem);
+    transition: opacity 220ms var(--curva), transform 260ms var(--curva),
+                visibility 0s linear 260ms;
+  }
+
+  .papel .cabecera--con-tirador .menu[data-abierto] {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    transition-delay: 0s;
+  }
+
+  .papel .cabecera--con-tirador .menu a {
+    padding-block: 0.85rem;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--borde);
+    font-size: 1rem;
+  }
+  .papel .cabecera--con-tirador .menu a:last-child { border-bottom: 0; }
+
+  /* La cabecera necesita ser el marco del panel colgado. */
+  .papel .cabecera { position: fixed; }
+
+  /* Y el rótulo de sesión se aprieta para que las dos acciones y el tirador
+     entren en una sola fila de 390 px. */
+  .papel .cabecera--con-tirador .sesion {
+    margin-left: auto;
+    padding-left: 0;
+    border-left: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .papel .cabecera--con-tirador .tirador__dicho { display: none; }
+  .papel .cabecera--con-tirador .tirador { padding-inline: 0.7rem; }
+}
+
+/* De 46rem para arriba el tirador no existe y los cuatro enlaces van sueltos:
+   es lo correcto cuando hay lugar, y evita esconder navegación por gusto. */
+@media (min-width: 46.0625rem) {
+  .papel .cabecera--con-tirador .tirador { display: none; }
+}

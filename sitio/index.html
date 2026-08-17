@@ -32,6 +32,7 @@
      el scroll; el segundo lo reemplazó por un lienzo de luz. Ninguno sobrevive
      al cambio de idioma: sobre papel, el instrumento se IMPRIME. -->
 <script src="/menu.js" defer></script>
+<script src="/portada.js" defer></script>
 <script src="/ciclo.js" defer></script>
 <script src="/vitrina.js" defer></script>
 </head>
@@ -116,6 +117,7 @@
       </div>
     </div>
 
+
     <!-- UN SOLO EJE PARA LAS DOS REGLAS.
 
          La primera versión corría la regla del ciclo con `translate`, y se
@@ -157,6 +159,71 @@
   </section>
 
   <!-- ── el corte de la tarjeta, con el visual clavado ──────── -->
+
+  <!-- ── el acto de la pantalla ─────────────────────────────────
+       ESTO ESTABA MAL Y SE MIDIÓ. La pantalla nació al lado del titular,
+       repartiendo la portada en dos columnas. A 1440 el marco salía en 411 px
+       de ancho: un tablero de 1920 metido ahí deja el texto en un tercio de su
+       tamaño, ilegible. Y la portada crecía a 1303 px dentro de una ventana de
+       900 — se salía media pantalla.
+
+       Las dos cosas tienen la misma causa: tres piezas grandes —titular,
+       pantalla e instrumento— no caben en un viewport. Así que la pantalla se
+       lleva su propio acto, a todo el ancho de la hoja, donde el marco mide
+       1248 px y el tablero se lee.
+
+       LO QUE SE VE ADENTRO SON DOS COSAS UNIDAS. Los primeros seis segundos
+       son generados —un documento deshaciéndose en luz, sin una sola letra en
+       el cuadro, que es lo único que un modelo de video no puede arruinar—.
+       Los últimos tres y medio son la INTERFAZ REAL, grabada de la app con
+       `herramientas/filmar.js`: categorías en español, lempiras, el ciclo
+       7 ago – 6 sep. El empalme es invisible porque las columnas de luz y las
+       barras de la gráfica son la misma forma, y las cifras están a medio
+       contar justo cuando la luz aterriza.
+
+       El `src` no va en el marcado: lo pone /portada.js, y solo cuando de
+       verdad se va a usar. En teléfono y con movimiento reducido nadie
+       descarga 6.3 MB — les queda el póster, que es el tablero terminado y ya
+       es una composición completa. -->
+  <section class="franja acto-pantalla">
+    <div class="hoja">
+      <p class="rotulo llega">Lo que ve, de verdad</p>
+      <!-- LA PANTALLA. Un aparato apoyado sobre la hoja, no un fondo a sangre:
+           la página es papel y la película es oscura, así que el contraste la
+           vuelve el foco en vez de pelear con el mundo.
+
+           Lo que se ve adentro son DOS COSAS UNIDAS. Los primeros seis
+           segundos son generados —un documento deshaciéndose en luz, sin una
+           sola letra en el cuadro, que es lo único que un modelo de video no
+           puede arruinar—. Los últimos tres y medio son la INTERFAZ REAL,
+           grabada de la app con `herramientas/filmar.js`: categorías en
+           español, lempiras, el ciclo 7 ago – 6 sep. El empalme es invisible
+           porque las columnas de luz y las barras de la gráfica son la misma
+           forma, y las cifras están a medio contar justo cuando la luz aterriza.
+
+           El `src` NO va en el marcado: lo pone /portada.js, y solo cuando de
+           verdad se va a usar. En teléfono y con movimiento reducido nadie
+           descarga 6.3 MB — les queda el póster, que es el tablero terminado y
+           ya es una composición completa. -->
+      <figure class="pantalla llega">
+        <div class="pantalla__marco">
+          <div class="pantalla__barra" aria-hidden="true">
+            <i></i><i></i><i></i><span>controlewallet.com/app</span>
+          </div>
+          <div class="pantalla__vidrio">
+            <video class="pantalla__cinta" data-cinta="/media/hero-scrub.mp4"
+                   muted playsinline preload="none"
+                   aria-hidden="true" tabindex="-1"></video>
+
+          </div>
+        </div>
+        <figcaption class="pantalla__pie">
+          El resumen del mes, sobre el ciclo real
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
   <section class="franja">
     <div class="fijo">
 

@@ -758,3 +758,183 @@
 @media (min-width: 46.0625rem) {
   .papel .cabecera--con-tirador .tirador { display: none; }
 }
+
+/* ==========================================================================
+   LA PANTALLA DE LA PORTADA — un aparato apoyado sobre la hoja
+
+   La página es papel claro y la película es oscura. No se resuelve poniendo
+   el video a sangre: se resuelve ENMARCÁNDOLO. Un aparato tiene una pantalla
+   oscura y eso no contradice el papel, igual que un teléfono sobre un
+   escritorio no contradice el escritorio. El contraste lo vuelve el foco.
+
+   LO QUE SE VE ADENTRO SON DOS COSAS UNIDAS: seis segundos generados —un
+   documento deshaciéndose en luz, sin una letra en el cuadro— y tres y medio
+   de la interfaz REAL, grabada de la app. El empalme es invisible porque las
+   columnas de luz y las barras de la gráfica son la misma forma.
+   ========================================================================== */
+
+.pantalla { margin: 0; display: grid; gap: 0.9rem; justify-items: center; }
+
+.pantalla__marco {
+  width: 100%;
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  background: #17181A;
+  box-shadow: 0 1px 2px rgb(19 19 21 / 0.06), 0 24px 60px -28px rgb(19 19 21 / 0.35);
+  overflow: hidden;
+}
+
+.pantalla__barra {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 12px;
+  background: #1F2124;
+  border-bottom: 1px solid #2A2D31;
+}
+.pantalla__barra i { width: 8px; height: 8px; border-radius: 99px; background: #3A3E43; }
+.pantalla__barra span {
+  margin-left: 8px;
+  padding: 2px 12px;
+  border-radius: 99px;
+  background: #131416;
+  color: #8B9097;
+  font-size: 0.6875rem;
+}
+
+/* La proporción la fija el vidrio y no el video: así el marco reserva su
+   lugar desde el primer pintado y la página no da un salto cuando la
+   película entra. */
+/* La proporción la fija el vidrio y no el video: así el marco reserva su
+   lugar desde el primer pintado y la página no da un salto cuando la película
+   entra.
+
+   EL FONDO ES EL PRIMER CUADRO porque acá el video SÍ se va a reproducir, y
+   arrancar mostrando el final para después rebobinar se ve como un error.
+   Donde no se reproduce, más abajo, se cambia por el último. */
+.pantalla__vidrio {
+  position: relative;
+  aspect-ratio: 1920 / 1080;
+  background: #0E0F11 center / cover no-repeat url("/media/hero-poster.jpg");
+}
+
+.pantalla__cinta {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  /* Aparece cuando ya se puede reproducir, no antes: mostrada mientras carga
+     es un rectángulo negro tapando el póster. */
+  opacity: 0;
+  transition: opacity 500ms var(--curva);
+}
+.pantalla--lista .pantalla__cinta { opacity: 1; }
+.pantalla--sin-cinta .pantalla__cinta { display: none; }
+
+/* El pie se centra y se acota. Suelto y a 390 se iba a dos renglones y
+   arrancaba a la izquierda del marco, que a esa escala se lee como texto
+   desalineado y no como pie. */
+.pantalla__pie {
+  max-width: 46ch;
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  text-wrap: balance;
+  color: var(--tenue);
+}
+
+/* ---------- el acto de la pantalla ----------
+
+   A TODO EL ANCHO DE LA HOJA, Y NO AL LADO DEL TITULAR. La primera versión
+   repartía la portada en dos columnas y se midió: el marco salía en 411 px a
+   1440, con lo que el texto del tablero quedaba en un tercio de su tamaño —
+   ilegible—, y la portada crecía a 1303 px dentro de una ventana de 900.
+
+   Acá el marco mide lo que mide la hoja: 1248 px. El tablero se lee, que era
+   el único motivo para filmarlo. */
+
+.acto-pantalla { padding-block: clamp(4rem, 10vh, 8rem); }
+.acto-pantalla .rotulo { margin-bottom: clamp(1.5rem, 3vh, 2.5rem); }
+
+/* ---------- EL PARALAJE ----------
+
+   La pantalla entra más despacio que la página. Esa diferencia de velocidad
+   es lo único que el ojo lee como profundidad: el marco se queda atrás, como
+   un objeto que está más lejos, y el pie lo sigue un poco después.
+
+   Va con `animation-timeline: view()`, que corre FUERA del hilo principal. Un
+   paralaje hecho con un `scroll` que escribe `transform` en cada cuadro es la
+   forma más común de que una página larga se sienta pesada.
+
+   `translate` y nada más. Ni `top`, ni `margin`, ni filtros: es lo único que
+   no rehace ni composición ni pintura. */
+@supports (animation-timeline: view()) {
+  @media (min-width: 48rem) and (prefers-reduced-motion: no-preference) {
+    .acto-pantalla .pantalla__marco {
+      animation: paralaje-marco linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 40%;
+    }
+    @keyframes paralaje-marco {
+      from { translate: 0 4.5rem; }
+      to   { translate: 0 0; }
+    }
+
+    .acto-pantalla .pantalla__pie {
+      animation: paralaje-pie linear both;
+      animation-timeline: view();
+      animation-range: entry 15% cover 45%;
+    }
+    @keyframes paralaje-pie {
+      from { translate: 0 2rem; opacity: 0; }
+      to   { translate: 0 0;    opacity: 1; }
+    }
+  }
+}
+
+/* ---------- las compuertas, y por qué son DOS listas y no una ----------
+
+   Nacieron como una sola lista de cinco que apagaba el video. Se midió a 390
+   y el resultado fue el mismo defecto que ya había costado caro en la
+   vitrina: el marco queda en 308 px, y un tablero compuesto para 1280 metido
+   ahí deja su texto más chico en 5 px. Ilegible.
+
+   Apagar el video no arregla eso — el póster es igual de chiquito. Lo que hay
+   que apagar es EL ACTO ENTERO, y por una razón de composición, no de peso:
+   más abajo la vitrina ya enseña la app en un teléfono, filmada al tamaño
+   correcto y legible. Un tablero de escritorio ilegible encima de eso es
+   estrictamente peor que no ponerlo.
+
+   Dónde está el corte, medido y CORREGIDO midiendo. El texto más chico del
+   tablero son 14.5 px sobre 1280 de ancho; para que no baje de los 10 px que
+   este proyecto ya tenía por umbral, el marco tiene que medir
+   1280 × (10 / 14.5) = 883 px. El primer corte lo puse en 1024 a ojo y la
+   medición lo desmintió: ahí el marco sale en 838 px y la letra en 9.5. El
+   marco llega a 883 px con una ventana de ~1080, y ese es el número.
+
+   Y por eso son dos listas. El TAMAÑO esconde el acto. El MOVIMIENTO
+   REDUCIDO no: quien lo tiene prendido en una pantalla de 1440 sí puede leer
+   el tablero perfectamente — lo que no quiere es que se mueva. A ese le queda
+   el acto completo con el último cuadro fijo. Meter las dos cosas en una sola
+   lista le escondía la pantalla por una preferencia que no tiene nada que ver
+   con poder verla. */
+
+/* 1. POR TAMAÑO — se esconde el acto entero. */
+@media (max-width: 1080px),
+       (orientation: portrait) and (pointer: coarse),
+       (orientation: landscape) and (pointer: coarse) and (max-height: 560px) {
+  .acto-pantalla { display: none; }
+}
+
+/* 2. POR MOVIMIENTO — se queda el acto, se va la película.
+   El fondo pasa a ser el ÚLTIMO cuadro: el resumen del mes ya calculado, con
+   sus lempiras y su ciclo. Una composición terminada, no la disculpa de un
+   video que no llegó. */
+@media (prefers-reduced-motion: reduce) {
+  .pantalla__vidrio { background-image: url("/media/hero-final.jpg"); }
+  .pantalla__cinta { display: none; }
+}

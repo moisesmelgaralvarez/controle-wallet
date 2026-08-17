@@ -67,9 +67,14 @@ const POR_SEG = 30;
    tamaño se fija para que el texto más chico de cada película —el
    rótulo de un movimiento, 0.85em— no baje de 10 px. */
 const PLATOS = {
-  telefono:   { letra: 12 },
-  tableta:    { letra: 12 },
-  escritorio: { letra: 13 },
+  telefono:   { letra: 12, modo: 'light' },
+  tableta:    { letra: 12, modo: 'light' },
+  escritorio: { letra: 13, modo: 'light' },
+  /* El hero va en OSCURO y los otros tres en claro, y no es un descuido: es
+     la mitad real de un híbrido cuya primera mitad es luz sobre fondo
+     carbón. Un corte de oscuro a claro en mitad de un mismo plano se lee
+     como un error de montaje, no como una transición. */
+  hero:       { letra: 18, modo: 'dark' },
 };
 
 /* ---------- la curva ----------
@@ -162,7 +167,8 @@ const nav = await chromium.launch();
 const ctx = await nav.newContext({
   viewport: { width: 1000, height: 700 },
   deviceScaleFactor: 2,
-  colorScheme: 'light',   /* El mundo del sitio es claro: la app se filma en claro */
+  /* El modo se fija POR PLATÓ más abajo con `emulateMedia`, no acá: en una
+     misma corrida hay tomas claras y una oscura. */
   bypassCSP: true,
 });
 const pag = await ctx.newPage();
@@ -200,6 +206,10 @@ for (const [nombre, cfg] of Object.entries(PLATOS)) {
     return { width: +el.dataset.ancho, height: +el.dataset.alto };
   }, [nombre, cfg.letra]);
 
+  /* El modo de color, por toma. `emulateMedia` reevalúa las media queries
+     del documento ya cargado, así que `marca.css` cambia sus once tokens sin
+     recargar nada. */
+  await pag.emulateMedia({ colorScheme: cfg.modo });
   await pag.setViewportSize(medida);
 
   const cocina = mkdtempSync(join(tmpdir(), 'controle-film-'));

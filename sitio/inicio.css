@@ -84,10 +84,42 @@
 
 @media (min-width: 1000px) {
   .fijo { grid-template-columns: 1fr 1fr; gap: var(--e5); }
-  .fijo__visual { position: sticky; top: 18vh; }
-  .fijo__texto > * + * { margin-top: 60vh; }
-  .fijo__texto > *:first-child { margin-top: 6vh; }
-  .fijo__texto > *:last-child { margin-bottom: 30vh; }
+
+  /* EL APARATO SE CENTRA EN LA VENTANA, no se cuelga de 18vh.
+
+     Con `top: 18vh` el panel medía 416 px y arrancaba en y=162 de una ventana
+     de 900: quedaban 322 px muertos debajo de él, en la mitad izquierda de la
+     pantalla, durante las tres pantallas que dura la sección. Clavarlo a una
+     altura fija solo se ve bien en la ventana donde se eligió esa altura.
+
+     `height: 100svh` con `align-content: center` lo deja centrado en
+     cualquier ventana sin una sola medida escrita a mano. */
+  .fijo__visual {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    display: grid;
+    align-content: center;
+  }
+
+  /* EL PASO ENTRE HITOS BAJA DE 60vh A 34vh.
+
+     Con 60vh el paso era de 654 px y en una ventana de 900 se veía UN hito
+     solo, flotando, con media pantalla vacía arriba y otra media abajo.
+     Medido: 27, 30 y 27% de cobertura de tinta en las tres pantallas de la
+     sección — la parte más vacía del recorrido.
+
+     Con 34vh el paso queda en ~420 px: siempre se ve el hito que manda y
+     asoma el siguiente, así que la columna se lee como lo que es —una
+     cronología— y no como cuatro cosas sueltas. La sección se acorta
+     ~800 px, que era scroll sin nada que mirar.
+
+     OJO: cambiar esto MUEVE los tiempos del instrumento. Los rangos de
+     `noche.css` §4 están medidos contra esta separación; si vuelve a
+     cambiar, hay que volver a medirlos. */
+  .fijo__texto > * + * { margin-top: 34vh; }
+  .fijo__texto > *:first-child { margin-top: 22vh; }
+  .fijo__texto > *:last-child { margin-bottom: 26vh; }
 }
 
 /* ---------- los hitos del ciclo ---------- */

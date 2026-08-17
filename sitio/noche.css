@@ -1670,25 +1670,40 @@
       .fijo { view-timeline: --recorrido block; }
 
 
-      /* Los tiempos NO son a ojo. Medido en el navegador, el centro de cada
-         hito cruza el medio de la ventana en estos puntos del recorrido:
+      /* Los tiempos NO son a ojo, y se volvieron a medir cuando el paso entre
+         hitos bajó de 60vh a 34vh. El centro de cada hito cruza el medio de
+         la ventana en estos puntos:
 
-           1  «Abre el ciclo» ................ −21%   (la vía todavía vacía)
-           2  «Corta, y aparece el número» ...  22%   (19,101 completo)
-           3  «Entra el pago, y no llena» ....  65%   (14,840, y el faltante)
-           4  «Y el sueldo ya se gastó» ...... 108%   (todo dibujado)
+           1  «Abre el ciclo» ................ 25%   (la vía todavía vacía)
+           2  «Corta, y aparece el número» ... 42%   (19,101 completo)
+           3  «Entra el pago, y no llena» .... 58%   (14,840, y el faltante)
+           4  «Y el saldo engaña» ............ 74%   (todo dibujado)
+
+         VAN EN `cover` Y YA NO EN `contain`. Con la separación anterior los
+         hitos cruzaban dentro de la fase `contain`; con esta, los dos
+         primeros cruzan ANTES de que esa fase empiece, y un rango en
+         `contain` se quedaba clavado en 0% sin avisar. `cover` cubre todo el
+         tiempo que la sección está a la vista, de 0 a 100, y no tiene ese
+         borde donde el reloj se detiene.
+
+         Cómo se midió: se cuelga una sonda de la MISMA línea de tiempo, con
+         rango `cover 0%` a `cover 100%`, animando la opacidad; su opacidad
+         computada es el progreso. Se pregunta al navegador en vez de rehacer
+         la aritmética de las fases a mano. (Y hay que leerla dos cuadros
+         después del scroll: las animaciones de scroll se resuelven al pintar,
+         y leer antes devuelve el valor anterior — salía en mesetas.)
 
          Cada tramo termina donde su hito se lee, nunca después: si el número
          aparece antes que la barra que lo dibuja, el aparato deja de medir y
-         pasa a decorar. La carga arranca en `entry 85%` porque ahí es donde
-         el panel se clava, y no tiene sentido llenar algo que todavía sube. */
-      .medida__carga   { animation-timeline: --recorrido; animation-range: entry 85% contain 24%; }
-      .renglon--1      { animation-timeline: --recorrido; animation-range: contain 16% contain 24%; }
-      .medida__abono   { animation-timeline: --recorrido; animation-range: contain 40% contain 60%; }
-      .renglon--2      { animation-timeline: --recorrido; animation-range: contain 52% contain 60%; }
-      .medida__costura { animation-timeline: --recorrido; animation-range: contain 60% contain 66%; }
-      .medida__falta   { animation-timeline: --recorrido; animation-range: contain 62% contain 74%; }
-      .renglon--3      { animation-timeline: --recorrido; animation-range: contain 66% contain 76%; }
+         pasa a decorar. Los tres tramos del faltante caen entre el hito 3 y
+         el 4 porque es el hito 3 el que dice las dos cifras, en ese orden. */
+      .medida__carga   { animation-timeline: --recorrido; animation-range: cover 10% cover 40%; }
+      .renglon--1      { animation-timeline: --recorrido; animation-range: cover 32% cover 42%; }
+      .medida__abono   { animation-timeline: --recorrido; animation-range: cover 44% cover 56%; }
+      .renglon--2      { animation-timeline: --recorrido; animation-range: cover 48% cover 58%; }
+      .medida__costura { animation-timeline: --recorrido; animation-range: cover 56% cover 61%; }
+      .medida__falta   { animation-timeline: --recorrido; animation-range: cover 58% cover 66%; }
+      .renglon--3      { animation-timeline: --recorrido; animation-range: cover 60% cover 68%; }
     }
 
     /* ---------- 5. la voz de los actos ----------

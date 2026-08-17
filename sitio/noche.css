@@ -76,6 +76,175 @@
 
 .noche > * { position: relative; z-index: 1; }
 
+/* ==========================================================================
+   EL MUNDO — el lienzo vivo, detrás de todo
+
+   Fijo a la ventana y del tamaño de la ventana. No se mueve con el scroll: lo
+   que se mueve es lo que dibuja adentro, que es una cosa muy distinta y mucho
+   más barata — un elemento fijo no repinta la página al desplazarse.
+
+   `z-index: 0` con el contenido en 1: el lienzo queda debajo de todo sin
+   sacar a nadie del flujo.
+   ========================================================================== */
+
+.mundo {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  display: block;
+}
+
+/* ==========================================================================
+   LA PORTADA
+
+   Una sola declaración tipográfica, a escala de display, sobre el vacío.
+   Se fue la carta de vidrio con las tres cifras: en una portada, una carta
+   con datos es un tablero, y un tablero pide leerse. Lo que tiene que pasar
+   acá es que alguien SIENTA algo en tres segundos. Las cifras siguen en el
+   acto siguiente, que es donde se explican.
+   ========================================================================== */
+
+.portada {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  align-content: center;
+  padding: clamp(6rem, 14vh, 10rem) clamp(1.25rem, 5vw, 5rem) clamp(1.5rem, 4vh, 3rem);
+}
+
+.portada__marco {
+  align-self: center;
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+}
+
+/* De 64rem para arriba el texto se queda con la mitad izquierda y le deja la
+   derecha al instrumento que dibuja el lienzo. Antes las dos vías cruzaban
+   POR ENCIMA del titular: se leía como una raya sobre el texto, no como un
+   aparato al lado. Reparto, no superposición. */
+@media (min-width: 64rem) {
+  .portada__marco { max-width: min(1440px, 100%); }
+  .portada__titulo,
+  .noche .portada__bajada { max-width: 15ch; }
+  .noche .portada__bajada { max-width: 42ch; }
+}
+
+/* ---------- el rótulo ---------- */
+
+.portada__rotulo {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0 0 clamp(1.5rem, 3vh, 2.5rem);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--luz-baja);
+}
+
+.portada__punto {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--verde);
+  box-shadow: 0 0 12px rgba(var(--aura-tinte), 0.9);
+}
+
+/* ---------- el titular ----------
+
+   LA TIPOGRAFÍA ES LA OBRA. Geist es variable de 100 a 900 y el sitio venía
+   usando tres pesos del medio; a este tamaño el peso correcto es MENOS, no
+   más. Un titular de 10rem en 600 es un grito; en 380 es una declaración.
+
+   `line-height: 0.84` y `-0.055em` de interletrado: a escala de display el
+   espacio entre líneas y entre letras que se ve «normal» está de más. Se
+   aprieta hasta que las cuatro líneas se leen como un bloque, que es lo que
+   convierte un titular en una imagen. */
+
+.portada__titulo {
+  margin: 0;
+  /* EL TOPE ES EL ALTO, NO SOLO EL ANCHO. Con `10.5vw` a secas, a 1440 × 900
+     el titular salía en 151 px: cuatro renglones daban 508 px de bloque y la
+     portada medía 988 en una ventana de 900 — la bajada quedaba cortada y ni
+     el botón ni el pie llegaban a verse. Un titular de cuatro renglones se
+     mide contra el alto disponible, siempre. */
+  font-size: clamp(2.75rem, min(9.5vw, 12.5svh), 9rem);
+  font-weight: 380;
+  font-variation-settings: "wght" 380;
+  line-height: 0.84;
+  letter-spacing: -0.055em;
+  color: var(--luz);
+  display: grid;
+  justify-items: start;
+}
+
+/* La máscara. Cada renglón recorta, y su voz sube desde abajo: el titular se
+   ESCRIBE en vez de aparecer. `clip` y no `hidden` para no crear contenedor
+   de scroll —esa ya costó caro una vez en este archivo—, y un poco de
+   holgura abajo porque las colas de la «g» y la «y» viven debajo de la línea
+   base y con recorte exacto se decapitan. */
+.verso {
+  display: block;
+  overflow: clip;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+
+.verso__voz { display: block; }
+
+/* El eco: las dos últimas líneas bajan de luz. «El saldo todavía no lo sabe»
+   es la parte que acusa, y dicha más bajo pega más fuerte que gritada. */
+.verso--eco .verso__voz { color: var(--luz-media); }
+
+/* ---------- la bajada y el pie ---------- */
+
+.noche .portada__bajada {
+  margin: clamp(1.75rem, 4vh, 2.75rem) 0 clamp(2rem, 4.5vh, 3rem);
+  max-width: 46ch;
+  font-size: clamp(1.05rem, 0.95rem + 0.45vw, 1.3125rem);
+  line-height: 1.55;
+  color: var(--luz-media);
+}
+
+/* El pie rotula las dos vías que el lienzo dibuja detrás. Sin él son dos
+   hilos bonitos; con él, un instrumento. */
+.portada__pie {
+  align-self: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem clamp(1.5rem, 4vw, 3.5rem);
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-top: clamp(1.25rem, 3vh, 2rem);
+  border-top: 0.5px solid var(--filete);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--luz-baja);
+}
+
+.portada__via { display: flex; align-items: center; gap: 0.6rem; }
+.portada__via b,
+.portada__desfase b {
+  font-weight: 500;
+  color: var(--luz);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+}
+.portada__desfase { margin-left: auto; }
+.portada__desfase b { color: var(--salmon); }
+
+.portada__muestra { width: 22px; height: 2px; border-radius: 99px; }
+.portada__muestra--mes   { background: var(--filete-vivo); }
+.portada__muestra--ciclo { background: var(--verde); }
+
 /* ---------- el acto: una pantalla, una idea ---------- */
 
 /* El acto es la PISTA; la pantalla clavada adentro es lo que se ve. Por
@@ -1439,8 +1608,20 @@
 .noche .escena { background: transparent; }
 
 /* Encabezado: vidrio flotante, no barra opaca. El contenido pasa por debajo,
-   que es lo que lo hace sentir una capa y no un recorte de pantalla. */
+   que es lo que lo hace sentir una capa y no un recorte de pantalla.
+
+   Y FLOTA DE VERDAD: `fixed`, no `sticky`. Un encabezado pegajoso sigue
+   ocupando su lugar en el flujo, así que la portada empezaba 70 px abajo y
+   con `min-height: 100svh` la sección medía 970 en una ventana de 900: el pie
+   de la portada caía fuera de cuadro. Medido, no supuesto.
+
+   Sacándolo del flujo, la portada arranca en 0 y mide exactamente una
+   ventana. El relleno superior que ya tenía —6rem como mínimo— alcanza de
+   sobra para no quedar debajo de la barra. */
 .noche .cabecera {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
   background: color-mix(in srgb, var(--vacio) 72%, transparent);
   backdrop-filter: blur(24px) saturate(140%);
   border-bottom: 0.5px solid var(--filete);
@@ -1622,6 +1803,48 @@
   .entra--2 { animation-delay: 120ms; }
   .entra--3 { animation-delay: 240ms; }
   .entra--4 { animation-delay: 360ms; }
+
+  /* ---------- 1b. el titular se escribe ----------
+
+     Cada renglón sube desde detrás de su propia máscara, escalonado. Es la
+     entrada más vieja del oficio y sigue siendo la mejor por una razón
+     física: el texto no aparece de la nada, entra desde fuera de cuadro.
+
+     `transform` y nada más: es lo único que no toca composición ni pintura, y
+     acá se mueven cuatro renglones de hasta 10rem a la vez.
+
+     40 ms de escalón, no más. Con 120 se lee como cuatro cosas que llegan por
+     turno; con 40, como una sola frase que se termina de decir. */
+  .verso__voz {
+    animation: escribirse 1000ms var(--curva) both;
+  }
+  @keyframes escribirse {
+    from { transform: translateY(112%); }
+    to   { transform: none; }
+  }
+
+  .verso:nth-child(1) .verso__voz { animation-delay:  60ms; }
+  .verso:nth-child(2) .verso__voz { animation-delay: 100ms; }
+  .verso:nth-child(3) .verso__voz { animation-delay: 160ms; }
+  .verso:nth-child(4) .verso__voz { animation-delay: 200ms; }
+
+  /* EL PESO SE ASIENTA. Geist es variable y el sitio nunca usó el eje: el
+     titular entra en 200 —casi un trazo— y engorda hasta 380 mientras sube.
+     Es el detalle que hace que se lea como tipografía viva y no como texto
+     con una transición encima.
+
+     SOLO DE 64rem PARA ARRIBA, y no por gusto: `font-variation-settings`
+     rehace la composición del bloque en CADA cuadro. A 10rem y cuatro
+     renglones eso vale la pena una vez al cargar; en un teléfono el titular
+     mide 2.85rem, el efecto no se percibe, y el costo sí. Se paga donde se
+     ve. */
+  @media (min-width: 64rem) {
+    .verso__voz { animation-name: escribirse, asentar-peso; }
+    @keyframes asentar-peso {
+      from { font-variation-settings: "wght" 200; }
+      to   { font-variation-settings: "wght" 380; }
+    }
+  }
 
   /* 2. El ciclo se traza solo, de izquierda a derecha: la dirección en que
         pasa el tiempo y se acumula la deuda. */

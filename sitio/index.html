@@ -23,18 +23,28 @@
 <!-- El mundo visual nuevo de la portada. Va de último: gana por cascada sin
      necesitar un solo !important. -->
 <link rel="stylesheet" href="/noche.css">
-<!-- Sin `defer` a propósito: aplica el tema guardado antes del primer
-     pintado, o hay destello blanco en cada carga. -->
-<!-- Los dos con `defer`: ninguno tiene nada que hacer antes del primer
-     pintado, porque la página ya se ve completa sin ellos. El sitio ya no
-     necesita `modo.js` — un solo modo, negro, decidido y no preguntado. -->
+<!-- Todos con `defer`: ninguno tiene nada que hacer antes del primer pintado,
+     porque la página se ve completa sin ellos. Un solo modo, negro, decidido
+     y no preguntado — por eso tampoco hay `modo.js`.
+
+     `hero.js` salió: raspaba un mp4 contra el scroll, y esa película la
+     reemplazó `mundo.js`, que dibuja lo mismo pero vivo y respondiendo al
+     puntero. Se fueron con él los 311 KB del video y su póster. -->
+<script src="/mundo.js" defer></script>
 <script src="/ciclo.js" defer></script>
-<script src="/hero.js" defer></script>
 <script src="/vitrina.js" defer></script>
 </head>
 <body class="noche">
 
 <a class="saltar" href="#principal">Saltar al contenido</a>
+
+<!-- EL MUNDO. Un lienzo fijo detrás de todo, donde las dos líneas de tiempo
+     del producto —el mes y el ciclo— corren desfasadas y se van juntando a lo
+     largo del recorrido. No es decoración de fondo: es la tesis, dibujándose.
+
+     `aria-hidden` porque es atmósfera. Todo lo que dice está escrito también
+     en el texto de la página; un lector de pantalla no se pierde nada. -->
+<canvas class="mundo" data-mundo aria-hidden="true"></canvas>
 
 <header class="cabecera">
   <a class="marca" href="/">
@@ -67,87 +77,54 @@
        diferencia ES la pista contra la que se raspa la película: sin ella el
        acto medía exactamente una ventana y no había recorrido que medir. La
        composición que se ve sigue siendo de una sola pantalla. -->
-  <section class="acto">
-   <div class="acto__pantalla">
-    <div class="aura" aria-hidden="true"></div>
+  <section class="portada">
+    <div class="portada__marco">
 
-    <!-- La película. El `src` NO va acá: lo pone /hero.js, y solo cuando de
-         verdad se va a usar. Así el teléfono y quien pidió menos movimiento
-         no descargan 311 KB que no van a ver — les queda el póster, que pesa
-         19 KB y ya es una composición terminada. -->
-    <div class="pelicula" aria-hidden="true">
-      <video class="pelicula__cinta" data-hero="/media/ciclo-hero.mp4"
-             poster="/media/ciclo-hero-poster.jpg"
-             muted playsinline preload="none"></video>
-      <div class="pelicula__velo"></div>
-    </div>
+      <p class="portada__rotulo entra">
+        <span class="portada__punto" aria-hidden="true"></span>
+        Presupuesto del hogar · Honduras
+      </p>
 
-    <div class="acto__marco">
-      <h1 class="acto__titulo entra">El dinero ya se gastó. El saldo todavía no lo sabe.</h1>
+      <!-- Cada renglón va envuelto en su propia máscara y sube desde abajo.
+           Es lo que hace que el titular se ESCRIBA en vez de aparecer.
 
-      <p class="acto__bajada entra entra--2">
+           El <span> de adentro no es de adorno: la máscara necesita un
+           elemento que se mueva y otro que recorte, o no hay nada que
+           recortar. Y los renglones se parten a mano —no con `text-wrap`—
+           porque el corte es una decisión de composición: «El dinero / ya se
+           gastó» pega distinto que «El dinero ya / se gastó». -->
+      <h1 class="portada__titulo">
+        <span class="verso"><span class="verso__voz">El dinero</span></span>
+        <span class="verso"><span class="verso__voz">ya se gastó.</span></span>
+        <span class="verso verso--eco"><span class="verso__voz">El saldo todavía</span></span>
+        <span class="verso verso--eco"><span class="verso__voz">no lo sabe.</span></span>
+      </h1>
+
+      <p class="portada__bajada entra entra--3">
         Tu tarjeta no cobra por mes calendario: cobra por ciclo de corte. Ese
         desfase es la razón por la que las cuentas cuadran en el papel y no
         cuadran en la casa.
       </p>
 
-      <div class="vidrio entra entra--3">
-        <div class="instrumento" role="img"
-             aria-label="El mes calendario va del 1 al 31 de agosto. El ciclo real de la tarjeta va del 7 de julio al 6 de agosto: empieza antes y termina antes. En ese ciclo se cargaron 19,101 lempiras, se abonaron 14,840 y faltan 4,261.">
-
-          <div class="carril">
-            <div class="carril__cabeza">
-              <span class="tecnico">Mes calendario</span>
-              <span class="tecnico">1 ago — 31 ago</span>
-            </div>
-            <div class="carril__via">
-              <span class="carril__tramo carril__tramo--mes"></span>
-            </div>
-          </div>
-
-          <div class="carril">
-            <div class="carril__cabeza">
-              <span class="tecnico">Ciclo de corte</span>
-              <span class="tecnico">7 jul — 6 ago</span>
-            </div>
-            <div class="carril__via">
-              <span class="carril__tramo carril__tramo--ciclo"></span>
-              <span class="carril__corte" aria-hidden="true"></span>
-            </div>
-          </div>
-
-        </div>
-
-        <div class="lectura-cifras">
-          <div class="dato">
-            <span class="dato__v"><i>L</i>19,101</span>
-            <span class="dato__k">Cargado al ciclo</span>
-          </div>
-          <div class="dato">
-            <span class="dato__v"><i>L</i>14,840</span>
-            <span class="dato__k">Cubierto</span>
-          </div>
-          <div class="dato">
-            <span class="dato__v dato__v--falta"><i>L</i>4,261</span>
-            <span class="dato__k">Aún figura como disponible</span>
-          </div>
-        </div>
-      </div>
-
       <div class="acciones-noche entra entra--4">
         <a class="pulsar pulsar--luz" href="/registro">Crear cuenta</a>
         <a class="pulsar pulsar--vidrio" href="/entrar">Entrar</a>
       </div>
-
-      <!-- Un rótulo que dice qué viene, no una instrucción. «Seguí bajando» le
-           explica al lector cómo usar una página web; esto le adelanta el
-           contenido, que es lo único que puede hacerlo bajar. -->
-      <p class="descenso entra entra--4">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-        El ciclo, en cuatro fechas
-      </p>
     </div>
-   </div>
+
+    <!-- El pie de la portada rotula las dos vías que el lienzo dibuja detrás.
+         Sin él son dos hilos bonitos; con él son un instrumento. -->
+    <div class="portada__pie entra entra--4">
+      <span class="portada__via">
+        <i class="portada__muestra portada__muestra--mes" aria-hidden="true"></i>
+        Mes calendario <b>1 — 31 ago</b>
+      </span>
+      <span class="portada__via">
+        <i class="portada__muestra portada__muestra--ciclo" aria-hidden="true"></i>
+        Ciclo real <b>7 jul — 6 ago</b>
+      </span>
+      <span class="portada__desfase">Desfase: <b>25 días</b></span>
+    </div>
   </section>
 
   <!-- ── el corte de la tarjeta, con el visual clavado ──────── -->

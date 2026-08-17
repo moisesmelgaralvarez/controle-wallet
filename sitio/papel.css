@@ -814,6 +814,13 @@
    Donde no se reproduce, más abajo, se cambia por el último. */
 .pantalla__vidrio {
   position: relative;
+  /* El ancho lo manda el marco, siempre. Sin esto, cuando el alto se estira a
+     la ventana entera `aspect-ratio` invierte el cálculo y saca el ancho del
+     alto: en una ventana de 1440 × 900 el vidrio salía en 1600 px dentro de
+     un marco de 1438, y se recortaba de un solo lado. Con el ancho clavado,
+     el recorte lo hace el video con `object-fit: cover`, que lo hace
+     centrado. */
+  width: 100%;
   aspect-ratio: 1920 / 1080;
   background: #0E0F11 center / cover no-repeat url("/media/hero-poster.jpg");
 }
@@ -823,7 +830,17 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* `contain` Y NO `cover`, Y SE VIO EN LA COMPARACIÓN DE LAS TRES ETAPAS.
+     La película es 16:9 y casi ninguna ventana lo es: a 1440 × 900, llenar
+     recortando se comía «Controle» por la izquierda y la fecha del ciclo por
+     la derecha. Texto cortado a media palabra no se lee como encuadre, se lee
+     como defecto.
+
+     Con `contain` sobran dos franjas del color del marco arriba y abajo
+     mientras la pantalla está llena, y eso sí se lee: es una sala de cine. Y
+     no cuesta nada al final del encogimiento, donde el vidrio ya es 16:9
+     exacto y las dos reglas dan el mismo resultado. */
+  object-fit: contain;
   display: block;
   /* Aparece cuando ya se puede reproducir, no antes: mostrada mientras carga
      es un rectángulo negro tapando el póster. */
@@ -833,65 +850,138 @@
 .pantalla--lista .pantalla__cinta { opacity: 1; }
 .pantalla--sin-cinta .pantalla__cinta { display: none; }
 
-/* El pie se centra y se acota. Suelto y a 390 se iba a dos renglones y
-   arrancaba a la izquierda del marco, que a esa escala se lee como texto
-   desalineado y no como pie. */
-.pantalla__pie {
-  max-width: 46ch;
-  margin: 0;
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  text-align: center;
-  text-wrap: balance;
-  color: var(--tenue);
+
+/* ---------- el acto de la pantalla: arranca lleno y se encoge ----------
+
+   LA PELÍCULA OCUPA LA PANTALLA Y SE VA ENCOGIENDO CON EL SCROLL hasta quedar
+   dentro del marco del aparato. Primero se ve la película sola, sin nada que
+   compita; después la página se vuelve a armar en torno a ella —la barra, el
+   filete, el rótulo— y lo que queda en el marco es el producto.
+
+   POR QUÉ `width` Y NO `scale`, QUE SERÍA MÁS BARATO
+
+   Encoger con `scale` no cuesta ni composición ni pintura, y era lo primero
+   que había que intentar. No se puede: el factor final tendría que ser
+   `--hoja / 100vw`, y CSS no sabe dividir dos longitudes para sacar un número
+   sin unidad. Y agrandar con `scale` además estira el video por encima de sus
+   1920 nativos, que es exactamente lo que se acababa de arreglar subiendo el
+   montaje a 1080p.
+
+   Animar `width` sí rehace la composición en cada cuadro, así que el daño se
+   acota: `contain: layout paint` en el pin encierra el recálculo dentro del
+   acto, y no hay un solo elemento más adentro que dependa del ancho. Se midió
+   contando cuadros largos durante el scroll — no se supuso.
+
+   Y el ancho va de `100%` a `var(--hoja)`, nunca de `100vw`: `100vw` incluye
+   la barra de scroll, y eso mete desborde horizontal en toda pantalla que la
+   tenga. El pin ya es del ancho de la ventana sin ella. */
+
+.acto-pantalla {
+  /* La PISTA. Su altura es el recorrido durante el cual la película se
+     encoge: 220vh son 120vh de encogimiento más los 100vh que ocupa el pin. */
+  height: 220vh;
+  padding-block: 0;
+  /* El canal lateral de `.franja` se anula, y se midió por qué: con él puesto
+     la película arrancaba en 1758 px sobre una ventana de 1920 — le faltaban
+     160 px para llenar la pantalla, que es justo lo que este acto promete. El
+     canal vuelve más abajo, aplicado al ancho FINAL y no al de arranque. */
+  padding-inline: 0;
+  /* El nombre del reloj. Se lo pasa al hijo clavado, que por estar clavado no
+     se mueve y no puede medir su propio avance. */
+  view-timeline-name: --pista;
+  view-timeline-axis: block;
 }
 
-/* ---------- el acto de la pantalla ----------
+.acto-pantalla__pin {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  contain: layout paint;
+}
 
-   A TODO EL ANCHO DE LA HOJA, Y NO AL LADO DEL TITULAR. La primera versión
-   repartía la portada en dos columnas y se midió: el marco salía en 411 px a
-   1440, con lo que el texto del tablero quedaba en un tercio de su tamaño —
-   ilegible—, y la portada crecía a 1303 px dentro de una ventana de 900.
+/* La cabecera es `fixed` y mide 69 px medidos, así que no le quita altura a
+   nada: la película a sangre le pasa por debajo, que es lo correcto —para eso
+   es a sangre—. Pero el rótulo, que aparece recién cuando ya hay marco, salía
+   a 42 px del borde y quedaba tapado. Se despeja solo la caja, no el pin: si
+   el hueco se le pusiera al pin, la película dejaría de llenar la pantalla. */
+.acto-pantalla__caja { padding-top: 4.5rem; }
 
-   Acá el marco mide lo que mide la hoja: 1248 px. El tablero se lee, que era
-   el único motivo para filmarlo. */
+/* Y el hueco de arriba se compensa abajo para que el conjunto siga viéndose
+   centrado en la ventana en vez de empujado. */
+.acto-pantalla__pin { align-content: center; }
 
-.acto-pantalla { padding-block: clamp(4rem, 10vh, 8rem); }
-.acto-pantalla .rotulo { margin-bottom: clamp(1.5rem, 3vh, 2.5rem); }
+.acto-pantalla__caja {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  gap: clamp(1rem, 2.5vh, 2rem);
+}
 
-/* ---------- EL PARALAJE ----------
+.acto-pantalla__rotulo { margin: 0; }
 
-   La pantalla entra más despacio que la página. Esa diferencia de velocidad
-   es lo único que el ojo lee como profundidad: el marco se queda atrás, como
-   un objeto que está más lejos, y el pie lo sigue un poco después.
+.pantalla { width: 100%; display: grid; justify-items: center; }
 
-   Va con `animation-timeline: view()`, que corre FUERA del hilo principal. Un
-   paralaje hecho con un `scroll` que escribe `transform` en cada cuadro es la
-   forma más común de que una página larga se sienta pesada.
-
-   `translate` y nada más. Ni `top`, ni `margin`, ni filtros: es lo único que
-   no rehace ni composición ni pintura. */
 @supports (animation-timeline: view()) {
-  @media (min-width: 48rem) and (prefers-reduced-motion: no-preference) {
+  @media (min-width: 67.5rem) and (prefers-reduced-motion: no-preference) {
+    /* `contain 0%` es el instante en que la pista llena la ventana, y
+       `contain 100%` aquel en que termina de pasar. Para un elemento más alto
+       que la ventana ese tramo es exactamente lo que dura el clavado. */
     .acto-pantalla .pantalla__marco {
-      animation: paralaje-marco linear both;
-      animation-timeline: view();
-      animation-range: entry 0% cover 40%;
+      animation: encoger linear both;
+      animation-timeline: --pista;
+      animation-range: contain 0% contain 100%;
     }
-    @keyframes paralaje-marco {
-      from { translate: 0 4.5rem; }
-      to   { translate: 0 0; }
+    @keyframes encoger {
+      from { width: 100%; border-radius: 0; }
+      to   { width: var(--hoja); border-radius: 14px; }
     }
 
-    .acto-pantalla .pantalla__pie {
-      animation: paralaje-pie linear both;
-      animation-timeline: view();
-      animation-range: entry 15% cover 45%;
+    /* EL ALTO TAMBIÉN, o no llena la pantalla. La proporción del video es
+       16:9 y casi ninguna ventana lo es: a 1440 × 900, un ancho completo da
+       801 px de alto y sobran 99 abajo. Así que al arrancar el vidrio mide
+       la ventana entera y el video se recorta —`object-fit: cover`—, y al
+       terminar vuelve a la altura que le toca por proporción.
+
+       `aspect-ratio` sigue declarado en la regla base y no estorba: cuando
+       hay `height` explícito, gana el `height`. Se queda porque es lo que
+       reserva el lugar antes de que cargue nada. */
+    .acto-pantalla .pantalla__vidrio {
+      animation: encoger-alto linear both;
+      animation-timeline: --pista;
+      animation-range: contain 0% contain 100%;
     }
-    @keyframes paralaje-pie {
-      from { translate: 0 2rem; opacity: 0; }
-      to   { translate: 0 0;    opacity: 1; }
+    /* `min-height` Y NO `height`, Y LA DIFERENCIA NO ES DE ESTILO.
+
+       Con `height` puesto, `aspect-ratio` deja de derivar el alto del ancho y
+       pasa a derivar el ANCHO DEL ALTO. Y como el valor final tenía que
+       escribirse con `--hoja`, que lleva un `100%` adentro, ese porcentaje se
+       resolvía contra el propio vidrio: circular. Medido, el vidrio terminaba
+       en 588 px dentro de un marco de 1248.
+
+       Con `min-height` el ancho lo sigue mandando el marco y el alto es el
+       mayor entre «lo que pide la proporción» y «la ventana entera». Al
+       arrancar gana la ventana; al llegar a cero, la proporción. Sin
+       porcentajes y sin pelearse con `aspect-ratio`. */
+    @keyframes encoger-alto {
+      from { min-height: 100svh; }
+      to   { min-height: 0; }
+    }
+
+    /* El aparato se arma DESPUÉS, no desde el principio: una barra de
+       navegador falsa sobre una película a sangre no es un aparato, es un
+       adorno encima de una imagen. Aparece cuando ya hay marco donde vivir. */
+    .acto-pantalla .pantalla__barra,
+    .acto-pantalla__rotulo {
+      animation: armarse linear both;
+      animation-timeline: --pista;
+      animation-range: contain 55% contain 95%;
+    }
+    @keyframes armarse {
+      from { opacity: 0; }
+      to   { opacity: 1; }
     }
   }
 }
@@ -928,6 +1018,20 @@
        (orientation: portrait) and (pointer: coarse),
        (orientation: landscape) and (pointer: coarse) and (max-height: 560px) {
   .acto-pantalla { display: none; }
+}
+
+/* Sin `view()` —o con movimiento reducido— no hay encogimiento que valga: la
+   pista de 220vh sería scroll vacío. El acto vuelve a medir lo que ocupa y la
+   pantalla se queda en su tamaño de marco, quieta. */
+@media (prefers-reduced-motion: reduce) {
+  .acto-pantalla { height: auto; padding-block: clamp(4rem, 10vh, 8rem); }
+  .acto-pantalla__pin { position: static; height: auto; }
+  .acto-pantalla .pantalla__marco { width: var(--hoja); }
+}
+@supports not (animation-timeline: view()) {
+  .acto-pantalla { height: auto; padding-block: clamp(4rem, 10vh, 8rem); }
+  .acto-pantalla__pin { position: static; height: auto; }
+  .acto-pantalla .pantalla__marco { width: var(--hoja); }
 }
 
 /* 2. POR MOVIMIENTO — se queda el acto, se va la película.

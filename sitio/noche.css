@@ -1115,6 +1115,31 @@
 
   /* Hundirse al apretar, como todo lo pulsable del sitio. */
   .paso:active { transform: scale(0.97); }
+
+  /* ---------- la escena se retira ----------
+
+     Al acabarse la pista, el clavado suelta y el aparato —que mide media
+     pantalla— se iba de golpe hacia arriba. Se retira: se aleja y se
+     desenfoca sobre el último tramo del recorrido, igual que hace el marco
+     de la portada al terminar su acto. Mismo recurso, mismo vocabulario.
+
+     LA LÍNEA DE TIEMPO ES LA DE LA PISTA, NO LA SUYA. Un elemento pegado no
+     se mueve respecto de la ventana, así que su propia `view()` se congela y
+     la animación no correría nunca. Es la misma trampa que ya documenta el
+     aparato del acto II. */
+  @supports (animation-timeline: view()) {
+    .vitrina--viva .vitrina__pista { view-timeline: --vitrina block; }
+
+    .vitrina--viva .vitrina__escena {
+      animation: retirarse linear both;
+      animation-timeline: --vitrina;
+      animation-range: contain 90% contain 100%;
+    }
+    @keyframes retirarse {
+      from { opacity: 1; transform: none;                          filter: blur(0);   }
+      to   { opacity: 0; transform: translateY(-3rem) scale(0.96); filter: blur(6px); }
+    }
+  }
 }
 
 /* ==========================================================================

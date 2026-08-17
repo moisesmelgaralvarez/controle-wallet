@@ -15,14 +15,26 @@
    hogar, la consulta no devuelve nada y aquí no hay nada que mandar.
    La clave de servicio se usa solo después, y solo para el correo.
 
-   POR QUÉ EL ENLACE LLEVA NUESTRO TOKEN Y NO SOLO EL DE GoTrue
+   POR QUÉ EL ENLACE **NO** LLEVA NUESTRO TOKEN
 
-   GoTrue sabe crear la cuenta y confirmar el correo, pero no sabe
-   nada de hogares. Nuestro token es el que dice a QUÉ hogar y con qué
-   rol entra la persona. Viaja en el `redirect_to`, así que al
-   terminar de confirmar cae en la app con todo lo necesario para que
-   `aceptar_invitacion` haga el resto — y esa función vuelve a
-   comprobar las cuatro condiciones, porque el enlace puede reenviarse.
+   Lo llevó, en un fragmento pegado al `redirect_to`, y NO PUEDE
+   FUNCIONAR. Un `#` dentro del valor de un parámetro de consulta tiene
+   que ir codificado como `%23`; sin codificar, todo lo que sigue al `#`
+   se convierte en el fragmento de la URL de AFUERA y el servidor no lo
+   ve siquiera. Se comprobó con el correo que de verdad llegó a un
+   teléfono: el enlace terminaba en
+   `redirect_to=https://controlewallet.com/app/`, con el fragmento
+   evaporado.
+
+   Y codificarlo tampoco era la salida, porque dependía de que GoTrue
+   respetara la codificación y de que la lista blanca aceptara
+   fragmentos — dos cosas fuera de nuestro control para resolver algo
+   que no hacía falta resolver.
+
+   La app no necesita el token: pregunta. Al caer en `/app/` sin hogar,
+   llama a `mi_invitacion_pendiente()`, que contesta con lo que hay
+   PARA SU PROPIO CORREO. El token se queda en la base, que es donde
+   siempre debió estar, y no pasa por el historial de nadie.
 
    SI EL CORREO YA TIENE CUENTA
 
@@ -74,28 +86,20 @@ Deno.serve(async (req: Request) => {
     if (!inv) return fallar('No se encontró esa invitación.', 404);
     if (inv.estado !== 'pendiente') return fallar('Esa invitación ya no está pendiente.', 400);
 
-    /* A dónde cae la persona al confirmar. El token va en el hash
-       porque ahí no lo guarda ningún registro de servidor: los
-       parámetros de una URL quedan en los accesos de medio mundo, y
-       este token abre un hogar. */
-    const base = String(destino || '').startsWith('https://')
+    /* A dónde cae la persona al confirmar: la app, y nada más. Sin
+       token pegado — ver la nota de arriba sobre por qué el fragmento
+       no sobrevive a un parámetro de consulta. */
+    const volverA = String(destino || '').startsWith('https://')
       ? String(destino) : 'https://controlewallet.com/app/';
-    const volverA = `${base}#/invitacion/${inv.token}`;
 
-    /* `redirect_to` FALTABA, Y ERA EL DEFECTO QUE ROMPÍA TODO.
-       `volverA` se calculaba acá abajo y no se mandaba a ninguna parte,
-       así que `{{ .ConfirmationURL }}` del correo apuntaba al `site_url`
-       pelado: la persona invitada caía en la raíz de la app SIN el token
-       y la app, que no tenía cómo saber de la invitación, le ofrecía
-       armar un hogar. Se vio en un hogar de verdad antes que en ninguna
-       prueba.
+    /* `redirect_to` se manda igual: sin él, `{{ .ConfirmationURL }}`
+       apunta al `site_url` del panel, que es un valor que se administra
+       aparte y puede no ser el de la app.
 
-       `data.invitacion` se queda además del `redirect_to`, y no es
-       repetición: son dos caminos para dos casos distintos. El de los
-       metadatos lo lee el disparador `al_crear_usuario` en la base, para
-       NO crearle un hogar propio a quien viene invitado. El del
-       `redirect_to` lo lee la app cuando la persona abre el enlace. Si
-       falta cualquiera de los dos, el defecto vuelve por la otra mitad. */
+       `data.invitacion` SÍ se queda, y es el único camino por el que el
+       token viaja: lo lee el disparador `al_crear_usuario` DENTRO de la
+       base, para no crearle un hogar propio a quien viene invitado.
+       Nunca llega al navegador. */
     const enviado = await fetch(`${url}/auth/v1/invite`, {
       method: 'POST',
       headers: { apikey: servicio, Authorization: `Bearer ${servicio}`,

@@ -315,6 +315,19 @@ async function ofrecerInvitacion(inv) {
       await llamar('aceptar_invitacion_mia', { p_id: inv.id });
       olvidar(); olvidarHistorico();
       document.body.dataset.asistente = 'no';
+
+      /* Y ACÁ TAMBIÉN SE PIDE LA CONTRASEÑA, que antes solo se pedía por
+         el otro camino. `/auth/v1/invite` crea la cuenta SIN ninguna, así
+         que quien entra por acá quedaba adentro hoy y sin poder volver
+         mañana — y sin manera de enterarse de por qué.
+
+         Es el hueco que dejó descubierto el correo de verdad: como el
+         token no sobrevive a la URL, TODA persona invitada llega por
+         este camino y no por el del fragmento. */
+      if (delCorreo && delCorreo.tipo === 'invite') {
+        delCorreo.tipo = null;      // una sola vez, no en cada recarga
+        return pedirClave({ alTerminar: () => arrancar({ refrescar: true }) });
+      }
       arrancar({ refrescar: true });
     } catch (err) {
       const mal = $('#invMal');

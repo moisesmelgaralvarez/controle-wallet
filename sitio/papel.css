@@ -1852,3 +1852,164 @@
    arriba— nada de esto existe y la sección se ve completa y quieta. Ninguna
    de estas reglas es la que hace visible a un elemento: todas parten de un
    estado que ya es el final. */
+
+/* ==========================================================================
+   ENTRAR Y CREAR CUENTA — las dos pantallas de sesión
+
+   Son las primeras del sitio que NO son un argumento de venta: acá el
+   visitante viene a hacer una cosa concreta. Así que mandan la claridad y la
+   costumbre, no la expresión — y la identidad vive en el detalle preciso,
+   no en la composición.
+
+   Qué cambia respecto de la base de `sitio.css`, y por qué cada cosa:
+
+   1. LA VOZ DEL TITULAR. Salía en 24 px y peso de cuerpo, o sea igual que
+      cualquier encabezado. Acá hereda el trato de la portada —tamaño para
+      el énfasis, peso 400, interletrado cerrado— en una escala que no grita
+      arriba de un formulario de cuatro campos.
+
+   2. LOS RÓTULOS EN VOZ TÉCNICA. Eran negrita 600, que en este mundo es
+      gritar. Pasan a chicos, espaciados y en versalita, como el rótulo de
+      una cota en los instrumentos del resto del sitio. Es el detalle donde
+      vive la marca en una pantalla que no puede decorarse.
+
+   3. EL OBJETIVO TÁCTIL. 44 px medidos, que es del ADN y acá importa más que
+      en ningún lado: se escribe una contraseña con el pulgar.
+   ========================================================================== */
+
+.papel .acceso {
+  min-height: 78svh;
+  align-content: center;
+  padding-block: clamp(3rem, 10vh, 6rem);
+}
+
+/* Una hoja sobre el papel. Filete y radio, sin sombra: en este mundo la
+   jerarquía la hacen las líneas, y una carta flotando diría «esto está
+   encima» cuando lo que hay que decir es «esto es otra cosa». */
+.papel .acceso__caja {
+  background: var(--superficie);
+  border: 1px solid var(--filete);
+  border-radius: 12px;
+  padding: clamp(1.75rem, 5vw, 2.75rem);
+  box-shadow: none;
+}
+
+.papel .acceso h1 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.75rem, 1.5rem + 1vw, 2.25rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--tinta);
+}
+
+.papel .acceso__intro {
+  margin: 0 0 clamp(1.5rem, 4vh, 2.25rem);
+  padding-bottom: clamp(1.25rem, 3vh, 1.75rem);
+  border-bottom: 1px solid var(--filete);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--tenue);
+}
+
+/* ---------- los campos ---------- */
+
+.papel .acceso .campo { margin-bottom: 1.125rem; }
+
+.papel .acceso .campo span {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tenue);
+  margin-bottom: 0.5rem;
+}
+
+.papel .acceso .campo input {
+  min-height: 44px;              /* el objetivo táctil del ADN, medido */
+  padding: 0.75rem 0.875rem;
+  font-size: 1rem;               /* 16 px: por debajo, iOS hace zoom al enfocar */
+  color: var(--tinta);
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  border-radius: 8px;            /* el radio de controles, no el de superficies */
+  transition: border-color 160ms var(--curva), background-color 160ms var(--curva);
+}
+.papel .acceso .campo input::placeholder { color: var(--borde-fuerte); }
+
+/* El foco se ve, y se ve en verde. Un campo enfocado que no se distingue es
+   un problema de accesibilidad antes que de estética. */
+.papel .acceso .campo input:focus {
+  outline: none;
+  border-color: var(--acento);
+  background: var(--superficie);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--acento) 14%, transparent);
+}
+.papel .acceso .campo input:focus-visible { outline: none; }
+
+/* Un campo con ayuda necesita más aire abajo que uno sin ella, o el texto
+   de ayuda queda más cerca del rótulo siguiente que del campo que explica —
+   y se lee como si perteneciera al de abajo. */
+.papel .acceso .campo__ayuda {
+  margin-top: 0.4rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--tenue);
+}
+.papel .acceso .campo:has(.campo__ayuda) { margin-bottom: 1.5rem; }
+
+/* ---------- el botón ---------- */
+
+.papel .acceso .boton {
+  min-height: 44px;
+  margin-top: 0.5rem;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
+/* ---------- los pies ----------
+   Separados del formulario por un filete: dejan de ser parte de la tarea y
+   pasan a ser salidas. Alineados a la izquierda como todo lo demás — el
+   centrado que traía la base los dejaba flotando sin relación con nada. */
+.papel .acceso__pie {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--tenue);
+  text-align: left;
+}
+/* EL FILETE VA POR HERMANO ADYACENTE, Y ESTO ERA UN DEFECTO.
+   Antes decía `.acceso__pie:first-of-type`, y `:first-of-type` mira el TIPO
+   de elemento, no la clase: el primer <p> del formulario es
+   `.acceso__intro`, así que ningún `.acceso__pie` calificaba nunca y el
+   filete no se dibujaba. No dio error — simplemente no estaba.
+
+   `.boton + .acceso__pie` dice lo que de verdad se quiere: el pie que sigue
+   al botón, o sea donde termina la tarea y empiezan las salidas. */
+.papel .acceso .boton + .acceso__pie {
+  margin-top: clamp(1.25rem, 3vh, 1.75rem);
+  padding-top: clamp(1rem, 2.5vh, 1.5rem);
+  border-top: 1px solid var(--filete);
+}
+.papel .acceso__pie + .acceso__pie { margin-top: 0.5rem; }
+
+.papel .acceso__pie a {
+  color: var(--acento);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+}
+
+/* El aviso de error. Rojo del ADN, sin fondo saturado: en una hoja, un
+   bloque de color se lee como alarma de sistema y no como corrección. */
+.papel .acceso .aviso--error {
+  background: color-mix(in srgb, var(--alerta) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--alerta) 30%, transparent);
+  border-radius: 8px;
+  padding: 0.75rem 0.875rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--alerta);
+}

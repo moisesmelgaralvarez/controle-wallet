@@ -34,7 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!cabecera || !tirador || !menu) return;
 
   /* El mismo corte que la hoja de estilo. Si cambia uno, cambia el otro. */
-  const angosto = matchMedia('(max-width: 46rem)');
+  /* 57rem, IDÉNTICO al corte de `papel.css`. Si los dos números se separan,
+     aparece una franja de anchos donde la hoja recoge el menú y el JS no —o
+     al revés— y el resultado es una cabecera partida en dos renglones que
+     nadie sabe de dónde salió. Ya pasó: estaban en 46rem y la cabecera dejaba
+     de caber a los 898px, dejando 162px rotos. */
+  const angosto = matchMedia('(max-width: 57rem)');
 
   /* Recién acá existe el tirador. Hasta esta línea la cabecera es la de
      siempre, con los cuatro enlaces puestos. */

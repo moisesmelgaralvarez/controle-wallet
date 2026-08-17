@@ -1,0 +1,604 @@
+/* ==========================================================================
+   PAPEL Y TINTA — el mundo visual del sitio público.
+
+   REEMPLAZA A `noche.css`. No es un refinamiento: es otro idioma.
+
+   POR QUÉ SE ABANDONA EL VACÍO NEGRO
+
+   El mundo anterior era negro absoluto, vidrio esmerilado y hilos de luz
+   verde. Está bien hecho y está mal elegido. Ese vocabulario —el vacío, el
+   neón, el cristal— es el de cripto, el de trading, el de los tableros de
+   inteligencia artificial. Dice ESPECULACIÓN.
+
+   Este producto es una señora en Tegucigalpa decidiendo, un martes, si
+   alcanza para el colegio. Lo que tiene que decir es lo contrario:
+   precisión, calma, y que alguien llevó bien las cuentas. Eso no se dice con
+   luz sobre el vacío. Se dice con TINTA SOBRE PAPEL.
+
+   Y no es una desviación del ADN: es una restitución. `marca.css` ya declara
+   esta paleta —papel #FBF9F9, tinta #131315, verde hondo #064E3B— y el mundo
+   negro la sobreescribía entera. Acá se le devuelven sus tokens.
+
+   LAS TRES DECISIONES DE LAS QUE CUELGA TODO
+
+   1. EL FILETE, NO LA SOMBRA. La jerarquía la hacen líneas de un píxel y
+      aire, como en un estado de cuenta impreso. Ni una carta flotando, ni un
+      desenfoque. Una sombra dice «esto está encima»; un filete dice «esto es
+      otra cosa», que es lo que hace falta.
+
+   2. LA CIFRA ES LA IMAGEN. En un sitio de finanzas la ilustración es el
+      número. Van en tabulares, grandes, y con el mismo trato que un titular.
+
+   3. EL MOVIMIENTO SE MIDE EN MILÍMETROS. Las cosas se trazan y se corren,
+      nunca aparecen ni rebotan. Un documento financiero que hace piruetas
+      pierde exactamente lo que tiene que ganar.
+   ========================================================================== */
+
+.papel {
+  /* El papel no es blanco puro: #FBF9F9 tiene un punto de calor. En pantalla
+     el blanco absoluto se lee como «sin terminar», y en una página larga
+     cansa la vista. */
+  background: var(--fondo);
+  color: var(--tinta);
+
+  /* Un solo modo, y es el claro. Igual que antes había un solo modo negro:
+     el fondo lo decide la dirección de arte, no el visitante. */
+  color-scheme: light;
+
+  --filete:     var(--borde);
+  --filete-ink: color-mix(in srgb, var(--tinta) 22%, transparent);
+  --curva:      cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* La rejilla del documento: el ancho de la mancha y el margen. Una sola
+     medida para toda la página es lo que hace que se lea como un impreso y
+     no como diez secciones negociando cada una su ancho. */
+  --hoja:   min(100% - clamp(2.5rem, 8vw, 10rem), 78rem);
+  --canal:  clamp(1.25rem, 5vw, 5rem);
+}
+
+/* ---------- la retícula ----------
+   Todo lo que va a lo ancho de la página pasa por acá. */
+.hoja {
+  width: var(--hoja);
+  margin-inline: auto;
+}
+
+/* ==========================================================================
+   TIPOGRAFÍA — el peso es la voz
+
+   Geist es variable de 100 a 900 y el sitio usaba tres pesos del medio. A
+   escala de titular el peso correcto es MENOS, no más: sobre papel, un
+   titular en 700 grita; en 400 afirma. El tamaño hace el énfasis.
+   ========================================================================== */
+
+.papel .rotulo {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0 0 clamp(1.75rem, 4vh, 3rem);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--tenue);
+}
+
+/* La barrita del rótulo. Es un signo de imprenta, no un adorno: marca el
+   principio de un bloque igual que el filete marca el final. */
+.rotulo::before {
+  content: "";
+  width: 2.5rem;
+  height: 1px;
+  background: var(--tinta);
+  flex: none;
+}
+
+.papel .display {
+  margin: 0;
+  font-size: clamp(2.6rem, min(8.6vw, 11.5svh), 8rem);
+  font-weight: 400;
+  font-variation-settings: "wght" 400;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+  color: var(--tinta);
+}
+
+/* La segunda mitad del titular baja de tono. «El saldo todavía no lo sabe»
+   es la parte que acusa, y dicha más bajo pega más fuerte que gritada. */
+.display em {
+  font-style: normal;
+  color: var(--tenue);
+}
+
+.papel .entrada {
+  margin: clamp(1.75rem, 4vh, 2.75rem) 0 0;
+  max-width: 54ch;
+  font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+  line-height: 1.6;
+  color: var(--tenue);
+}
+
+/* ==========================================================================
+   LA PORTADA
+   ========================================================================== */
+
+.portada {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  padding-block: clamp(7rem, 16vh, 11rem) 0;
+}
+
+.portada__dicho { align-self: center; }
+
+.portada__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: clamp(2rem, 4.5vh, 3rem);
+}
+
+/* ==========================================================================
+   EL DESFASE — el instrumento, y la única imagen que necesita la portada
+
+   Dos reglas de días, impresas, que no calzan. El mes del calendario arranca
+   el 1; el ciclo de la tarjeta ya venía corriendo desde el 7 de julio. Esa
+   diferencia es el producto entero, y acá está medida y acotada como en un
+   plano, no insinuada con luz.
+
+   Los días son un `repeating-linear-gradient` y no 62 elementos: son marcas
+   de imprenta, no contenido, y ninguna de ellas tiene nada que decirle a un
+   lector de pantalla. La lectura va en el texto de al lado.
+   ========================================================================== */
+
+.desfase {
+  align-self: end;
+  padding-block: clamp(1.25rem, 3.5vh, 3rem) clamp(1rem, 3vh, 2.5rem);
+  border-top: 1px solid var(--filete);
+  display: grid;
+  gap: clamp(0.6rem, 1.8vh, 1.4rem);
+}
+
+/* EL EJE MIDE 56 DÍAS. El ciclo ocupa del día 0 al 31; el mes, del 25 al 56.
+   Cada regla es un TRAMO del mismo eje, no una regla empujada — por eso
+   ninguna se sale de su celda y el desfase queda dibujado porque es cierto.
+
+     31 / 56 = 55.357%   lo que mide un mes sobre el eje
+     25 / 56 = 44.643%   el corrimiento, o sea el desfase */
+.regla {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, auto) 1fr minmax(5.5rem, auto);
+  align-items: center;
+  gap: clamp(0.6rem, 1.6vw, 1.25rem);
+}
+
+.regla__nombre,
+.regla__rango {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--tenue);
+  white-space: nowrap;
+}
+
+.regla__rango {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinta);
+}
+
+.regla__eje { position: relative; display: block; height: 2rem; }
+
+/* La cinta de días. `--paso` es el ancho de UN día dentro de la cinta, y la
+   cinta mide siempre 31 días: lo que cambia entre las dos es dónde empieza. */
+.regla__cinta {
+  --paso: calc(100% / 31);
+  position: absolute;
+  inset-block: 0;
+  border-inline: 1px solid var(--tinta);
+}
+
+.regla__cinta--mes   { left: 44.643%; right: 0; }
+.regla__cinta--ciclo { left: 0; right: 44.643%; border-color: var(--acento); }
+
+/* Dos tramas superpuestas: la de todos los días, tenue, y la de cada cinco,
+   a tinta plena y más alta. Es lo que permite CONTAR de un vistazo en vez de
+   solo ver rayas. */
+.regla__cinta::before,
+.regla__cinta::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+}
+
+.regla__cinta::before {
+  inset-block: 0;
+  background-image: repeating-linear-gradient(to right, var(--filete-ink) 0 1px, transparent 1px var(--paso));
+}
+
+.regla__cinta::after {
+  inset-block: 45% 0;
+  background-image: repeating-linear-gradient(to right, var(--tinta) 0 1px, transparent 1px calc(var(--paso) * 5));
+}
+
+.regla__cinta--ciclo::before { background-image: repeating-linear-gradient(to right, color-mix(in srgb, var(--acento) 35%, transparent) 0 1px, transparent 1px var(--paso)); }
+.regla__cinta--ciclo::after  { background-image: repeating-linear-gradient(to right, var(--acento) 0 1px, transparent 1px calc(var(--paso) * 5)); }
+
+.regla--ciclo .regla__nombre { color: var(--acento); }
+
+/* La cota ocupa exactamente el corrimiento: del día 0 al 25 del eje. Dibujo
+   técnico —dos topes y una línea— y no un bloque de color. */
+.regla--cota .regla__eje { height: 2.5rem; }
+
+.cota {
+  position: absolute;
+  left: 0;
+  width: 44.643%;
+  top: 0.25rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--alerta);
+}
+
+.cota__linea { position: absolute; inset-inline: 0; top: 0; border-top: 1px solid var(--alerta); }
+.cota__linea::before,
+.cota__linea::after {
+  content: "";
+  position: absolute;
+  top: -0.3rem;
+  width: 1px;
+  height: 0.6rem;
+  background: var(--alerta);
+}
+.cota__linea::before { left: 0; }
+.cota__linea::after  { right: 0; }
+
+.cota__texto {
+  position: absolute;
+  left: 0;
+  top: 0.6rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* En pantalla angosta los rótulos se van arriba y el eje se queda con todo el
+   ancho. A 390 px, con el rótulo al lado, la cinta bajaba a 170 px: 5.5 px
+   por día, y 31 marcas ahí no son una regla, son una mancha gris. */
+@media (max-width: 46rem) {
+  .regla {
+    grid-template-columns: 1fr auto;
+    gap: 0.35rem 1rem;
+  }
+  .regla__eje { grid-column: 1 / -1; height: 1.5rem; }
+  .regla--cota .regla__nombre,
+  .regla--cota .regla__rango { display: none; }
+  .cota__texto { white-space: normal; line-height: 1.3; }
+}
+
+/* ==========================================================================
+   CONTROLES — botones de impreso, no de aplicación
+   ========================================================================== */
+
+.papel .pulsar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 1.5rem;
+  border-radius: var(--radio-chico);
+  font-size: 0.9375rem;
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: transform 160ms var(--curva), background-color 200ms var(--curva),
+              border-color 200ms var(--curva);
+}
+
+.papel .pulsar--tinta {
+  background: var(--acento);
+  color: var(--acento-ct);
+}
+
+.papel .pulsar--borde {
+  border-color: var(--borde-fuerte);
+  color: var(--tinta);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .papel .pulsar--tinta:hover { background: color-mix(in srgb, var(--acento) 88%, black); }
+  .papel .pulsar--borde:hover { border-color: var(--tinta); background: var(--elevado); }
+}
+
+/* Hundirse al apretar: es lo que hace que un control se sienta físico. */
+.papel .pulsar:active { transform: scale(0.975); }
+
+/* ==========================================================================
+   EL ENCABEZADO — una línea de imprenta
+   ========================================================================== */
+
+.papel .cabecera {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: 5;
+  background: color-mix(in srgb, var(--fondo) 88%, transparent);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--filete);
+}
+
+.papel .cabecera .marca,
+.papel .cabecera .marca span { color: var(--tinta); }
+.papel .menu a:not(.boton) { color: var(--tenue); }
+.papel .menu a[aria-current="page"]:not(.boton) { color: var(--tinta); }
+.papel .sesion { border-left-color: var(--filete); }
+.papel .marca { white-space: nowrap; }
+
+@media (hover: hover) and (pointer: fine) {
+  .papel .menu a:not(.boton):hover { color: var(--tinta); }
+}
+
+/* ==========================================================================
+   LA VITRINA — un aparato a la vez, y su pantalla es una película
+
+   La composición viene de `noche.css` y se conserva porque está bien: tres
+   aparatos chicos en fila no se pueden leer, y la única cura de un problema
+   de escala es escala. Lo que cambia es el material — la carcasa deja de ser
+   vidrio esmerilado y pasa a ser un objeto sobre papel: filete de un píxel y
+   una sombra corta, como una foto pegada en una hoja.
+   ========================================================================== */
+
+.vitrina { padding-block: clamp(4.5rem, 11vw, 10rem); }
+
+.vitrina__intro {
+  margin: 0 auto clamp(2.75rem, 6vw, 6rem);
+  max-width: 44rem;
+  text-align: center;
+}
+
+.vitrina__escena { display: grid; gap: clamp(4rem, 9vw, 7rem); }
+
+.tarima {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.25rem);
+  justify-items: center;
+}
+
+.tarima__voz { max-width: 46ch; text-align: center; }
+
+.papel .tarima__voz h3 {
+  font-size: clamp(1.3rem, 1.1rem + 1vw, 1.75rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  margin: 0 0 0.6rem;
+  color: var(--tinta);
+}
+
+.papel .tarima__voz p { margin: 0; color: var(--tenue); line-height: 1.6; }
+
+.pasos { display: none; }
+
+/* ---------- la carcasa ---------- */
+
+.chasis {
+  --alto: min(34rem, 62svh);
+  margin: 0;
+  position: relative;
+  border-radius: var(--curva-chasis, 20px);
+  border: 1px solid var(--borde);
+  background: var(--superficie);
+  padding: var(--bisel, 8px);
+  box-shadow: var(--sombra);
+  display: grid;
+  gap: 0;
+  /* Contra `100%` y no contra la ventana: el tope es el ancho DISPONIBLE, con
+     el relleno de la franja ya descontado. Con `92vw` la página desbordaba. */
+  width: min(100%, calc(var(--alto) * var(--w) / var(--h) + var(--bisel, 8px) * 2));
+  margin-inline: auto;
+}
+
+/* El ancho queda definido arriba, así que a `aspect-ratio` le queda una sola
+   medida por resolver y sí se aplica. Con las dos puestas se ignora. */
+.chasis__pantalla {
+  width: 100%;
+  aspect-ratio: var(--w) / var(--h);
+  overflow: hidden;
+  border-radius: calc(var(--curva-chasis, 20px) - var(--bisel, 8px));
+  background: var(--elevado);
+}
+
+.chasis__cinta { display: block; width: 100%; height: 100%; object-fit: fill; }
+
+.chasis--telefono   { --w: 300; --h: 580; --curva-chasis: 30px; --bisel: 9px; }
+.chasis--tableta    { --w: 420; --h: 545; --curva-chasis: 22px; --bisel: 10px; }
+.chasis--escritorio { --w: 880; --h: 540; --curva-chasis: 14px; --bisel: 0px; }
+
+.chasis__muesca {
+  position: absolute;
+  top: calc(var(--bisel) + 6px);
+  left: 50%;
+  translate: -50% 0;
+  width: 34%;
+  height: 5px;
+  border-radius: 99px;
+  background: var(--borde);
+  z-index: 2;
+}
+
+.chasis__barra {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 12px;
+  background: var(--elevado);
+  border-bottom: 1px solid var(--borde);
+  border-radius: 13px 13px 0 0;
+}
+.chasis__barra i { width: 8px; height: 8px; border-radius: 99px; background: var(--borde); }
+.chasis__barra span {
+  margin-left: 8px;
+  padding: 2px 12px;
+  border-radius: 99px;
+  background: var(--fondo);
+  color: var(--tenue);
+  font-size: 0.6875rem;
+}
+.chasis--escritorio .chasis__pantalla { border-radius: 0 0 13px 13px; }
+
+/* ---------- la escena clavada ----------
+   Solo donde hay alto para que el aparato de escritorio siga siendo legible.
+   Debajo de eso vale más la lista apilada que un cine que no se lee. */
+@media (min-width: 64rem) and (min-height: 46rem) and (prefers-reduced-motion: no-preference) {
+  .vitrina--viva .vitrina__pista { position: relative; height: 320svh; }
+
+  .vitrina--viva .vitrina__tramos {
+    position: absolute; inset: 0;
+    display: grid; grid-template-rows: repeat(3, 1fr);
+    pointer-events: none; z-index: -1;
+  }
+
+  .vitrina--viva .vitrina__escena {
+    position: sticky; top: 0; height: 100svh;
+    display: grid; grid-template-rows: auto auto;
+    align-content: center; justify-items: center;
+    gap: clamp(1.25rem, 3vh, 2.25rem);
+    padding-block: clamp(3.5rem, 7vh, 5rem) clamp(1.5rem, 3vh, 2.5rem);
+  }
+
+  .vitrina--viva .pasos { grid-area: 1 / 1; }
+  .vitrina--viva .tarima { grid-area: 2 / 1; align-content: start; align-self: start; }
+  .vitrina--viva .chasis { --alto: min(29rem, calc(100svh - 17rem)); }
+  .vitrina--viva .tarima { gap: clamp(1rem, 2.4vh, 1.75rem); }
+
+  /* Transición y no `@keyframes`: se puede interrumpir y reapuntar a mitad de
+     camino, que es lo que pasa cuando alguien rueda el ratón de golpe. El
+     desenfoque no es adorno — sin él se ven DOS aparatos superpuestos durante
+     el cruce y se lee como un error de dibujo. */
+  .vitrina--viva .tarima {
+    opacity: 0;
+    transform: translateY(1.25rem) scale(0.97);
+    filter: blur(8px);
+    pointer-events: none;
+    transition: opacity 420ms var(--curva), transform 420ms var(--curva), filter 420ms var(--curva);
+  }
+  .vitrina--viva .tarima[data-vivo] {
+    opacity: 1; transform: none; filter: blur(0); pointer-events: auto;
+  }
+
+  .vitrina--viva .pasos {
+    display: flex; gap: 0.35rem; list-style: none; margin: 0;
+    padding: 0.3rem;
+    background: var(--elevado);
+    border: 1px solid var(--borde);
+    border-radius: 999px;
+  }
+
+  .paso {
+    appearance: none; border: 0; background: transparent;
+    color: var(--tenue); font: inherit; font-size: 0.8125rem; font-weight: 500;
+    padding: 0.5rem 1.1rem; border-radius: 999px; cursor: pointer;
+    transition: color 200ms var(--curva), background-color 200ms var(--curva);
+  }
+  .paso[aria-current="true"] { color: var(--acento-ct); background: var(--acento); }
+  @media (hover: hover) and (pointer: fine) { .paso:hover { color: var(--tinta); } }
+  .paso:active { transform: scale(0.97); }
+
+  /* La escena se retira al soltar el clavado, en vez de irse de golpe. La
+     línea de tiempo es la de la PISTA: un elemento pegado no se mueve
+     respecto de la ventana, así que su propia `view()` se congela. */
+  @supports (animation-timeline: view()) {
+    .vitrina--viva .vitrina__pista { view-timeline: --vitrina block; }
+    .vitrina--viva .vitrina__escena {
+      animation: retirarse linear both;
+      animation-timeline: --vitrina;
+      animation-range: contain 90% contain 100%;
+    }
+    @keyframes retirarse {
+      from { opacity: 1; transform: none; filter: blur(0); }
+      to   { opacity: 0; transform: translateY(-3rem) scale(0.96); filter: blur(6px); }
+    }
+  }
+}
+
+/* ==========================================================================
+   EL MOVIMIENTO — se traza y se corre, nunca aparece ni rebota
+   ========================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* El titular se escribe: cada renglón sube desde detrás de su máscara.
+     `transform` y nada más — es lo único que no toca composición ni pintura. */
+  .verso { display: block; overflow: clip; padding-bottom: 0.1em; margin-bottom: -0.1em; }
+  .verso__voz {
+    display: block;
+    animation: escribirse 900ms var(--curva) both;
+  }
+  @keyframes escribirse {
+    from { transform: translateY(108%); }
+    to   { transform: none; }
+  }
+  .verso:nth-child(1) .verso__voz { animation-delay:  40ms; }
+  .verso:nth-child(2) .verso__voz { animation-delay:  90ms; }
+
+  .llega { animation: llegar 800ms var(--curva) both; }
+  @keyframes llegar {
+    from { opacity: 0; transform: translateY(0.75rem); }
+    to   { opacity: 1; transform: none; }
+  }
+  .llega--2 { animation-delay: 160ms; }
+  .llega--3 { animation-delay: 240ms; }
+  .llega--4 { animation-delay: 320ms; }
+
+  /* LAS REGLAS SE IMPRIMEN. Se descubren de izquierda a derecha, que es la
+     dirección en que pasa el tiempo. `clip-path` y no `width`: recortar no
+     rehace la composición, y estas cintas llevan un degradado repetido que
+     al cambiar de ancho se recalcularía entero en cada cuadro. */
+  .regla__cinta {
+    animation: imprimir 1100ms var(--curva) both;
+    animation-delay: 420ms;
+  }
+  .regla--ciclo .regla__cinta { animation-delay: 560ms; }
+  @keyframes imprimir {
+    from { clip-path: inset(0 100% 0 0); }
+    to   { clip-path: inset(0 0 0 0); }
+  }
+
+  .cota { animation: llegar 700ms var(--curva) 980ms both; }
+}
+
+/* Sin movimiento: todo visible, quieto y completo. */
+@media (prefers-reduced-motion: reduce) {
+  .papel *, .papel *::before, .papel *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* El cierre repite las acciones de la portada, centradas. */
+.portada__acciones--centro { justify-content: center; }
+
+/* ==========================================================================
+   EL TOPE DE LA MANCHA — la regla que ninguna sección puede saltarse
+
+   Medido a 1920 sin esto: 168 caracteres por renglón. El ojo pierde el
+   principio de la línea siguiente pasados los ~75, y el proyecto se fija 65.
+
+   Va acá y no sección por sección a propósito: los topes repartidos por diez
+   reglas distintas es exactamente como se llegó a 168 — cada sección nueva
+   creía que la anterior lo había resuelto. Una sola regla, en el mundo, y las
+   secciones solo la anulan cuando tienen una razón.
+   ========================================================================== */
+
+.papel :where(p, li, dd, .lectura, .bajada, .entrada) { max-width: 65ch; }
+
+/* Los renglones de dos columnas no son líneas de lectura: su mancha son sus
+   hijos. Ponerles el tope acota la columna del término y desarma la rejilla. */
+.papel :where(.hecho, .fila-cfg) { max-width: none; }
+
+/* Centrados, el tope se reparte a los dos lados en vez de dejar el bloque
+   pegado a la izquierda dentro de su caja. */
+.papel :where(.bajada--centro, .tarima__voz p, .vitrina__intro p) { margin-inline: auto; }

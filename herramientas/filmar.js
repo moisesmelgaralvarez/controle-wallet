@@ -162,7 +162,7 @@ const nav = await chromium.launch();
 const ctx = await nav.newContext({
   viewport: { width: 1000, height: 700 },
   deviceScaleFactor: 2,
-  colorScheme: 'dark',
+  colorScheme: 'light',   /* El mundo del sitio es claro: la app se filma en claro */
   bypassCSP: true,
 });
 const pag = await ctx.newPage();

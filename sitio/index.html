@@ -20,31 +20,24 @@
      plató donde se filman esas películas. Dejarla enlazada acá eran 10 KB
      que ya no dibujaban nada. -->
 <link rel="stylesheet" href="/marca.css">
-<!-- El mundo visual nuevo de la portada. Va de último: gana por cascada sin
-     necesitar un solo !important. -->
-<link rel="stylesheet" href="/noche.css">
+<!-- El mundo visual del sitio. Va de último: gana por cascada sin necesitar
+     un solo !important. Reemplaza a `noche.css` — tinta sobre papel en vez de
+     luz sobre el vacío. El porqué está escrito en la cabecera del archivo. -->
+<link rel="stylesheet" href="/papel.css">
 <!-- Todos con `defer`: ninguno tiene nada que hacer antes del primer pintado,
      porque la página se ve completa sin ellos. Un solo modo, negro, decidido
      y no preguntado — por eso tampoco hay `modo.js`.
 
-     `hero.js` salió: raspaba un mp4 contra el scroll, y esa película la
-     reemplazó `mundo.js`, que dibuja lo mismo pero vivo y respondiendo al
-     puntero. Se fueron con él los 311 KB del video y su póster. -->
-<script src="/mundo.js" defer></script>
+     `hero.js` y `mundo.js` salieron los dos. El primero raspaba un mp4 contra
+     el scroll; el segundo lo reemplazó por un lienzo de luz. Ninguno sobrevive
+     al cambio de idioma: sobre papel, el instrumento se IMPRIME. -->
 <script src="/ciclo.js" defer></script>
 <script src="/vitrina.js" defer></script>
 </head>
-<body class="noche">
+<body class="papel">
 
 <a class="saltar" href="#principal">Saltar al contenido</a>
 
-<!-- EL MUNDO. Un lienzo fijo detrás de todo, donde las dos líneas de tiempo
-     del producto —el mes y el ciclo— corren desfasadas y se van juntando a lo
-     largo del recorrido. No es decoración de fondo: es la tesis, dibujándose.
-
-     `aria-hidden` porque es atmósfera. Todo lo que dice está escrito también
-     en el texto de la página; un lector de pantalla no se pierde nada. -->
-<canvas class="mundo" data-mundo aria-hidden="true"></canvas>
 
 <header class="cabecera">
   <a class="marca" href="/">
@@ -69,61 +62,78 @@
 
 <main id="principal">
 
-  <!-- ── acto I · la portada ───────────────────────────────── -->
-  <!-- Una pantalla, una idea. El instrumento del ciclo no ilustra el titular:
-       lo demuestra. Todo dibujado en CSS — pesa cero y se ve nítido a
-       cualquier resolución. -->
-  <!-- El acto es más alto que la pantalla y su contenido se clava adentro. Esa
-       diferencia ES la pista contra la que se raspa la película: sin ella el
-       acto medía exactamente una ventana y no había recorrido que medir. La
-       composición que se ve sigue siendo de una sola pantalla. -->
+  <!-- ── la portada ────────────────────────────────────────── -->
+  <!-- Una declaración y un instrumento. Nada más.
+
+       El instrumento no ilustra el titular: lo DEMUESTRA. Dos reglas de días
+       impresas, que no calzan, con la diferencia acotada como en un plano. Es
+       el producto entero dicho sin una cifra.
+
+       Va dibujado con `repeating-linear-gradient` y no con 62 elementos: los
+       días son marcas de imprenta, no contenido, y ninguno tiene nada que
+       decirle a un lector de pantalla. La lectura entera va en el texto. -->
   <section class="portada">
-    <div class="portada__marco">
+    <div class="hoja portada__dicho">
 
-      <p class="portada__rotulo entra">
-        <span class="portada__punto" aria-hidden="true"></span>
-        Presupuesto del hogar · Honduras
-      </p>
+      <p class="rotulo llega">Presupuesto del hogar · Honduras</p>
 
-      <!-- Cada renglón va envuelto en su propia máscara y sube desde abajo.
-           Es lo que hace que el titular se ESCRIBA en vez de aparecer.
-
-           El <span> de adentro no es de adorno: la máscara necesita un
-           elemento que se mueva y otro que recorte, o no hay nada que
-           recortar. Y los renglones se parten a mano —no con `text-wrap`—
-           porque el corte es una decisión de composición: «El dinero / ya se
-           gastó» pega distinto que «El dinero ya / se gastó». -->
-      <h1 class="portada__titulo">
-        <span class="verso"><span class="verso__voz">El dinero</span></span>
-        <span class="verso"><span class="verso__voz">ya se gastó.</span></span>
-        <span class="verso verso--eco"><span class="verso__voz">El saldo todavía</span></span>
-        <span class="verso verso--eco"><span class="verso__voz">no lo sabe.</span></span>
+      <!-- Cada renglón va detrás de su propia máscara y sube desde abajo: el
+           titular se ESCRIBE en vez de aparecer. El corte de línea es a mano
+           porque es una decisión de composición, no de ancho disponible. -->
+      <h1 class="display">
+        <span class="verso"><span class="verso__voz">El dinero ya se gastó.</span></span>
+        <span class="verso"><span class="verso__voz"><em>El saldo todavía no lo sabe.</em></span></span>
       </h1>
 
-      <p class="portada__bajada entra entra--3">
+      <p class="entrada llega llega--3">
         Tu tarjeta no cobra por mes calendario: cobra por ciclo de corte. Ese
         desfase es la razón por la que las cuentas cuadran en el papel y no
         cuadran en la casa.
       </p>
 
-      <div class="acciones-noche entra entra--4">
-        <a class="pulsar pulsar--luz" href="/registro">Crear cuenta</a>
-        <a class="pulsar pulsar--vidrio" href="/entrar">Entrar</a>
+      <div class="portada__acciones llega llega--4">
+        <a class="pulsar pulsar--tinta" href="/registro">Crear cuenta</a>
+        <a class="pulsar pulsar--borde" href="/entrar">Entrar</a>
       </div>
     </div>
 
-    <!-- El pie de la portada rotula las dos vías que el lienzo dibuja detrás.
-         Sin él son dos hilos bonitos; con él son un instrumento. -->
-    <div class="portada__pie entra entra--4">
-      <span class="portada__via">
-        <i class="portada__muestra portada__muestra--mes" aria-hidden="true"></i>
-        Mes calendario <b>1 — 31 ago</b>
-      </span>
-      <span class="portada__via">
-        <i class="portada__muestra portada__muestra--ciclo" aria-hidden="true"></i>
-        Ciclo real <b>7 jul — 6 ago</b>
-      </span>
-      <span class="portada__desfase">Desfase: <b>25 días</b></span>
+    <!-- UN SOLO EJE PARA LAS DOS REGLAS.
+
+         La primera versión corría la regla del ciclo con `translate`, y se
+         salía de su celda: pisaba su propio rótulo y sangraba fuera de la
+         hoja. El modelo correcto no es «una regla desplazada», es UN EJE DE
+         56 DÍAS donde cada regla ocupa su tramo. El ciclo va del día 0 al 31;
+         el mes, del 25 al 56. La diferencia —esos 25 días— es el desfase, y
+         queda dibujada porque es verdad, no porque se empujó algo. -->
+    <div class="hoja desfase" role="img"
+         aria-label="Dos reglas de días sobre un mismo eje. El ciclo de la tarjeta corre del 7 de julio al 6 de agosto; el mes calendario, del 1 al 31 de agosto, arranca 25 días después. Cuando el mes abre, el ciclo ya lleva 25 días de consumo acumulado.">
+
+      <div class="regla">
+        <span class="regla__nombre">Mes calendario</span>
+        <span class="regla__eje" aria-hidden="true">
+          <span class="regla__cinta regla__cinta--mes"></span>
+        </span>
+        <span class="regla__rango">1 — 31 ago</span>
+      </div>
+
+      <div class="regla regla--ciclo">
+        <span class="regla__nombre">Ciclo de corte</span>
+        <span class="regla__eje" aria-hidden="true">
+          <span class="regla__cinta regla__cinta--ciclo"></span>
+        </span>
+        <span class="regla__rango">7 jul — 6 ago</span>
+      </div>
+
+      <div class="regla regla--cota">
+        <span class="regla__nombre"></span>
+        <span class="regla__eje" aria-hidden="true">
+          <span class="cota">
+            <span class="cota__linea"></span>
+            <span class="cota__texto">25 días ya consumidos cuando abre el mes</span>
+          </span>
+        </span>
+        <span class="regla__rango"></span>
+      </div>
     </div>
   </section>
 
@@ -584,9 +594,9 @@
         tu hogar en pocos pasos y cualquier cosa se puede cambiar después.
       </p>
 
-      <div class="acciones-noche acciones-noche--centro">
-        <a class="pulsar pulsar--luz" href="/registro">Crear cuenta</a>
-        <a class="pulsar pulsar--vidrio" href="/entrar">Entrar</a>
+      <div class="portada__acciones portada__acciones--centro">
+        <a class="pulsar pulsar--tinta" href="/registro">Crear cuenta</a>
+        <a class="pulsar pulsar--borde" href="/entrar">Entrar</a>
       </div>
     </div>
   </section>

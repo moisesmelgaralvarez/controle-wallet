@@ -1042,3 +1042,813 @@
   .pantalla__vidrio { background-image: url("/media/hero-final.jpg"); }
   .pantalla__cinta { display: none; }
 }
+
+/* ==========================================================================
+   LA MITAD DE ABAJO — reparación de una regresión que causé yo
+
+   QUÉ PASÓ, SIN ADORNOS
+
+   Al cambiar el sitio a papel desenlacé `noche.css` y escribí `papel.css` en
+   su lugar. Pero `papel.css` solo vistió la portada, el instrumento del
+   desfase, la vitrina y la pantalla: 79 clases. De la sección del ciclo para
+   abajo quedaron 68 clases SIN UNA SOLA REGLA en ninguna hoja enlazada — el
+   61% de esa parte de la página.
+
+   No se vio porque un elemento sin estilo no da error: se dibuja con los
+   valores por defecto del navegador y parece «texto plano», no «roto». El
+   dueño lo encontró mirando el sitio publicado. Las barras negras gigantes
+   del instrumento interactivo eran `<rect>` de SVG sin `fill`, que el
+   navegador rellena de negro y estira a todo el ancho porque el `<svg>`
+   tampoco tenía ancho acotado.
+
+   Es la trampa que TRASPASO.md §6 describe: falló en silencio.
+
+   POR QUÉ NO SE PORTA `noche.css` Y SE ESCRIBE DE NUEVO
+
+   Porque `noche.css` es el idioma del vidrio esmerilado y el neón sobre
+   negro, y ese vocabulario se abandonó a propósito. Copiarlo acá traería de
+   vuelta justo lo que se decidió no ser. Las tres reglas de este mundo
+   mandan igual que arriba:
+
+     1. EL FILETE, NO LA SOMBRA. Jerarquía con líneas de un píxel y aire.
+     2. LA CIFRA ES LA IMAGEN. En finanzas la ilustración es el número.
+     3. EL MOVIMIENTO SE MIDE EN MILÍMETROS. Se traza y se corre; no aparece.
+   ========================================================================== */
+
+/* ---------- la superficie compartida ----------
+   `.vidrio` se llamaba así porque en el mundo negro era cristal esmerilado.
+   Acá no se renombra —el marcado es de otras nueve secciones y renombrar por
+   gusto es cómo se rompen las cosas— pero sí cambia de materia: papel puesto
+   sobre papel, separado por un filete y no por un desenfoque. */
+.papel .vidrio {
+  background: var(--superficie);
+  border: 1px solid var(--filete);
+  border-radius: 12px;
+  padding: clamp(1.5rem, 4vw, 2.75rem);
+}
+
+/* El rótulo técnico: lo que en un plano va junto a una cota. Chico, espaciado
+   y en tinta tenue — nombra el dibujo sin competir con él. */
+.papel .tecnico {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tenue);
+  font-variant-numeric: tabular-nums;
+}
+
+/* El titular de sección. Menos peso que tamaño: a esta escala 700 grita. */
+.papel .titular {
+  margin: 0 0 clamp(2rem, 5vh, 3.5rem);
+  font-size: clamp(1.75rem, 1.2rem + 2.2vw, 3rem);
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  color: var(--tinta);
+}
+.papel .titular--centro { text-align: center; margin-inline: auto; max-width: 22ch; }
+
+/* El filete que separa acto de acto. Es la única división de la página: ni
+   fondos alternados ni cajas. Se estrecha a los lados para que se lea como
+   marca de imprenta y no como borde de contenedor. */
+.papel .regla-viva {
+  width: var(--hoja);
+  margin-inline: auto;
+  height: 1px;
+  background: var(--filete);
+}
+
+/* ==========================================================================
+   ACTO · EL CICLO — el aparato clavado y sus cuatro hitos
+   ========================================================================== */
+
+.papel .aparato { display: grid; gap: clamp(1.25rem, 3vh, 2rem); }
+
+.papel .aparato__cabeza {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid var(--filete);
+}
+
+/* ---------- la vía de medida ----------
+   Un solo riel donde se leen tres tramos: lo cargado, lo que la quincena
+   cubre, y lo que queda sin cubrir. Los tres suman el ancho completo, así
+   que la proporción ES el dato y no una ilustración de él.
+
+   14,840 de 19,101 = 77.7% cubierto. El resto, 22.3%, es lo que falta. */
+.papel .medida { display: grid; gap: 0.625rem; }
+
+.papel .medida__via {
+  position: relative;
+  height: 10px;
+  border-radius: 99px;
+  background: var(--elevado);
+  overflow: hidden;
+}
+
+/* La carga es todo el ciclo: el fondo contra el que se leen los otros dos. */
+.papel .medida__carga {
+  position: absolute;
+  inset: 0;
+  background: var(--elevado);
+}
+/* Lo que la quincena sí cubre. Verde porque va a favor. */
+.papel .medida__abono {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 77.7%;
+  background: var(--acento);
+  border-radius: 99px;
+}
+/* Lo que queda sin cubrir. Es el único rojo del acto, y por eso pesa. */
+.papel .medida__falta {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 22.3%;
+  background: var(--alerta);
+  border-radius: 99px;
+}
+/* La costura: dónde se acaba el ingreso y empieza el problema. */
+.papel .medida__costura {
+  position: absolute;
+  top: -3px; bottom: -3px;
+  left: 77.7%;
+  width: 1.5px;
+  background: var(--tinta);
+}
+
+.papel .medida__pies {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* ---------- las cifras ----------
+   Renglones de estado de cuenta: rótulo a la izquierda, cifra a la derecha,
+   filete entre medio. El total se separa con un filete más marcado, como en
+   un impreso — no con un fondo de color. */
+.papel .aparato__cifras { margin: 0; display: grid; }
+
+.papel .renglon {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding-block: 0.625rem;
+  border-bottom: 1px solid var(--filete);
+}
+.papel .renglon dt { color: var(--tenue); font-size: 0.9375rem; }
+.papel .renglon dd { margin: 0; }
+
+.papel .renglon--total {
+  border-bottom: 0;
+  border-top: 1px solid var(--borde-fuerte);
+  margin-top: 0.25rem;
+  padding-top: 0.875rem;
+}
+.papel .renglon--total dt { color: var(--tinta); font-weight: 500; }
+
+/* Toda cifra de dinero en tabulares. Sin excepción: es del ADN. */
+.papel .cifra {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.01em;
+}
+.papel .renglon .cifra { font-size: 1.125rem; }
+.papel .renglon--total .cifra { font-size: 1.375rem; font-weight: 500; }
+.papel .falta,
+.papel .hito__falta { color: var(--alerta); }
+
+.papel .aparato__pie {
+  margin: 0;
+  padding-top: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--tenue);
+}
+
+/* ---------- los hitos ----------
+   Fechados, no numerados: el orden ES el dato. La fecha va en su propia
+   columna, alineada, para que las cuatro se lean como una cronología y no
+   como cuatro párrafos con negrita. */
+.papel .hito {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, auto) 1fr;
+  gap: 0.25rem clamp(1rem, 2.5vw, 2rem);
+  padding-block: clamp(1.25rem, 3vh, 2rem);
+  border-top: 1px solid var(--filete);
+}
+.papel .hito:first-child { border-top: 0; padding-top: 0; }
+
+.papel .hito__fecha {
+  grid-row: 1 / 3;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tenue);
+  font-variant-numeric: tabular-nums;
+  padding-top: 0.3rem;
+}
+.papel .hito h3 {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--tinta);
+}
+.papel .hito p {
+  margin: 0.375rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--tenue);
+  max-width: 52ch;
+}
+
+@media (max-width: 40rem) {
+  /* A 390 la columna de fecha se come el ancho del texto. Se apila. */
+  .papel .hito { grid-template-columns: 1fr; }
+  .papel .hito__fecha { grid-row: auto; padding-top: 0; }
+}
+
+/* ==========================================================================
+   ACTO · EL CICLO PROPIO — el único momento en que el visitante toca algo
+
+   ACÁ ESTABA EL PEOR DAÑO. El dibujo es un `<svg>` cuyos `<rect>` no tenían
+   `fill` en ninguna hoja enlazada, así que el navegador los pintaba NEGRO —
+   su valor por defecto— y encima el `<svg>` sin ancho declarado se estiraba
+   a todo lo disponible. De ahí los dos bloques negros gigantes, uno saliéndose
+   de la pantalla, que no se parecían a nada.
+   ========================================================================== */
+
+.papel .propio { display: grid; gap: clamp(2rem, 5vh, 3.5rem); }
+.papel .propio__intro { width: var(--hoja); margin-inline: auto; }
+.papel .propio__intro .lectura + .lectura { margin-top: 1rem; }
+
+.papel .propio__panel {
+  width: var(--hoja);
+  margin-inline: auto;
+  display: grid;
+  gap: clamp(1.25rem, 3vh, 2rem);
+}
+
+/* ---------- la leyenda ----------
+   Rotula el dibujo desde afuera. Va afuera y no dentro del SVG porque el
+   texto de adentro escala con el `viewBox`: a 390 de ancho quedaría en 8 px. */
+.papel .propio__leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem clamp(1rem, 3vw, 2rem);
+}
+.papel .leyenda {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--tenue);
+}
+.papel .leyenda b { color: var(--tinta); font-weight: 500; font-variant-numeric: tabular-nums; }
+/* La muestra de color, del mismo alto que el carril que nombra. */
+.papel .leyenda i {
+  width: 18px; height: 6px; border-radius: 99px; flex: none;
+}
+.papel .leyenda--mes i   { background: var(--borde-fuerte); }
+.papel .leyenda--ciclo i { background: var(--acento); }
+
+/* ---------- el dibujo ----------
+   Un plano, no una ilustración: dos carriles, una guía, una costura y una
+   cota. Cada `fill` se declara acá porque en SVG el valor por defecto es
+   negro sólido, y eso fue exactamente el defecto. */
+.papel .reglas {
+  display: block;
+  width: 100%;
+  /* ACOTADO, Y SE MIDIÓ POR QUÉ. Suelto llegaba a 1158 px a 1920, o sea 1.87
+     veces su tamaño nativo: los carriles de 6 px salían en 11 y la guía de 1
+     en casi 2. Un plano engordado deja de leerse como plano. A 760 la escala
+     máxima es 1.23×, que el ojo no registra como agrandado. */
+  max-width: 47.5rem;
+  height: auto;
+  /* Alineado a la izquierda como TODO lo demás del panel —leyenda, lectura,
+     control y pie—. Centrado, el dibujo flotaba solo en el medio mientras el
+     resto se pegaba al margen, y esa mezcla se lee como descuido. */
+  overflow: visible;
+}
+
+/* El mes del calendario: neutro. El calendario no es el culpable. */
+.papel .reglas__mes   { fill: var(--borde-fuerte); }
+/* El ciclo de la tarjeta: el acento, porque es lo que el producto respeta. */
+.papel .reglas__ciclo { fill: var(--acento); }
+/* La guía del día 1, contra la que se mide todo lo demás. */
+.papel .reglas__guia  { fill: var(--borde); }
+/* La costura y su nudo: donde los dos calendarios dejan de coincidir. */
+.papel .reglas__costura { fill: var(--alerta); }
+.papel .reglas__nudo    { fill: var(--alerta); }
+/* La cota: dibujo técnico, un pelo de línea, nunca un bloque de color. */
+.papel .reglas__cota,
+.papel .reglas__tope    { fill: var(--tinta); }
+
+/* Los carriles se deslizan cuando se mueve el control. `x` en SVG SÍ es
+   propiedad CSS y por eso se puede transicionar; por eso la costura se
+   dibuja con `<rect>` y no con `<line>`, cuyo `x1` es solo atributo y
+   saltaría de golpe.
+
+   CADA UNO TRANSICIONA SOLO LO QUE DE VERDAD LE CAMBIA, y no es purismo:
+   `/ciclo.js` mueve `x` en cuatro elementos, `cx` en uno y `width` en uno
+   solo. Declarar las tres en los seis hacía que el navegador vigilara
+   dieciocho propiedades para animar seis, y dejaba escrito en la hoja algo
+   falso sobre qué se mueve.
+
+   Lo de `width` en la cota lo marcó el detector de diseño, con razón para el
+   caso general: animar anchos rehace composición. Acá se queda porque es
+   geometría de SVG sobre un rectángulo de 1 píxel de alto —no caja de
+   HTML— y porque el ancho de la cota ES el dato: mide los días que el ciclo
+   lleva corriendo. Sustituirlo por `scaleX` obligaría a que el factor lo
+   calculara el JS, moviendo a otro archivo una cuenta que acá se lee. */
+.papel .reglas__ciclo,
+.papel .reglas__costura,
+.papel .reglas__tope {
+  transition: x 260ms var(--curva);
+}
+.papel .reglas__nudo { transition: cx 260ms var(--curva); }
+.papel .reglas__cota { transition: x 260ms var(--curva), width 260ms var(--curva); }
+
+.papel .propio__lectura {
+  margin: 0;
+  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
+  line-height: 1.6;
+  color: var(--tenue);
+  max-width: 52ch;
+}
+.papel .propio__lectura b {
+  color: var(--tinta);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- el control ----------
+   El deslizador se dibuja a mano porque el nativo trae el azul del sistema,
+   y este mundo no tiene azul. La pista es un filete; el tirador, un punto de
+   tinta. 44 px de objetivo táctil, que es del ADN. */
+.papel .dial {
+  display: grid;
+  gap: 0.625rem;
+  padding-top: clamp(0.5rem, 2vh, 1rem);
+  border-top: 1px solid var(--filete);
+}
+.papel .dial__rotulo {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tenue);
+}
+.papel .dial__fila {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+.papel .dial__deslizador {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 26rem;
+  appearance: none;
+  background: transparent;
+  height: 44px;              /* el objetivo táctil, no el grosor de la pista */
+  margin: 0;
+  cursor: pointer;
+}
+.papel .dial__deslizador::-webkit-slider-runnable-track {
+  height: 2px;
+  border-radius: 99px;
+  background: var(--borde);
+}
+.papel .dial__deslizador::-moz-range-track {
+  height: 2px;
+  border-radius: 99px;
+  background: var(--borde);
+}
+.papel .dial__deslizador::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px; height: 20px;
+  margin-top: -9px;          /* (2 − 20) ÷ 2, para centrarlo en la pista */
+  border-radius: 99px;
+  background: var(--acento);
+  border: 2px solid var(--superficie);
+  /* La sombra única del ADN, y acá sí gana su lugar: el tirador es lo único
+     de la página que el dedo levanta de la hoja. */
+  box-shadow: var(--sombra);
+  transition: transform 140ms var(--curva);
+}
+.papel .dial__deslizador::-moz-range-thumb {
+  width: 20px; height: 20px;
+  border: 2px solid var(--superficie);
+  border-radius: 99px;
+  background: var(--acento);
+  box-shadow: var(--sombra);
+  transition: transform 140ms var(--curva);
+}
+/* Que se sienta que el control escuchó. 140 ms: por debajo de los 160 que
+   pide una pulsación, porque un deslizador se toca muchas veces seguidas. */
+.papel .dial__deslizador:active::-webkit-slider-thumb { transform: scale(1.15); }
+.papel .dial__deslizador:active::-moz-range-thumb     { transform: scale(1.15); }
+.papel .dial__deslizador:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* El día elegido, en grande y tabular: es la respuesta al control, y una
+   cifra que cambia de ancho al deslizar se lee como un error. */
+.papel .dial__dia {
+  font-size: 1.5rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinta);
+  min-width: 2.25ch;
+  text-align: right;
+}
+
+.papel .propio__pie {
+  margin: 0;
+  padding-top: clamp(0.75rem, 2vh, 1.25rem);
+  border-top: 1px solid var(--filete);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--tenue);
+  max-width: 60ch;
+}
+
+/* ==========================================================================
+   ACTO · EL PULSO — una sola cifra, del tamaño que le toca
+
+   Es la regla 2 del mundo llevada al extremo: en un sitio de finanzas la
+   ilustración ES el número. Acá no hay dibujo que la acompañe porque no hace
+   falta ninguno.
+   ========================================================================== */
+
+.papel .acto-pulso {
+  width: var(--hoja);
+  margin-inline: auto;
+  display: grid;
+  gap: clamp(2.5rem, 6vh, 4.5rem);
+}
+
+.papel .mayor { display: grid; gap: 0.75rem; justify-items: start; }
+
+/* La cifra. Tabular y con el signo de moneda en menor, como en un impreso
+   financiero: la L acompaña, no compite. */
+.papel .mayor__valor {
+  margin: 0;
+  font-size: clamp(3.5rem, 2rem + 8vw, 8rem);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinta);
+}
+/* La L acompaña, no compite: más chica y en tinta tenue. Pero al ras de la
+   línea de base, no flotando — con `vertical-align: 0.5em` quedaba a la
+   altura del ápice y se leía como un exponente, no como una moneda. */
+.papel .mayor__valor i {
+  font-style: normal;
+  font-size: 0.34em;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--tenue);
+  vertical-align: baseline;
+  margin-right: 0.18em;
+}
+
+/* El rótulo va DEBAJO de la cifra, nunca encima: encima de un número o de un
+   titular está prohibido en este proyecto, y al pie de un instrumento es
+   donde trabaja. */
+.papel .mayor__rotulo {
+  margin: 0;
+  max-width: 34ch;
+  font-size: clamp(1rem, 0.95rem + 0.35vw, 1.1875rem);
+  line-height: 1.45;
+  color: var(--tinta);
+}
+.papel .mayor__pie {
+  margin: 0;
+  max-width: 52ch;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--tenue);
+}
+
+/* ---------- el contraste ----------
+   La MISMA cifra dos veces con veredicto opuesto. Todo el argumento del acto
+   sin una línea de explicación previa — y por eso las dos caras tienen que
+   verse una al lado de la otra, no una debajo de la otra: la comparación se
+   hace con el ojo, no con la memoria. */
+.papel .contraste {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--filete);
+  border-bottom: 1px solid var(--filete);
+}
+.papel .contraste__cara {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: start;
+  padding: clamp(1.5rem, 4vh, 2.5rem) clamp(1rem, 3vw, 2.5rem);
+}
+/* Los bordes de afuera van sin sangría, o el 26% no alinea con la cifra
+   mayor de arriba y la sección pierde su margen izquierdo. Un impreso alinea
+   la primera columna al margen; solo lo de adentro lleva aire. */
+.papel .contraste__cara:first-child { padding-left: 0; }
+.papel .contraste__cara:last-child  { padding-right: 0; }
+/* El filete entre las dos caras es lo que las vuelve una comparación. */
+.papel .contraste__cara + .contraste__cara {
+  border-left: 1px solid var(--filete);
+}
+
+.papel .contraste__pct {
+  font-size: clamp(2rem, 1.4rem + 2.6vw, 3.25rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinta);
+}
+.papel .contraste__dia {
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--tenue);
+  max-width: 22ch;
+}
+
+/* El veredicto en píldora. Es el único lugar de la página donde el color
+   dice algo por sí solo, y por eso lleva también la palabra: nadie tiene que
+   saber que verde es bueno. */
+.papel .contraste__juicio {
+  margin-top: 0.25rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.papel .contraste__juicio--bien {
+  background: var(--suave);
+  color: var(--acento);
+}
+.papel .contraste__juicio--mal {
+  background: color-mix(in srgb, var(--alerta) 10%, transparent);
+  color: var(--alerta);
+}
+
+.papel .contraste__pie {
+  margin: 0;
+  max-width: 60ch;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--tenue);
+}
+
+@media (max-width: 34rem) {
+  /* A 390 dos columnas dejan cada cifra en 140 px y el rótulo en cuatro
+     renglones. Se apilan, y el filete pasa de vertical a horizontal para que
+     sigan leyéndose como una comparación y no como dos bloques sueltos. */
+  .papel .contraste { grid-template-columns: 1fr; }
+  .papel .contraste__cara + .contraste__cara {
+    border-left: 0;
+    border-top: 1px solid var(--filete);
+  }
+}
+
+/* ==========================================================================
+   ACTO · LO QUE CAMBIA — las cuatro cartas
+   ========================================================================== */
+
+.papel .acto-rejilla,
+.papel .acto-hechos { width: var(--hoja); margin-inline: auto; }
+
+/* ==========================================================================
+   ACTO · LO QUE YA ESTÁ RESUELTO — hechos, no cartas
+
+   Un hecho no necesita caja. Filetes y aire: la misma decisión que toma un
+   estado de cuenta impreso cuando lista movimientos.
+   ========================================================================== */
+
+.papel .hechos__intro { margin-bottom: clamp(2rem, 5vh, 3rem); }
+.papel .hechos__intro .titular { margin-bottom: 1rem; }
+.papel .hechos__intro .bajada { max-width: 58ch; }
+
+.papel .hechos { margin: 0; padding: 0; list-style: none; }
+
+.papel .hecho {
+  display: grid;
+  grid-template-columns: minmax(11rem, 15rem) 1fr;
+  gap: 0.25rem clamp(1.25rem, 3vw, 2.5rem);
+  padding-block: clamp(1.125rem, 2.5vh, 1.75rem);
+  border-top: 1px solid var(--filete);
+}
+.papel .hecho:last-child { border-bottom: 1px solid var(--filete); }
+
+.papel .hecho b {
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--tinta);
+}
+.papel .hecho span {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--tenue);
+  max-width: 56ch;
+}
+
+@media (max-width: 44rem) {
+  .papel .hecho { grid-template-columns: 1fr; }
+}
+
+/* ==========================================================================
+   ACTO · LA RESOLUCIÓN — los dos carriles vuelven, y esta vez coinciden
+
+   Es el remate: la tesis de la portada resuelta en imagen antes de pedir el
+   correo. Y no es un efecto — el producto deja elegir qué día arranca tu mes,
+   que es exactamente hacer coincidir el mes con el ciclo.
+   ========================================================================== */
+
+.papel .resolucion { padding-block: clamp(4rem, 12vh, 8rem); }
+
+.papel .resolucion__marco {
+  width: var(--hoja);
+  margin-inline: auto;
+  display: grid;
+  justify-items: center;
+  gap: clamp(2rem, 5vh, 3.25rem);
+}
+
+/* Los dos carriles, ALINEADOS. Es la única diferencia con el instrumento de
+   la portada, donde no calzan — y esa diferencia es todo el argumento. */
+.papel .carriles {
+  position: relative;
+  width: min(100%, 34rem);
+  height: 44px;
+}
+.papel .carriles__riel {
+  position: absolute;
+  left: 0; right: 0;
+  height: 6px;
+  border-radius: 99px;
+}
+.papel .carriles__riel--mes   { top: 10px; background: var(--borde-fuerte); }
+.papel .carriles__riel--ciclo { top: 28px; background: var(--acento); }
+
+/* La costura pierde el rojo y se vuelve tinta: ya no marca un desfase,
+   marca que los dos empiezan en el mismo punto. */
+.papel .carriles__costura {
+  position: absolute;
+  top: 4px; bottom: 4px;
+  left: 0;
+  width: 1.5px;
+  background: var(--tinta);
+}
+
+.papel .resolucion .bajada--centro { max-width: 52ch; }
+
+/* ==========================================================================
+   EL MOVIMIENTO DE LA MITAD DE ABAJO
+
+   CADA ANIMACIÓN DE ACÁ CONTESTA «¿POR QUÉ SE MUEVE?», y las que no
+   contestaban no se escribieron. Es una página de venta que se recorre una
+   vez: el movimiento explica: no adorna ni celebra.
+
+   Todo va con `animation-timeline: view()`, o sea atado al scroll y FUERA
+   del hilo principal. Un revelado hecho con un `scroll` que escribe
+   `transform` en cada cuadro es la forma más común de que una página larga
+   se sienta pesada.
+
+   Solo `opacity` y `transform`. Ninguna otra propiedad se anima: las demás
+   rehacen composición o pintura en cada cuadro.
+
+   LA CURVA ES `--curva`, cubic-bezier(0.16, 1, 0.3, 1) — un ease-out fuerte,
+   que es lo correcto para algo que ENTRA. Nunca ease-in: empieza lento justo
+   en el instante en que el ojo está mirando, y hace que todo se sienta
+   pesado aunque dure lo mismo.
+   ========================================================================== */
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+
+    /* ---------- la vía de medida SE LLENA ----------
+       La animación que más trabaja de la página, y la única que es un dato y
+       no una entrada: la carga corre y el abono la persigue sin alcanzarla.
+       Ver el tramo rojo quedarse afuera explica el doble conteo mejor que el
+       párrafo que va abajo.
+
+       `transform: scaleX` y no `width`: escalar no rehace composición. El
+       origen a la izquierda porque el tiempo corre hacia allá. */
+    .papel .medida__abono,
+    .papel .medida__falta {
+      transform-origin: left center;
+      animation: llenarse-via linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 45%;
+    }
+    .papel .medida__falta { transform-origin: right center; }
+    @keyframes llenarse-via {
+      from { transform: scaleX(0.001); }
+      to   { transform: scaleX(1); }
+    }
+
+    /* La costura llega DESPUÉS de que la vía terminó de llenarse. Es el
+       remate: acá se acabó el ingreso. Antes no significaría nada. */
+    .papel .medida__costura {
+      animation: aparecer-costura linear both;
+      animation-timeline: view();
+      animation-range: entry 42% cover 55%;
+    }
+    @keyframes aparecer-costura {
+      from { opacity: 0; transform: scaleY(0.4); }
+      to   { opacity: 1; transform: scaleY(1); }
+    }
+
+    /* ---------- las tres cifras, escalonadas ----------
+       Para eso existen `renglon--1/2/3` en el marcado, que no tenían regla
+       ninguna. 60 ms entre una y otra: lo bastante para que se lea como
+       cascada y no tanto como para que se sienta lenta. */
+    .papel .renglon {
+      animation: trazar linear both;
+      animation-timeline: view();
+    }
+    .papel .renglon--1 { animation-range: entry 30% cover 42%; }
+    .papel .renglon--2 { animation-range: entry 36% cover 48%; }
+    .papel .renglon--3 { animation-range: entry 42% cover 54%; }
+
+    /* ---------- los hitos y los hechos ----------
+       Se TRAZAN de arriba abajo, como se lee una cronología y como se
+       imprime una lista. Cada uno arranca un poco después del anterior;
+       el escalonado lo da el propio scroll, no un `animation-delay`, así que
+       nunca se desincroniza de dónde está el lector. */
+    .papel .hito,
+    .papel .hecho,
+    .papel .contraste__cara {
+      animation: trazar linear both;
+      animation-timeline: view();
+      animation-range: entry 8% cover 30%;
+    }
+
+    /* 2.5rem sería un salto; 0.75rem es un corrimiento. La regla 3 de este
+       mundo: el movimiento se mide en milímetros. Y nunca desde `scale(0)` ni
+       desde `opacity` con desplazamiento grande — nada en el mundo real
+       aparece de la nada. */
+    @keyframes trazar {
+      from { opacity: 0; transform: translateY(0.75rem); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* ---------- la cifra mayor ----------
+       Entra sola y sin desplazamiento: es lo más grande de la página y
+       moverla se sentiría como que se cae. Solo aparece. */
+    .papel .mayor__valor {
+      animation: surgir-quieto linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 34%;
+    }
+    @keyframes surgir-quieto {
+      from { opacity: 0; transform: scale(0.985); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* ---------- la resolución: los carriles se ALINEAN ----------
+       El remate de la película, y la única animación de la página que dura
+       más de 300 ms a propósito: no es interfaz, es la tesis resolviéndose.
+       El carril del ciclo llega corrido y se acomoda; la costura lo sigue.
+
+       Que termine exactamente alineado es el argumento entero. */
+    .papel .carriles__riel--ciclo {
+      animation: alinearse linear both;
+      animation-timeline: view();
+      animation-range: entry 15% cover 50%;
+    }
+    @keyframes alinearse {
+      from { transform: translateX(22%); opacity: 0.45; }
+      to   { transform: none; opacity: 1; }
+    }
+    .papel .carriles__costura {
+      animation: asentarse linear both;
+      animation-timeline: view();
+      animation-range: entry 25% cover 55%;
+    }
+    @keyframes asentarse {
+      from { transform: translateX(22%); background: var(--alerta); }
+      to   { transform: none; background: var(--tinta); }
+    }
+  }
+}
+
+/* Sin `view()` —o con movimiento reducido, que ya lo apaga todo más
+   arriba— nada de esto existe y la sección se ve completa y quieta. Ninguna
+   de estas reglas es la que hace visible a un elemento: todas parten de un
+   estado que ya es el final. */

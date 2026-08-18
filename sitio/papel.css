@@ -2431,3 +2431,89 @@
   .papel .cabecera .menu a:not(.boton):hover { color: var(--tinta); }
   .papel .cabecera .menu a[aria-current="page"]:not(.boton):hover { color: var(--acento-ct); }
 }
+
+/* ==========================================================================
+   UN SOLO CONTROL, UNA SOLA MEDIDA
+
+   Se midió lo que había y era un desorden: entre botones que hacen lo mismo
+   había CUATRO alturas (26, 36, 42, 44), TRES radios (0, 8, 999), TRES
+   tamaños de letra (12, 15, 16) y CUATRO pesos (400, 500, 550, 600). El
+   «Crear cuenta» de la cápsula salía en 12px y el de la portada en 15, con
+   8px de diferencia de alto. Nadie lo nombra y todos lo sienten.
+
+   Ahora hay tres propiedades y todo cuelga de ellas. Si mañana el control
+   tiene que crecer, se cambia acá y crecen todos juntos — que es lo que
+   evita que vuelvan a separarse.
+
+   EL RADIO SE QUEDA EN 8px, NO PASA A PÍLDORA. El ADN dice «12px
+   superficies, 8px controles, píldora en chips», y una acción no es un
+   chip. La píldora se reserva para lo que INDICA ESTADO —la cápsula misma y
+   la sección donde uno está—, que es una distinción que se lee sin
+   explicarla: lo redondo del todo dice dónde estás, lo cuadrado dice qué
+   podés hacer.
+   ========================================================================== */
+
+.papel {
+  --control-alto:  2.5rem;      /* 40px */
+  --control-radio: 8px;
+  --control-letra: 0.875rem;    /* 14px */
+  --control-peso:  550;
+  --control-aire:  1.15rem;
+}
+
+/* En pantalla táctil sube a los 44px del ADN. No es un ajuste estético: es
+   lo que separa tocar de errar con el pulgar. */
+@media (pointer: coarse) {
+  .papel { --control-alto: 2.75rem; }
+}
+
+.papel .boton,
+.papel .pulsar {
+  min-height: var(--control-alto);
+  padding-block: 0;
+  padding-inline: var(--control-aire);
+  border-radius: var(--control-radio);
+  font-size: var(--control-letra);
+  font-weight: var(--control-peso);
+  letter-spacing: -0.005em;
+}
+
+/* El «Crear cuenta» de la cápsula era el más chico de todos —12px de letra,
+   600 de peso— porque heredaba una regla pensada para una cabecera que ya
+   no existe. Ahora es el mismo botón que el de la portada. */
+.papel .cabecera .sesion .boton {
+  min-height: var(--control-alto);
+  padding-inline: var(--control-aire);
+  font-size: var(--control-letra);
+  font-weight: var(--control-peso);
+}
+
+/* «Entrar» es un enlace, no un botón, y por eso no lleva caja. Pero sí
+   comparte la altura, o queda flotando a distinta línea que su vecino. */
+.papel .cabecera .sesion a:not(.boton) {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-alto);
+  font-size: var(--control-letra);
+  font-weight: var(--control-peso);
+}
+
+/* ---------- la cápsula se aprieta ----------
+   Con los controles en 40px, el relleno de 5px daba 54 de alto. Cuatro
+   bastan, y la cápsula baja a 48 sin que nada quede apretado contra el
+   filete. */
+@media (min-width: 57.0625rem) {
+  .papel .cabecera { padding: 4px 4px 4px clamp(0.9rem, 2vw, 1.3rem); }
+
+  /* La píldora de la sección activa acompaña la altura del resto. Sigue
+     siendo píldora: indica dónde estás, no es una acción. */
+  .papel .cabecera .menu a:not(.boton) {
+    min-height: var(--control-alto);
+    display: inline-flex;
+    align-items: center;
+    padding-block: 0;
+    padding-inline: 0.95rem;
+    font-size: var(--control-letra);
+    font-weight: var(--control-peso);
+  }
+}

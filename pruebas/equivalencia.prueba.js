@@ -55,7 +55,14 @@ test('la API nueva expone todo lo que exponía la vieja', () => {
 const NUEVOS_A_PROPOSITO = {
   adaptadorSaldos: 'lee el PDF de cualquier banco guiándose por el saldo que ' +
                    'arrastra, en vez de adivinar columnas. Hacía falta porque del ' +
-                   'mes en curso los bancos solo dan PDF.'
+                   'mes en curso los bancos solo dan PDF.',
+
+  realPorRubro: 'cruza lo PRESUPUESTADO con lo GASTADO, rubro por rubro. La app ' +
+                'vieja no lo tenía y la nueva tampoco lo tuvo hasta que el dueño ' +
+                'preguntó «¿dónde está lo que llevo gastado respecto al presupuesto ' +
+                'por categoría?» y la respuesta fue que en ninguna pantalla. ' +
+                '`gastosMes` recorre los rubros con el monto PLANEADO y no mira un ' +
+                'solo movimiento: sirve para proyectar, no para saber cómo va el mes.'
 };
 
 test('la API nueva no inventa nada que la vieja no tuviera', () => {

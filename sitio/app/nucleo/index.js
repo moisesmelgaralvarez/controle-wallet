@@ -46,7 +46,7 @@ export {
   gastosMes, montosDeMes, mesCongelado, mesCerrado, fotoDelPlan, cierreDeMes,
   cicloDe, cicloTarjeta, efectivo,
   saldoCuenta, saldosCuentas, pagoPendiente,
-  deudaTarjeta, deudaTarjetas,
+  deudaTarjeta, deudaTarjetas, realPorRubro,
   estadoTarjeta, estadoTarjetas, efectivoHasta, saldosCierre, aperturaDe,
   movimientoCuenta, conciliaciones, TOLERANCIA
 } from './saldos.js';

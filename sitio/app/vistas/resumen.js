@@ -50,13 +50,35 @@ export function resumen({ contenedor, D, periodo }) {
   // pantalla y no avisa por ningún lado — el peor tipo de error.
   const barra = v => Math.max(0, Math.min(100, Math.round((Number(v) || 0) * 100)));
 
+  /* LO QUE DE VERDAD SE GASTÓ, QUE NO ES LO QUE ESTA PANTALLA ENSEÑABA.
+
+     `r.gastos` viene de `gastosMes`, que recorre los rubros con el monto
+     que se PLANEÓ y no mira un solo movimiento. Sirve para proyectar —«así
+     va a ser septiembre»— pero acá salía bajo el rótulo «Gastos del mes», y
+     con 145 movimientos y L 82,935.61 encima decía L 0.00, porque ningún
+     rubro tenía monto todavía.
+
+     El dueño lo dijo mejor que cualquier informe: «no entiendo el resumen,
+     no sé con cuánto contamos, si estamos en rojo o en verde». */
+  const rp = A.realPorRubro(D, periodo);
+
+  /* Y el disponible se mide contra lo gastado, no contra el plan. Un plan
+     vacío daba el ingreso íntegro como disponible: la cifra más peligrosa
+     que puede enseñar una app de dinero, porque invita a gastar lo que ya
+     se gastó. */
+  const disponibleReal = Math.round((r.neto - rp.gastado - r.cuotas) * 100) / 100;
+
   const fichas = [
-    { t: 'Disponible real', v: dinero(r.disponible), c: r.disponible >= 0 ? 'bien' : 'mal',
-      d: r.confirmado ? 'con lo que de verdad entró' : 'con montos estimados' },
+    { t: 'Disponible real', v: dinero(disponibleReal), c: disponibleReal >= 0 ? 'bien' : 'mal',
+      d: rp.hayGasto ? 'lo que entró menos lo que ya salió'
+                     : (r.confirmado ? 'con lo que de verdad entró' : 'con montos estimados') },
     { t: 'Ingreso neto', v: dinero(r.neto),
       d: r.confirmado ? 'confirmado' : r.parcial ? 'confirmado a medias' : 'sin confirmar' },
-    { t: 'Gastos del mes', v: dinero(r.gastos),
-      d: r.salud > 0 ? `${dinero(r.salud)} de salud` : 'del plan' },
+    { t: 'Gastos del mes', v: dinero(rp.gastado),
+      c: rp.hayPresupuesto && rp.diferencia < 0 ? 'mal' : '',
+      d: rp.hayPresupuesto
+           ? `de L ${esc(String(Math.round(rp.presupuestado).toLocaleString('en-US')))} presupuestados`
+           : (rp.hayGasto ? 'todavía sin presupuesto con qué compararlo' : 'sin movimientos este mes') },
     { t: 'Cuotas', v: dinero(r.cuotas),
       d: r.financiados ? `${r.financiados} vigente${r.financiados === 1 ? '' : 's'}` : 'ninguna' }
   ];
@@ -100,6 +122,79 @@ export function resumen({ contenedor, D, periodo }) {
               ${p.proximoCorte ? `<span>Corta <strong>${esc(p.proximoCorte.nombre)}</strong> en ${esc(p.proximoCorte.enDias)} d.</span>` : ''}
             </p>` : ''}
         ` : '<p class="pulso-app__pie">Todavía no hay presupuesto con qué medir el ritmo.</p>'}
+      </section>
+
+      <!-- ==========================================================
+           LO GASTADO POR RUBRO — la pieza que faltaba
+
+           Es lo que el dueño pidió con todas sus letras: «¿dónde está lo
+           que llevo gastado respecto al presupuesto por categoría?». No
+           estaba en ninguna pantalla. El presupuesto se editaba en un
+           lado y lo gastado vivía en otro, y nunca se miraban.
+
+           ORDENADO POR LO QUE MÁS SE GASTÓ, no por lo que más se
+           presupuestó ni alfabético. Quien abre esto viene a ver dónde se
+           le está yendo la plata, y eso es una sola pregunta con una sola
+           respuesta: el primer renglón.
+           ========================================================== -->
+      <section class="panel panel--ancho">
+        <h2>Lo gastado por rubro</h2>
+        ${rp.hayGasto ? `
+          ${rp.filas.filter(f => f.gastado > 0 || f.presupuestado > 0).map(f => {
+            const pasado = f.presupuestado > 0 && f.gastado > f.presupuestado;
+            return `
+            <div class="rubro-real">
+              <div class="rubro-real__f">
+                <em>${esc(f.concepto)}</em>
+                <span class="cifra">${esc(dinero(f.gastado))}</span>
+              </div>
+              ${f.presupuestado > 0 ? `
+                <div class="rubro-real__via" aria-hidden="true">
+                  <i class="${pasado ? 'mal' : ''}" data-ancho="${esc(String(barra(Math.min(1, f.consumido))))}"></i>
+                </div>
+                <div class="rubro-real__f rubro-real__pie">
+                  <em>de ${esc(dinero(f.presupuestado))}</em>
+                  <span class="${pasado ? 'mal' : 'bien'}">
+                    ${pasado ? `${esc(dinero(-f.diferencia))} de más` : `quedan ${esc(dinero(f.diferencia))}`}
+                  </span>
+                </div>`
+              : '<div class="rubro-real__f rubro-real__pie"><em class="ojo">sin presupuesto con qué compararlo</em></div>'}
+            </div>`;
+          }).join('')}
+
+          ${rp.sinClasificar > 0 ? `
+            <div class="rubro-real">
+              <div class="rubro-real__f">
+                <em class="ojo">Sin clasificar · ${esc(String(rp.movimientosSinClasificar))} movimiento${rp.movimientosSinClasificar === 1 ? '' : 's'}</em>
+                <span class="cifra">${esc(dinero(rp.sinClasificar))}</span>
+              </div>
+              <div class="rubro-real__f rubro-real__pie">
+                <em class="ojo">Cuentan en el total del mes, pero contra ningún rubro del plan.</em>
+              </div>
+            </div>` : ''}
+
+          <div class="rubro-real rubro-real--total">
+            <div class="rubro-real__f">
+              <em>Total gastado</em>
+              <span class="cifra">${esc(dinero(rp.gastado))}</span>
+            </div>
+            ${rp.hayPresupuesto ? `
+              <div class="rubro-real__f rubro-real__pie">
+                <em>de ${esc(dinero(rp.presupuestado))} presupuestados</em>
+                <span class="${rp.diferencia < 0 ? 'mal' : 'bien'}">
+                  ${rp.diferencia < 0 ? `${esc(dinero(-rp.diferencia))} de más` : `quedan ${esc(dinero(rp.diferencia))}`}
+                </span>
+              </div>` : ''}
+          </div>
+
+          ${!rp.hayPresupuesto ? `
+            <p class="pulso-app__pie">
+              Hay ${esc(dinero(rp.gastado))} gastados este mes y ningún rubro tiene monto,
+              así que no hay contra qué medirlos. En <strong>Presupuesto</strong> podés
+              partir de lo que ya gastaste en vez de inventar cifras.
+            </p>` : ''}
+        ` : `<p class="pulso-app__pie">Todavía no hay movimientos en este mes.
+             Importá un estado de cuenta y acá vas a ver en qué se está yendo.</p>`}
       </section>
 
       <section class="panel">

@@ -2009,6 +2009,9 @@
   margin-bottom: 0.5rem;
 }
 
+/* EL CAMPO SÍ SE QUEDA EN 8px, y está escrito en `IDENTIDAD.md`: un campo
+   es una caja donde se escribe, no una acción que se toca, y en píldora el
+   texto arranca demasiado adentro del borde. */
 .papel .acceso .campo input {
   min-height: 44px;              /* el objetivo táctil del ADN, medido */
   padding: 0.75rem 0.875rem;
@@ -2044,13 +2047,12 @@
 
 /* ---------- el botón ---------- */
 
+/* El botón hereda del token, no fija su radio. Lo fijaba en 8px y le ganaba
+   por especificidad, así que quedó cuadrado cuando todo lo demás pasó a
+   píldora — un botón distinto en la única pantalla donde la gente entrega
+   su contraseña. */
 .papel .acceso .boton {
-  min-height: 44px;
   margin-top: 0.5rem;
-  border-radius: 8px;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  letter-spacing: -0.005em;
 }
 
 /* ---------- los pies ----------
@@ -2453,12 +2455,28 @@
    podés hacer.
    ========================================================================== */
 
+/* EL RADIO PASA A PÍLDORA, Y ES UN CAMBIO DEL ADN, NO UN AJUSTE.
+
+   `IDENTIDAD.md` decía «12px superficies, 8px controles, píldora en chips».
+   Yo defendí los 8px con ese argumento y el dueño pidió píldora dos veces,
+   señalando la referencia: en agroporthonduras.com el botón de sesión es
+   una cápsula blanca dentro de la cápsula del header, y esa es la forma que
+   busca.
+
+   Tiene sentido propio, además de ser lo pedido: desde que la cabecera ES
+   una cápsula, un botón de esquinas rectas adentro se lee como una pieza de
+   otro juego. La forma del contenedor manda sobre la del contenido.
+
+   Y se aplica a TODOS los controles, no solo a los de la cabecera — que era
+   justamente el pedido anterior: que fueran uniformes. Dos radios distintos
+   para el mismo botón según dónde esté es el desorden que se acaba de
+   arreglar. */
 .papel {
-  --control-alto:  2.5rem;      /* 40px */
-  --control-radio: 8px;
+  --control-alto:  2.375rem;    /* 38px — la cápsula se aprieta un poco más */
+  --control-radio: 999px;
   --control-letra: 0.875rem;    /* 14px */
   --control-peso:  550;
-  --control-aire:  1.15rem;
+  --control-aire:  1.25rem;
 }
 
 /* En pantalla táctil sube a los 44px del ADN. No es un ajuste estético: es
@@ -2503,7 +2521,7 @@
    bastan, y la cápsula baja a 48 sin que nada quede apretado contra el
    filete. */
 @media (min-width: 57.0625rem) {
-  .papel .cabecera { padding: 4px 4px 4px clamp(0.9rem, 2vw, 1.3rem); }
+  .papel .cabecera { padding: 4px 4px 4px clamp(0.85rem, 1.8vw, 1.2rem); }
 
   /* La píldora de la sección activa acompaña la altura del resto. Sigue
      siendo píldora: indica dónde estás, no es una acción. */

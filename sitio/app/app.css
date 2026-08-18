@@ -1331,3 +1331,38 @@ body[data-mes-pasado="si"] .mes-nav .tope__mes {
   .riel-app[data-plegado] .salir:hover .nav__voz,
   .riel-app[data-plegado] .riel-app__pie .estado:hover > :not(.estado__punto) { opacity: 1; }
 }
+
+/* ==========================================================================
+   EL RIEL NO SE VA CON EL SCROLL
+
+   Era `position: static` ocupando `grid-row: 1 / -1`, o sea que CRECÍA con
+   el contenido: en un mes con muchos movimientos el riel medía lo que
+   midiera el documento, y su pie —tema, estado y cerrar sesión— terminaba
+   al fondo de la página, a varias pantallas de distancia. Para verlos había
+   que bajar hasta el final de algo que no tenía nada que ver.
+
+   Lo único que tiene que moverse al hacer scroll es el contenido del módulo
+   que se está mirando. La navegación se queda.
+
+   `sticky` y no `fixed`: `fixed` lo saca del flujo y habría que reservarle
+   el ancho a mano en la rejilla —un número escrito dos veces que se
+   desincroniza—. `sticky` conserva su celda y el ancho lo sigue poniendo la
+   rejilla, que es lo que hace que plegarlo siga cerrando el hueco.
+   ========================================================================== */
+
+@media (min-width: 900px) {
+  .riel-app {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    /* Con nueve destinos más los tres controles de abajo, una ventana corta
+       —un portátil de 768— no alcanza. Que el riel tenga su propio scroll
+       es lo que evita que el pie quede inalcanzable. */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* Y la barra de scroll del riel solo aparece si de verdad hace falta:
+     una barra permanente en una tira de 68px se come el ancho del icono. */
+  .riel-app { scrollbar-width: thin; }
+}

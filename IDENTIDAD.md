@@ -126,8 +126,19 @@ interfaz encajonada. Dos tokens: el fino separa, el fuerte delimita controles.
 
 ### Forma
 
-- **Un radio**: 12px en superficies, 8px en controles, píldora en sellos y chips.
-  El export traía seis radios distintos conviviendo.
+- **Un radio**: 12px en superficies, **píldora en controles**, píldora en sellos
+  y chips. El export traía seis radios distintos conviviendo.
+
+  > **Cambiado el 17 de agosto de 2026.** Los controles estaban en 8px. Cuando la
+  > cabecera del sitio pasó a ser una cápsula flotante, un botón de esquinas
+  > rectas adentro se leía como una pieza de otro juego: **la forma del
+  > contenedor manda sobre la del contenido.** Se aplica a todos los controles,
+  > no solo a los de la cabecera — dos radios para el mismo botón según dónde
+  > esté es precisamente el desorden que se venía de arreglar.
+  >
+  > Los 8px sobreviven en un solo lugar: los **campos de formulario**. Un campo
+  > es una caja donde se escribe, no una acción que se toca, y en píldora el
+  > texto arranca demasiado adentro.
 - **Una sombra**, de un solo nivel. Dos niveles son un sistema; seis son un accidente.
 - **44px de objetivo táctil** en `pointer: coarse`. Los botones crecen, no se aprietan.
 
@@ -318,7 +329,7 @@ Si al componer una pantalla las cartas cubren más que el lienzo, la proporción
 está invertida: hacé las cartas menos y más grandes, y ensanchá el aire entre
 ellas. Nunca compenses agregando color.
 
-Forma: radio 12px en cartas, 8px en controles, píldora en chips y sellos.
+Forma: radio 12px en cartas, píldora en controles, chips y sellos. 8px solo en campos de formulario.
 UNA sombra, muy suave. Objetivo táctil mínimo 44px.
 
 Idioma: TODO en español de Honduras. La etiqueta del documento es lang="es-HN".

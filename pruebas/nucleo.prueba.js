@@ -1809,3 +1809,26 @@ probar('un rubro sin presupuesto no inventa un porcentaje', () => {
   return { ok: s.consumido === null,
            det: `dividir entre cero daría Infinity y la barra se dibujaría hasta el infinito` };
 });
+
+probar('sin presupuesto fijado se mide contra la media, y se dice', () => {
+  const D = {
+    gastos: [{ id: 'c', concepto: 'Combustible', categoria: 'Transporte', monto: 0 }],
+    movimientos: [{ id: '1', fecha: '2026-08-15', periodo: '2026-08', monto: 2874.17, gastoId: 'c' }]
+  };
+  const r = A.realPorRubro(D, '2026-08', { c: 2100 });
+  const f = r.filas[0];
+  return { ok: cerca(f.referencia, 2100) && f.deLaMedia === true && f.consumido > 1 &&
+               r.hayConQueMedir === true && r.soloMedia === true,
+           det: `referencia ${f.referencia} · de la media ${f.deLaMedia} · consumido ${(f.consumido*100).toFixed(0)}%` };
+});
+
+probar('el presupuesto fijado le gana a la media', () => {
+  const D = {
+    gastos: [{ id: 'c', concepto: 'Combustible', categoria: 'Transporte', monto: 3500 }],
+    movimientos: [{ id: '1', fecha: '2026-08-15', periodo: '2026-08', monto: 2874.17, gastoId: 'c' }]
+  };
+  const r = A.realPorRubro(D, '2026-08', { c: 2100 });
+  const f = r.filas[0];
+  return { ok: cerca(f.referencia, 3500) && f.deLaMedia === false && f.consumido < 1,
+           det: 'lo que la persona decidió manda sobre lo que viene pasando' };
+});

@@ -1123,3 +1123,108 @@ body[data-mes-pasado="si"] .mes-nav .tope__mes {
 @media (prefers-reduced-motion: reduce) {
   .hoja-mas__fondo, .hoja-mas__panel { transition: none; }
 }
+
+/* ==========================================================================
+   DÍA Y NOCHE
+
+   TRES ESTADOS Y NO DOS. «Sistema» respeta lo que la persona ya eligió en
+   su aparato, y eso es distinto de elegir claro a mano: un interruptor de
+   dos posiciones obliga a decidir a quien no quería decidir nada.
+
+   El estado vive en `perfiles.tema`, no en el dispositivo — la regla 1 dice
+   que ahí solo va el token de sesión. Y así la elección sigue a la persona
+   entre aparatos.
+   ========================================================================== */
+
+.tema[hidden] { display: none; }
+/* El estado se lee de `data-actual` en el botón, nunca del `data-tema` del
+   <html>: ese dice qué tema rige, no cuál cara del interruptor toca. */
+.tema {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.5rem 0.6rem;
+  margin-bottom: 0.5rem;
+  border: 0;
+  border-radius: var(--radio-chico, 8px);
+  background: transparent;
+  color: var(--tenue);
+  font: inherit;
+  font-size: var(--t-sm);
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+.tema:active { transform: scale(0.97); }
+@media (hover: hover) and (pointer: fine) {
+  .tema:hover { background: var(--elevado); color: var(--tinta); }
+}
+
+/* Las tres caras ocupan la MISMA celda y solo se ve la que toca. Apiladas
+   en una rejilla y no con `display:none`, para que el cambio sea un
+   fundido y no un salto — y para que el botón no cambie de ancho al
+   cambiar de icono, que se leería como un temblor. */
+.tema__cara {
+  grid-area: 1 / 1;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  scale: 0.9;
+  transition: opacity 180ms var(--curva, ease), scale 180ms var(--curva, ease);
+}
+.tema > .tema__cara:first-of-type { margin-left: 0; }
+.tema {
+  --caras: 20px;
+}
+.tema__cara { width: 20px; height: 20px; }
+.tema:has(.tema__cara) { position: relative; }
+
+/* El grupo de caras se arma con una rejilla propia para que las tres se
+   superpongan sin sacarlas del flujo. */
+.tema { display: grid; grid-template-columns: 20px 1fr; align-items: center; gap: 0.75rem; }
+.tema .tema__cara { grid-column: 1; grid-row: 1; }
+.tema .nav__voz { grid-column: 2; grid-row: 1; text-align: left; }
+
+.tema[data-actual="sistema"] .tema__cara[data-cara="sistema"],
+.tema[data-actual="claro"]   .tema__cara[data-cara="claro"],
+.tema[data-actual="oscuro"]  .tema__cara[data-cara="oscuro"] {
+  opacity: 1;
+  scale: 1;
+}
+
+.tema__cara svg {
+  width: 20px; height: 20px;
+  fill: none; stroke: currentColor; stroke-width: 1.6;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* Plegado, el riel esconde el rótulo y deja la cara sola, igual que las
+   demás entradas. */
+@media (hover: hover) and (pointer: fine) {
+  .riel-app[data-plegado] .tema {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding-inline: 0;
+  }
+  .riel-app[data-plegado] .tema .nav__voz {
+    position: absolute;
+    left: calc(100% + 0.5rem); top: 50%;
+    translate: 0 -50%;
+    grid-column: 1; grid-row: 1;
+    z-index: 40;
+    white-space: nowrap;
+    padding: 0.4rem 0.7rem;
+    border-radius: var(--radio-chico, 8px);
+    background: var(--tinta); color: var(--fondo);
+    font-size: var(--t-xs); font-weight: 500;
+    opacity: 0; pointer-events: none;
+    transition: opacity 140ms ease;
+  }
+  .riel-app[data-plegado] .tema { position: relative; }
+  .riel-app[data-plegado] .tema:hover .nav__voz { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tema, .tema__cara { transition: none; }
+}

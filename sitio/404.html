@@ -33,11 +33,21 @@
     <a href="/precios">Precios</a>
     <a href="/preguntas">Preguntas</a>
     <a href="/contacto">Contacto</a>
-    <span class="sesion">
+  </nav>
+  <!-- «Entrar» y «Crear cuenta» viven FUERA del <nav>, igual que en
+       `index.html`: son acciones de sesión, no navegación. Además de ser lo
+       correcto para un lector de pantalla, es lo que permite dejarlas
+       siempre a la vista mientras la navegación se recoge.
+
+       Estaban adentro en las seis páginas interiores —index.html ya lo tenía
+       corregido y las demás se quedaron atrás—, y se notó al volver el <nav>
+       una cápsula: la píldora envolvía también los botones de sesión y todo
+       se leía como un solo control. -->
+  <span class="sesion">
       <a href="/entrar">Entrar</a>
       <a class="boton boton--principal" href="/registro">Crear cuenta</a>
     </span>
-  </nav>
+
 </header>
 
 <main id="principal" class="franja portada">

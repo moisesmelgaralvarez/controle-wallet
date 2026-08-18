@@ -331,3 +331,49 @@ h3, .tarjeta h3, .paso h3, .panel__tope, .ui__titulo {
     scroll-behavior: auto !important;
   }
 }
+
+
+/* ==========================================================================
+   LA ELECCIÓN A MANO GANA SOBRE LA DEL SISTEMA
+
+   El bloque de arriba responde a `prefers-color-scheme`, que es lo que el
+   aparato pide. Pero la app deja elegir, y esa elección vive en
+   `perfiles.tema`: `tema.js` la escribe en `data-tema` del <html>.
+
+   Va DESPUÉS de la media query y con la misma especificidad para ganar por
+   orden, sin un solo `!important`. Los dos bloques repiten los once tokens
+   a propósito: un tema que solo redefine algunos deja los otros del tema
+   anterior, y eso produce combinaciones que nadie diseñó.
+   ========================================================================== */
+
+:root[data-tema="claro"] {
+  --fondo:        #FBF9F9;
+  --superficie:   #FFFFFF;
+  --elevado:      #F1EFEE;
+  --tinta:        #131315;
+  --tenue:        #5B5F5D;
+  --borde:        #CFCBC8;
+  --borde-fuerte: #87847F;
+  --acento:       #064E3B;
+  --acento-ct:    #FFFFFF;
+  --suave:        #E6F2EC;
+  --alerta:       #B3261E;
+  color-scheme: light;
+}
+
+:root[data-tema="oscuro"] {
+    --fondo:        #131315;
+    --superficie:   #1B1B1D;
+    --elevado:      #232326;
+    --tinta:        #E5E1E4;
+    --tenue:        #A4ABA7;
+    --borde:        #37373A;
+    --borde-fuerte: #727674;
+    --acento:       #95D3BA;
+    --acento-ct:    #00382A;
+    --suave:        #12241D;
+    --alerta:       #FFB4AB;
+
+    --sombra: 0 1px 2px rgb(0 0 0 / 0.40), 0 8px 24px -12px rgb(0 0 0 / 0.60);
+  color-scheme: dark;
+}

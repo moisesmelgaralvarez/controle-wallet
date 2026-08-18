@@ -1366,3 +1366,74 @@ body[data-mes-pasado="si"] .mes-nav .tope__mes {
      una barra permanente en una tira de 68px se come el ancho del icono. */
   .riel-app { scrollbar-width: thin; }
 }
+
+/* ==========================================================================
+   EL TELÉFONO: LA BARRA ABAJO, EL TEMA ARRIBA, Y EL ESTADO SIN PALABRAS
+
+   Tres cosas que el dueño vio en un teléfono de verdad y que en escritorio
+   no se notan.
+   ========================================================================== */
+
+@media (max-width: 899px) {
+  /* ---------- 1. LA BARRA SE CLAVA AL BORDE DE LA VENTANA ----------
+
+     Era `position: sticky; bottom: 0`, que la pega al fondo del CONTENEDOR,
+     no al de la pantalla. Con una vista corta —«Todavía no hay historia»,
+     «Armando el informe…»— el contenedor terminaba a media pantalla y la
+     barra quedaba flotando en el medio con blanco debajo.
+
+     `fixed` la clava al borde real. Y el contenido gana abajo el alto de la
+     barra, o la última fila queda tapada por ella — que es el defecto que
+     suele venir con este arreglo. */
+  .app__barra {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 30;
+  }
+  .app { padding-bottom: calc(3.75rem + env(safe-area-inset-bottom, 0)); }
+
+  /* ---------- 2. EL TEMA, EN LA ESQUINA ----------
+     El interruptor del riel no existe acá porque el riel no existe. Este
+     vive en el tope, al lado del mes. */
+  .tema--tope {
+    display: grid;
+    grid-template-columns: 20px;
+    width: auto;
+    min-height: 40px;
+    padding: 0.4rem;
+    margin: 0;
+  }
+  .tema--tope .nav__voz {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  /* ---------- 3. EL ESTADO ES SOLO EL PUNTO ----------
+     «Datos al día» ocupaba media línea del tope para decir algo que el punto
+     ya dice con su color. El texto no se borra: se esconde a la vista y
+     sigue en el documento, que es lo que un lector de pantalla lee —y lo que
+     `aria-label` explica al tocarlo. */
+  .tope__der .estado > :not(.estado__punto) {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .tope__der .estado {
+    position: relative;
+    padding: 0.4rem;
+    min-height: 40px;
+    display: grid;
+    place-items: center;
+  }
+}
+
+/* En escritorio sobra: ahí el interruptor vive en el riel, y tener dos
+   controles idénticos a la vista es peor que no tener ninguno. */
+@media (min-width: 900px) {
+  .tema--tope { display: none; }
+}

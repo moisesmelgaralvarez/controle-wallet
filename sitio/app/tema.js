@@ -57,23 +57,29 @@ document.addEventListener('DOMContentLoaded', () => {
      `querySelector('[data-tema]')` empezaba a encontrar el <html> —que va
      antes en el documento— en vez del botón. Dos cosas distintas con el
      mismo nombre es una trampa que se arma sola. */
-  const boton = document.querySelector('[data-interruptor]');
-  if (!boton) return;
-  boton.hidden = false;
+  const botones = [...document.querySelectorAll('[data-interruptor]')];
+  if (!botones.length) return;
+  for (const b of botones) b.hidden = false;
+  const boton = botones[0];
 
-  const voz = boton.querySelector('[data-tema-voz]');
   let actual = 'sistema';
 
   const pintar = (tema, { animar = true } = {}) => {
     actual = tema;
-    if (!animar) boton.style.transitionDuration = '0s';
+    if (!animar) for (const b of botones) b.style.transitionDuration = '0s';
     aplicar(tema);
-    boton.dataset.actual = tema;
-    if (voz) voz.textContent = VOZ[tema];
-    boton.title = VOZ[tema];
+    /* LOS DOS BOTONES, no solo el del riel. En teléfono el riel no existe y
+       el interruptor vive en el tope; en escritorio pasa al revés. Pintar uno
+       solo dejaba al otro mostrando una cara que no era la del tema. */
+    for (const b of botones) {
+      b.dataset.actual = tema;
+      b.title = VOZ[tema];
+      const v = b.querySelector('[data-tema-voz]');
+      if (v) v.textContent = VOZ[tema];
+    }
     if (!animar) {
       requestAnimationFrame(() => requestAnimationFrame(() => {
-        boton.style.transitionDuration = '';
+        for (const b of botones) b.style.transitionDuration = '';
       }));
     }
   };
@@ -81,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
   pintar('sistema', { animar: false });
 
   let guardando = null;
-  boton.addEventListener('click', () => {
+  for (const b of botones) b.addEventListener('click', () => {
     const siguiente = CICLO[(CICLO.indexOf(actual) + 1) % CICLO.length];
     pintar(siguiente);
     /* El tema no vale una pantalla de error: si no se puede guardar, queda

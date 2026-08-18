@@ -92,6 +92,17 @@
   background: var(--superficie);
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
+/* `align-content: start` Y NO ES DETALLE. Al envolver el rótulo en un
+   `<span class="nav__voz">` —para poder esconderlo cuando el riel se
+   pliega— pasó a ser elemento de rejilla, y una rejilla ESTIRA sus hijos
+   por defecto. Medido: cada rótulo salía de 283 px de alto, empujando la
+   barra y dejando el texto lejos de su icono. Antes era un nodo de texto
+   suelto y no estiraba, así que el defecto llegó con el arreglo. */
+.barra-app a,
+.barra-app__mas { align-content: start; }
+.barra-app .nav__voz,
+.barra-app__mas .nav__voz { line-height: 1.25; }
+
 .barra-app a {
   display: grid; justify-items: center; gap: 0.15rem;
   padding: 0.55rem 0.2rem;
@@ -947,11 +958,21 @@ body[data-mes-pasado="si"] .mes-nav .tope__mes {
      Es la misma pieza diciendo lo contrario, que se lee sin leyenda. */
   .riel-app[data-plegado] .riel-app__pliegue svg { rotate: 180deg; }
 
+  /* Plegado, el riel pierde su relleno lateral y cada entrada ocupa el
+     ancho completo. NO es cosmético: la etiqueta flotante se posiciona con
+     `left: calc(100% + …)` contra la entrada, y si la entrada no llega al
+     borde del riel, la etiqueta nace ENCIMA del riel. Medido: arrancaba en
+     x=59 con el borde del riel en x=68. Con la entrada a ras del borde, el
+     cálculo da siempre afuera y no depende del relleno. */
+  .riel-app[data-plegado] { padding-inline: 0; }
+
   .riel-app[data-plegado] .nav,
   .riel-app[data-plegado] .riel-app__marca,
   .riel-app[data-plegado] .riel-app__pliegue {
     justify-content: center;
+    width: 100%;
     padding-inline: 0;
+    margin-inline: 0;
   }
 
   /* El nombre deja de ocupar lugar y pasa a ser una etiqueta flotante.
@@ -1002,4 +1023,103 @@ body[data-mes-pasado="si"] .mes-nav .tope__mes {
   .riel-app,
   .riel-app__pliegue svg,
   .riel-app .nav__voz { transition: none; }
+}
+
+/* ==========================================================================
+   LA HOJA DE «MÁS»
+
+   Lo que no cabe en las cuatro fijas de la barra, y no por eso menos
+   alcanzable. Sube desde abajo, que es de donde viene el pulgar.
+   ========================================================================== */
+
+/* Nace escondido. `mas.js` lo enciende: sin JavaScript no hay quien abra
+   la hoja, y un botón que no hace nada es peor que ningún botón — quien
+   navegue así tiene los nueve enlaces en el riel. */
+.barra-app__mas[hidden] { display: none; }
+.barra-app__mas {
+  display: grid; justify-items: center; gap: 0.15rem;
+  padding: 0.55rem 0.2rem;
+  min-height: 44px;
+  border: 0; background: transparent;
+  color: var(--tenue); font: inherit; font-size: 11px;
+  cursor: pointer;
+}
+.barra-app__mas svg {
+  width: 22px; height: 22px;
+  fill: currentColor; stroke: none;
+}
+.barra-app__mas[aria-expanded="true"] { color: var(--acento); }
+
+.hoja-mas { position: fixed; inset: 0; z-index: 60; }
+
+/* El fondo apaga lo de atrás y, sobre todo, es el blanco donde tocar para
+   cerrar: en un teléfono cerrar tocando afuera se espera antes que buscar
+   una equis. */
+.hoja-mas__fondo {
+  position: absolute; inset: 0;
+  background: rgb(0 0 0 / 0.4);
+  opacity: 0;
+  transition: opacity 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hoja-mas[data-abierta] .hoja-mas__fondo { opacity: 1; }
+
+.hoja-mas__panel {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  background: var(--superficie);
+  border-top: 1px solid var(--borde);
+  border-radius: 16px 16px 0 0;
+  padding: 0.75rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom, 0));
+  /* Sube desde abajo por su propio alto, así que no hay medida escrita a
+     mano que se desincronice al agregar una entrada. */
+  translate: 0 100%;
+  transition: translate 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hoja-mas[data-abierta] .hoja-mas__panel { translate: 0 0; }
+
+/* El tirador de la hoja. No hace nada: dice «esto sube y baja», que es
+   justo lo que hace falta saber sin leer nada. */
+.hoja-mas__panel::before {
+  content: "";
+  display: block;
+  width: 36px; height: 4px;
+  margin: 0 auto 0.75rem;
+  border-radius: 99px;
+  background: var(--borde);
+}
+
+.hoja-mas__titulo {
+  margin: 0 0 0.5rem;
+  padding-inline: 0.6rem;
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--tenue);
+}
+
+.hoja-mas__ir {
+  display: flex; align-items: center; gap: 0.85rem;
+  min-height: 48px;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radio-chico, 8px);
+  color: var(--tinta); text-decoration: none;
+  font-size: var(--t-sm);
+  transition: background-color 160ms ease;
+}
+.hoja-mas__ir svg {
+  width: 20px; height: 20px; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 1.6;
+  stroke-linecap: round; stroke-linejoin: round;
+  color: var(--tenue);
+}
+.hoja-mas__ir[aria-current="page"] { background: var(--suave); color: var(--acento); }
+.hoja-mas__ir[aria-current="page"] svg { color: var(--acento); }
+.hoja-mas__ir:active { background: var(--elevado); }
+
+/* La hoja es del teléfono. De 900 para arriba está el riel, que ya tiene
+   los nueve destinos a la vista. */
+@media (min-width: 900px) {
+  .hoja-mas, .barra-app__mas { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hoja-mas__fondo, .hoja-mas__panel { transition: none; }
 }

@@ -398,7 +398,24 @@ function deudaTarjeta(D, tarjeta, hasta) {
     .filter(x => x.tarjetaId === tarjeta.id && dentro(perDe(x))));
 
   const inicial = num(tarjeta.saldoInicial);
-  let deuda = Math.max(0, inicial + cargado - pagado);
+
+  /* EL `Math.max(0, …)` TAPABA UNA CONTRADICCIÓN EN VEZ DE GRITARLA.
+
+     Se descubrió con datos reales: un hogar había pagado L 44,920.58 a una
+     tarjeta cuyo saldo inicial era 0 y sin un solo consumo registrado. La
+     cuenta daba −44,920.58, el `max` la redondeaba a 0, y la pantalla decía
+     «Sobra L 33,675.40» sobre una tarjeta que se acababa de pagar.
+
+     Que alguien pague MÁS de lo que la app cree que debe es la señal más
+     fuerte posible de que a esa tarjeta le falta el saldo inicial o el
+     estado de cuenta. Redondearla a cero borra justo el dato que lo dice.
+
+     El `max` se queda —una deuda negativa no significa nada y ensuciaría el
+     patrimonio— pero lo que sobra se DEVUELVE, para que la pantalla lo pueda
+     decir. */
+  const bruto = inicial + cargado - pagado;
+  let sobrante = bruto < 0 ? cent(-bruto) : 0;
+  let deuda = Math.max(0, bruto);
 
   // El estado de cuenta dice la deuda al corte: eso vale más que sumar.
   const sb = tarjeta.saldoBanco;
@@ -410,6 +427,9 @@ function deudaTarjeta(D, tarjeta, hasta) {
                 - sumaMontos((D.pagosTarjeta || []).filter(x => x.tarjetaId === tarjeta.id && posterior(x)));
     deuda = Math.max(0, num(sb.monto) + luego);
     segunBanco = { monto: num(sb.monto), fecha: sb.fecha };
+    /* Con el banco declarado ya no hay contradicción que reportar: la cifra
+       del estado de cuenta manda y explica sola cualquier diferencia. */
+    sobrante = 0;
   }
   const tasa = Math.max(0, num(tarjeta.tasaAnual));
 
@@ -430,6 +450,9 @@ function deudaTarjeta(D, tarjeta, hasta) {
 
   return {
     id: tarjeta.id, nombre: tarjeta.nombre, inicial, cargado, pagado, deuda, tasa,
+    /* Cuánto se pagó por encima de lo que esta app sabe que se debía. Si es
+       mayor que cero, a la tarjeta le falta su saldo — y hay que decirlo. */
+    pagadoDeMas: sobrante,
     retenido, retenidoFecha: (retTj && retTj.fecha) || null,
     // Lo que de verdad deben: el estado de cuenta más lo que viene en camino.
     deudaTotal: cent(deuda + retenido),

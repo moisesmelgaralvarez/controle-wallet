@@ -25,7 +25,7 @@
    ============================================================ */
 
 import * as A from '../nucleo/index.js';
-import { $, $$, esc, dinero, pct } from '../ui.js';
+import { $, $$, esc, dinero, pct, diaCorto } from '../ui.js';
 import { historico } from '../datos/historico.js';
 
 export function resumen({ contenedor, D, periodo }) {
@@ -107,6 +107,9 @@ export function resumen({ contenedor, D, periodo }) {
         ${credito.length ? credito.map(t => {
           const c = A.cicloTarjeta(D, t, periodo);
           const falta = c.cobertura < 0;
+          /* La deuda viva de la tarjeta, que es distinta del ciclo: el ciclo
+             es lo que cerró este mes, la deuda es lo que queda debiéndose. */
+          const d = A.deudaTarjetas(D, periodo).find(x => x.id === t.id);
           return `
             <div class="ciclo-app">
               <div class="ciclo-app__f"><em>${esc(t.nombre)}</em><span>${esc(c.desde)} → ${esc(c.hasta)}</span></div>
@@ -118,6 +121,15 @@ export function resumen({ contenedor, D, periodo }) {
               </div>
               ${c.usandoPlan ? '<div class="ciclo-app__f"><em class="ciclo-app__nota">Según el plan: todavía no hay consumos registrados en este ciclo.</em></div>' : ''}
               ${!c.evento ? '<div class="ciclo-app__f"><em class="ciclo-app__nota">Falta decir qué ingreso paga esta tarjeta.</em></div>' : ''}
+              ${d && d.pagadoDeMas > 0 ? `
+                <div class="ciclo-app__f">
+                  <em class="ciclo-app__nota mal">Se pagaron ${esc(dinero(d.pagadoDeMas))} más de
+                  lo que esta app sabe que se debía. Falta el saldo de esta tarjeta:
+                  importá su estado de cuenta, o escribilo en Presupuesto → Tarjetas.</em>
+                </div>` : ''}
+              ${d && d.segunBanco ? `
+                <div class="ciclo-app__f"><em class="ciclo-app__nota">Deuda según el banco:
+                  ${esc(dinero(d.deuda))} — declarada al ${esc(diaCorto(d.segunBanco.fecha))}.</em></div>` : ''}
             </div>`;
         }).join('') : '<p class="pulso-app__pie">No hay tarjetas de crédito registradas.</p>'}
 

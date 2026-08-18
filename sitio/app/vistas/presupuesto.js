@@ -31,7 +31,7 @@
 
 import * as A from '../nucleo/index.js';
 import {
-  $, $$, esc, dinero, mesLocal, nombreMes, hoja, campo, campoMonto,
+  $, $$, esc, dinero, diaCorto, mesLocal, nombreMes, hoja, campo, campoMonto,
   selector, avisar, CATEGORIAS, MONEDAS
 } from '../ui.js';
 import { crear, actualizar, borrar, fusionar, borrarDonde } from '../datos/escribir.js';
@@ -338,13 +338,34 @@ export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
             return fila('cuenta', c.id, esc(c.nombre),
               dueños.length ? `${esc(dueños.map(p => p.nombre).join(' y '))} ${dueños.length === 1 ? 'cobra' : 'cobran'} aquí`
                 : '<em class="ojo">nadie cobra aquí todavía</em>',
-              dinero(c.saldoInicial), `desde ${esc(c.desdeMes || '—')}`);
+              /* EL SALDO QUE DECLARÓ EL BANCO MANDA SOBRE EL DE APERTURA.
+
+                 Acá se enseñaba `saldoInicial` y nada más — el monto con el
+                 que arranca la cuenta— y el pie explicaba que no era el saldo
+                 de hoy. Todo correcto y todo inútil: quien abre esta pantalla
+                 viene a ver cuánto hay.
+
+                 Y la app SÍ lo sabe cuando alguien importó un estado de
+                 cuenta: el importador ancla el saldo que declara el banco con
+                 su fecha, y eso es un hecho, no una deducción. Tenerlo
+                 guardado y no enseñarlo es la peor de las dos opciones. */
+              c.saldoBanco && c.saldoBanco.monto != null
+                ? dinero(c.saldoBanco.monto)
+                : dinero(c.saldoInicial),
+              c.saldoBanco && c.saldoBanco.fecha
+                ? `según el banco, al ${esc(diaCorto(c.saldoBanco.fecha))}`
+                : `apertura · desde ${esc(c.desdeMes || '—')}`);
           }))
           : nada('Sin cuentas. Registrá dónde les depositan.')}
           ${cuentas.length ? `<p class="pulso-app__pie panel__nota">
-            El monto es con el que arranca la cuenta, no su saldo de hoy: para
-            saber el saldo hace falta todo el histórico, y aquí solo vive el mes
-            en curso.</p>` : ''}
+            ${cuentas.some(c => c.saldoBanco && c.saldoBanco.monto != null)
+              ? `Donde dice «según el banco» es el saldo que declaró el estado
+                 de cuenta a esa fecha. Donde dice «apertura», nadie ha
+                 importado nada todavía y ese es el monto con el que se
+                 registró la cuenta, no su saldo de hoy.`
+              : `El monto es con el que arranca la cuenta, no su saldo de hoy:
+                 importá un estado de cuenta y acá va a aparecer el saldo que
+                 declara el banco.`}</p>` : ''}
         </section>
 
       </div>

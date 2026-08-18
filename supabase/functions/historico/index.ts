@@ -117,6 +117,18 @@ Deno.serve(async (req: Request) => {
       patrimonio: A.patrimonio(D, periodo),
       salud: A.saludFinanciera(D, periodo),
 
+      /* LA MEDIA POR RUBRO, Y POR QUÉ TIENE QUE SALIR DE ACÁ.
+
+         El navegador solo baja el mes en curso. Calcular ahí la media de
+         consumo daba la mediana de UN mes, o sea el mes mismo: cada barra
+         salía llena y cada rubro decía «te pasaste por cincuenta centavos».
+         El dueño subió doce estados de cuenta justamente para esto y el
+         cálculo no los miraba, porque no estaban en la pantalla.
+
+         Acá sí están: esta función carga la vida entera del hogar y corre
+         el mismo núcleo. */
+      sugerido: A.presupuestoSugerido(D, periodo, 12),
+
       /* La carta del asesor: qué hacer con el dinero de este mes, en
          orden. Se calcula aquí porque castiga según el colchón y la
          deuda, y las dos salen del histórico — con un mes cargado

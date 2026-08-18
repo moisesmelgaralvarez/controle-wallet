@@ -2694,3 +2694,34 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* ==========================================================================
+   LA CÁPSULA NO SE PARTE, Y NO POR HABER ELEGIDO BIEN EL CORTE
+
+   Se persiguió tres veces: 57 → 64 → 72rem, cada vez midiendo dónde dejaba
+   de caber. Y volvió a fallar, porque el corte estaba calibrado en Chromium
+   y el dueño usa Safari: WebKit dibuja el MISMO texto unos 50 px más ancho,
+   así que entre 1153 y 1250 la cápsula se partía en dos renglones — con
+   «Contacto» cayendo solo a una segunda línea.
+
+   Un número calibrado contra un motor no es una medida, es una coincidencia.
+
+   Estas dos reglas lo resuelven sin número:
+
+     `flex-wrap: nowrap` en el MENÚ. El cinturón que ya existía estaba en la
+     cabecera, pero quien envolvía era el <nav> de adentro.
+
+     `min-width: fit-content` en la cápsula. Antes que apretar su contenido,
+     crece: el 60% deja de ser un ancho fijo y pasa a ser un objetivo que se
+     respeta mientras alcance. Se corrige solo en cualquier motor y con
+     cualquier tipografía, y si mañana se agrega una entrada al menú, la
+     cápsula la absorbe en vez de partirse.
+
+   Va solo de 72rem para arriba: por debajo el menú ya es un panel y la
+   cápsula tiene su propia regla de ancho.
+   ========================================================================== */
+
+@media (min-width: 72.0625rem) {
+  .papel .cabecera { min-width: fit-content; }
+  .papel .cabecera .menu { flex-wrap: nowrap; }
+}

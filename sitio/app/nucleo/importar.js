@@ -360,11 +360,68 @@ async function renglonesPdf(buffer) {
   // del navegador baja, y el orden es el contrario. Se decide por página.
   const out = [];
   paginas.forEach(({ filas, invertida }) => {
-    Array.from(filas.keys())
+    const renglones = Array.from(filas.keys())
       .sort((a, b) => invertida ? a - b : b - a)
-      .forEach(k => out.push(unirFragmentos(filas.get(k).sort((a, b) => a[0] - b[0]))));
+      .map(k => unirFragmentos(filas.get(k).sort((a, b) => a[0] - b[0])));
+    /* Coser DENTRO de la página y nunca entre páginas: el pie de una y el
+       encabezado de la siguiente quedan pegados en el orden, y unirlos
+       inventaría un concepto que no existe. */
+    out.push(...coserDescripcionesPartidas(renglones));
   });
   return out;
+}
+
+/**
+ * Devuelve su descripción a los renglones que la perdieron.
+ *
+ * EL DEFECTO, Y CÓMO SE VEÍA. Cuando la descripción de un movimiento es
+ * larga, el banco la parte en varias líneas y deja la fecha y el monto en
+ * la de en medio:
+ *
+ *     PEDIDOS YA RESTAURANTEFRANCISCO
+ *     15/08/2026                          459.00 LPS
+ *     MO\HND
+ *
+ * Los fragmentos se agrupan por su coordenada vertical, así que el renglón
+ * con la fecha y el monto se queda SIN texto: está arriba y abajo, en otras
+ * dos filas. Y sin concepto no hay regla que pueda clasificarlo — dos
+ * pedidos por L 619 entraron como «sin clasificar» y el dueño no tenía
+ * cómo saber de dónde salían.
+ *
+ * LA COSTURA ES CONSERVADORA A PROPÓSITO. Solo toca renglones que tienen
+ * fecha y monto pero NINGUNA palabra, y solo se lleva vecinos que no
+ * tienen ni fecha ni monto —o sea, que no son movimientos—. Un renglón que
+ * ya se leía bien no puede salir peor: no entra en el caso.
+ */
+function coserDescripcionesPartidas(renglones) {
+  const FECHA = /\d{1,2}\/\d{1,2}\/\d{2,4}|\d{4}-\d{2}-\d{2}/;
+  const MONTO = /-?[\d,]+\.\d{2}/;
+  /* Lo que queda de un renglón al quitarle fecha, montos, moneda y signos.
+     Si no sobra ni una letra, es un movimiento sin descripción. */
+  const palabras = t => t.replace(FECHA, ' ').replace(/-?[\d,]+\.\d{2}/g, ' ')
+                         .replace(/\b(LPS|USD|HNL)\b/gi, ' ')
+                         .replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ]/g, '').trim();
+  const esMovimiento = t => FECHA.test(t) && MONTO.test(t);
+  const esSoloTexto  = t => !FECHA.test(t) && !MONTO.test(t) && palabras(t).length >= 3;
+
+  const usados = new Set();
+  const out = renglones.map((t, i) => {
+    if (!esMovimiento(t) || palabras(t).length) return t;
+    /* Arriba primero: el banco escribe el principio de la descripción antes
+       de la línea del monto, así que unir en el otro orden dejaría el
+       concepto al revés — «MO\HND PEDIDOS YA…». */
+    const trozos = [];
+    if (i > 0 && esSoloTexto(renglones[i - 1]) && !usados.has(i - 1)) {
+      trozos.push(renglones[i - 1]); usados.add(i - 1);
+    }
+    if (i + 1 < renglones.length && esSoloTexto(renglones[i + 1]) && !usados.has(i + 1)) {
+      trozos.push(renglones[i + 1]); usados.add(i + 1);
+    }
+    return trozos.length ? `${trozos.join(' ')} ${t}` : t;
+  });
+  /* Los trozos ya cosidos se van: dejarlos duplicaría el texto y algún
+     adaptador podría leerlos como un movimiento más. */
+  return out.filter((_, i) => !usados.has(i));
 }
 
 /* ============================================================
@@ -1110,7 +1167,7 @@ const REGLAS = [
 
   // --- alimentación ---
   [/paiz|la colonia|supermercado|lady lee|mega fardos|la bodega|despensa|carbajal|mercadito|americana lee|tienda lee/, 'Supermercado', 'Alimentación'],
-  [/pedidos ya|pupuser|papa john|kfc|pollo|burger|pizza|comedor|restaurante|barbacoa|colada|bakery|panaderia|cafe|chorizos|mey ko|tasty|bbq|pollisimo|frutiki|asador|grill|parrillada|carnitas|matambr|applebee|ihop|waffl|pozol|casa roble|taqueria|marisco|ceviche|sushi|antojitos|heladeria|donut|sandwich|\bfood\b|ternero|mendels|bip bip|denny|dennis|pizza hut|wendy|subway|domicilio|delivery|espresso|baleada|asados|china|buffet|\btaco|campero|espress|jugueria|licuado|refresqueria|merendero|grano de oro|granodeoro|cafeteria/, 'Comida fuera', 'Alimentación'],
+  [/pedidos ya|pupuser|papa john|kfc|pollo|burger|pizza|comedor|restaurante|barbacoa|colada|bakery|panaderia|cafe|chorizos|mey ko|tasty|bbq|pollisimo|frutiki|asador|grill|parrillada|carnitas|matambr|applebee|ihop|waffl|pozol|casa roble|taqueria|marisco|ceviche|sushi|antojitos|heladeria|donut|sandwich|\bfood\b|ternero|mendels|bip bip|denny|dennis|pizza hut|wendy|subway|domicilio|delivery|espresso|baleada|asados|china|buffet|\btaco|campero|espress|jugueria|licuado|refresqueria|merendero|grano de oro|granodeoro|cafeteria|fressco|starmart|star mart/, 'Comida fuera', 'Alimentación'],
 
   // --- hogar ---
   [/ferreteria|herco|dicalsa|friopartes|el compadre|construccion|pintura/, 'Ferretería y reparaciones', 'Hogar'],
@@ -1314,5 +1371,5 @@ export {
   // expuestos para las pruebas
   md5, rc4, filasCsv, mapearColumnas, decodificar, fechaIso, numero,
   adaptadorBac, adaptadorCsv, adaptadorFicohsa, adaptadorSaldos,
-  esPagoDeTarjeta, clasificar, verificar, renglonesPdf
+  esPagoDeTarjeta, clasificar, verificar, renglonesPdf, coserDescripcionesPartidas
 };

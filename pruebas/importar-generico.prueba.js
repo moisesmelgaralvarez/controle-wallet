@@ -161,3 +161,55 @@ test('un ACH a un tercero no es un pago de tarjeta', async () => {
     I.clasificar({ concepto: 'ACH Debito-Daniel Josue Vallejos Aguilera', monto: -1200 }, D, lote),
     'gasto', 'compartir apellidos no convierte a un tercero en el titular');
 });
+
+/* ============================================================
+   LA DESCRIPCIÓN PARTIDA EN VARIAS LÍNEAS
+
+   Cuando la descripción es larga, el banco la parte y deja la fecha y el
+   monto en la línea de en medio. Los fragmentos se agrupan por su
+   coordenada vertical, así que el renglón del movimiento se quedaba SIN
+   texto — y sin concepto no hay regla que lo pueda clasificar.
+
+   Se vio con datos reales: dos pedidos por L 619 entraron como «sin
+   clasificar» y el dueño no tenía cómo saber de dónde salían.
+   ============================================================ */
+
+test('un movimiento sin concepto recupera el texto de sus vecinos', async () => {
+  const I = await import('../sitio/app/nucleo/importar.js');
+
+  const r = I.coserDescripcionesPartidas([
+    'PEDIDOS YA RESTAURANTEFRANCISCO',
+    '15/08/2026                    459.00 LPS',
+    'MO\\HND'
+  ]);
+
+  assert.strictEqual(r.length, 1, 'los tres renglones son un solo movimiento');
+  assert.match(r[0], /PEDIDOS YA RESTAURANTE/);
+  assert.match(r[0], /459\.00/);
+});
+
+test('el renglón que ya venía completo no se toca', async () => {
+  const I = await import('../sitio/app/nucleo/importar.js');
+
+  const bueno = '15/08/2026  SUPER 7 PUMA ANDALUCIACHOLUTECA \\HND   148.43 LPS';
+  const r = I.coserDescripcionesPartidas(['Movimientos recientes', bueno, 'Total del periodo']);
+
+  assert.ok(r.includes(bueno), 'un movimiento con su descripción no entra en el caso');
+});
+
+test('dos movimientos seguidos no se roban el concepto', async () => {
+  const I = await import('../sitio/app/nucleo/importar.js');
+
+  const r = I.coserDescripcionesPartidas([
+    '01/08/2026   FARMACIA SIMAN   100.00 LPS',
+    '02/08/2026   EL MATERNO 5     200.00 LPS'
+  ]);
+
+  assert.deepEqual(r.length, 2, 'ninguno de los dos está sin concepto: no hay nada que coser');
+});
+
+test('«FRESSCO» es comida: un starmart de gasolinera', async () => {
+  const I = await import('../sitio/app/nucleo/importar.js');
+  const r = I.reglaDe('FRESSCO VIZCAYA       CHOLUTECA 21:26');
+  assert.strictEqual(r && r.rubro, 'Comida fuera');
+});

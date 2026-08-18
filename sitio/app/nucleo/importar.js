@@ -580,10 +580,20 @@ function adaptadorBac(renglones) {
   // que cualquier cifra que la app pueda deducir sumando consumos.
   let saldoCorte = numero((plano.match(/Saldo Al Corte\/Local:?\s*([\d.,-]+)/i) || [])[1]);
   if (!saldoCorte) saldoCorte = numero((compacto.match(/saldoenlempiras:?([\d.,-]+)/i) || [])[1]);
-  // Si el estado trae el saldo del corte anterior, se puede cuadrar la tarjeta
-  // igual que una cuenta. Si no viene, no se inventa: se deja en null y el
-  // cuadre simplemente no corre.
-  const mAnt = plano.match(/Saldo\s+Anterior[:\s]*([\d.,-]+)/i);
+  /* Si el estado trae el saldo del corte anterior, se puede cuadrar la tarjeta
+     igual que una cuenta. Si no viene, no se inventa: se deja en null y el
+     cuadre simplemente no corre.
+
+     Y VIENE EN INGLÉS. El estado de BAC lo escribe «Previous balance», no
+     «Saldo Anterior» — el mismo documento que tiene todo lo demás en
+     español. Buscar solo la versión en español dejaba sin cuadrar un
+     archivo que cuadra al centavo, y la pantalla avisaba «nadie lo
+     verificó» sobre un estado de cuenta perfectamente verificable.
+
+     El aviso no estaba de más: estaba diciendo la verdad sobre una
+     limitación nuestra, y el que lo leía entendía —con razón— que el
+     problema era su archivo. */
+  const mAnt = plano.match(/(?:Saldo\s+Anterior|Previous\s+balance)[:\s]*(-?[\d.,]+)/i);
   const saldoAnterior = mAnt ? numero(mAnt[1]) : null;
 
   const ES_FECHA = /^\d{2}\/\d{2}\/\d{4}$/;

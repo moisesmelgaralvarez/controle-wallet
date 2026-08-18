@@ -36,6 +36,7 @@ import {
 } from '../ui.js';
 import { crear, actualizar, borrar, fusionar, borrarDonde } from '../datos/escribir.js';
 import { FILAS, dijoAlgo } from '../datos/filas.js';
+import { historico } from '../datos/historico.js';
 
 
 /* ============================================================
@@ -100,6 +101,15 @@ function engancharDeducciones(caja) {
 }
 
 
+/* La media por rubro, cacheada por periodo EN EL MÓDULO.
+
+   Esta vista se redibuja invocándose otra vez, así que una variable local
+   volvería a arrancar en nulo y a pedir el histórico: bucle infinito y una
+   petición por repintado. Acá se guarda con su periodo, y `null` significa
+   «todavía no se preguntó». */
+let mediaDe = null;      // periodo al que corresponde
+let media   = null;      // lo que devolvió el histórico
+
 export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
   const ctx = { hogarId: hogar.id };
   const r = A.resumenMes(D, periodo);
@@ -161,9 +171,22 @@ export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
   const desdeCopia = copiables.length ? A.mesConfirmadoPrevio(D, copiables[0].id, periodo) : null;
   const totalGastos = gastos.reduce((s, g) => s + (Number(g.monto) || 0), 0);
 
-  /* Lo que saldría de presupuesto si se mirara lo ya gastado. Se calcula
-     siempre —es barato y puro— pero solo se enseña si hay con qué. */
-  const sug = A.presupuestoSugerido(D, periodo, 12);
+  /* LO QUE SALDRÍA DE PRESUPUESTO SI SE MIRARA LO YA GASTADO.
+
+     VIENE DEL SERVIDOR, y ese detalle es todo. Acá se calculaba con `D`,
+     que solo tiene el mes en curso: la mediana de un mes es ese mes, así
+     que el botón proponía el gasto de agosto como presupuesto de agosto.
+     El dueño lo aplicó y guardó doce rubros con esa cifra — un plan que
+     por construcción ya estaba consumido al 100%.
+
+     El mismo defecto ya se había corregido en el Resumen y esta pantalla
+     se quedó atrás. Arreglar la mitad de un cálculo es peor que no
+     arreglarlo: deja dos pantallas diciendo cosas distintas.
+
+     Empieza en nulo y llega con el viaje al histórico. Sin él no se
+     ofrece nada: mejor no proponer que proponer un número falso, y más
+     cuando el botón lo ESCRIBE. */
+  const sug = mediaDe === periodo ? media : null;
 
   /* ---------- piezas de la lista ---------- */
 
@@ -274,7 +297,7 @@ export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
                producto vino a evitar. Acá están, sacadas de lo que de
                verdad se gastó.
                ========================================================== -->
-          ${sug.hayDatos && sug.recurrentes.length ? `
+          ${sug && sug.hayDatos && sug.recurrentes.length ? `
             <div class="sugerido">
               <p class="sugerido__que">
                 <strong>Partí de lo que ya gastaste.</strong>
@@ -433,6 +456,26 @@ export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
     financiamiento: id => formFinanciamiento(porId(finan, id)),
     pago: id => formPago(porId(pagos, id))
   };
+
+  /* La media por rubro sale del histórico, que corre en el servidor sobre
+     la vida entera del hogar. Se pinta sin ella y se repinta al llegar:
+     bloquear la pantalla por un dato de apoyo es cambiar algo que funciona
+     por algo que espera. */
+  if (mediaDe !== periodo) {
+    /* Se marca ANTES de que vuelva la respuesta: si no, cada repintado
+       dispararía otro viaje mientras el primero sigue en el aire. */
+    mediaDe = periodo;
+    media = null;
+    historico(periodo)
+      .then(x => {
+        if (mediaDe !== periodo || !x || !x.sugerido) return;
+        media = x.sugerido;
+        // Solo si esta pantalla sigue puesta: repintar otra vista le
+        // borraría la suya.
+        if (contenedor.isConnected) presupuesto({ contenedor, D, periodo, hogar, recargar });
+      })
+      .catch(() => { mediaDe = null; /* que se pueda reintentar */ });
+  }
 
   $$('[data-nuevo]', contenedor).forEach(b =>
     b.addEventListener('click', () => ABRIR[b.dataset.nuevo](null)));
@@ -848,7 +891,7 @@ export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
    * solo enseña a la gente a decir que sí sin leer.
    */
   async function aplicarSugerido() {
-    const filas = (sug.recurrentes || []).filter(f => f.gastoId && f.sugerido > 0);
+    const filas = ((sug && sug.recurrentes) || []).filter(f => f.gastoId && f.sugerido > 0);
     if (!filas.length) return avisar('No hay suficiente historial para sugerir montos.', 'mal');
 
     botonSugerido.disabled = true;

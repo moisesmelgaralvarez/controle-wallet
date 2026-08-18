@@ -109,3 +109,55 @@ test('el rubro nuevo y lo que lo referencia comparten identificador', async () =
   assert.strictEqual(fila.categoria, 'Salud');
   assert.strictEqual(fila.orden, 900);
 });
+
+/* ============================================================
+   UN TRASLADO ES PROPIO POR SU DESTINO, NO POR SU ORIGEN
+
+   El banco escribe «Transferencia entre Cuentas-ORIGEN-DESTINO», y el
+   ORIGEN es siempre el titular de la cuenta que uno acaba de importar —
+   o sea, siempre alguien del hogar. La comprobación vieja buscaba el
+   nombre de cualquier persona registrada en la línea ENTERA, así que no
+   podía dar «no» nunca: toda transferencia salía como traslado propio.
+
+   Medido con archivos reales: L 900 a una hermana y L 2,060 a otros dos
+   terceros quedaron sin registrar, y un ACH de L 1,200 a un tercero se
+   registró como PAGO DE TARJETA.
+   ============================================================ */
+
+test('una transferencia a un tercero es gasto, aunque la mande alguien del hogar', async () => {
+  const I = await import('../sitio/app/nucleo/importar.js');
+  const D = { personas: [
+    { id: 'm', nombre: 'Moisés Armando Melgar Álvarez' },
+    { id: 'j', nombre: 'Judith Maryorie Vallejos Aguilera' }
+  ]};
+  const lote = { tipo: 'cuenta' };
+
+  const aCasa = I.clasificar(
+    { concepto: 'Transferencia entre Cuentas-JUDITH MARYORIE VALLEJOS AGUILERA-MOISES ARMANDO MELGAR ALVAREZ',
+      monto: -10769 }, D, lote);
+  assert.strictEqual(aCasa, 'traslado',
+    'entre dos cuentas del hogar la plata no sale: registrarla sería contarla dos veces');
+
+  const aTercero = I.clasificar(
+    { concepto: 'Transferencia entre Cuentas-JUDITH MARYORIE VALLEJOS AGUILERA-KATHERINE ALEJANDRA VALLEJOS AGUILERA',
+      monto: -500 }, D, lote);
+  assert.strictEqual(aTercero, 'gasto',
+    'a una hermana con los mismos apellidos la plata SÍ sale del hogar');
+});
+
+test('un ACH a un tercero no es un pago de tarjeta', async () => {
+  const I = await import('../sitio/app/nucleo/importar.js');
+  const D = { personas: [
+    { id: 'm', nombre: 'Moisés Armando Melgar Álvarez' },
+    { id: 'j', nombre: 'Judith Maryorie Vallejos Aguilera' }
+  ]};
+  const lote = { tipo: 'cuenta' };
+
+  assert.strictEqual(
+    I.clasificar({ concepto: 'ACH Debito-Moises Melgar', monto: -9031.71 }, D, lote),
+    'pagoTarjeta', 'el giro a nombre propio sí es el que paga la tarjeta');
+
+  assert.strictEqual(
+    I.clasificar({ concepto: 'ACH Debito-Daniel Josue Vallejos Aguilera', monto: -1200 }, D, lote),
+    'gasto', 'compartir apellidos no convierte a un tercero en el titular');
+});

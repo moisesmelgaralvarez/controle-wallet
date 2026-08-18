@@ -15,6 +15,11 @@
      NEGRA en una máquina con el sistema en oscuro mientras la portada seguía
      siendo papel: el mismo sitio partido en dos a mitad de visita. -->
 <link rel="stylesheet" href="/papel.css">
+<!-- SIN `defer`: la hoja esconde `[data-revelar]` solo cuando el <html> lleva
+     la clase `revela`, y esa clase la pone la primera línea de este archivo.
+     Con `defer` la página se pintaría entera con todo a la vista y medio
+     segundo después lo escondería para revelarlo. -->
+<script src="/revelar.js"></script>
 <script src="/menu.js" defer></script>
 </head>
 <body class="papel">
@@ -74,9 +79,9 @@
   </section>
 
   <section class="franja franja--superficie">
-    <div class="lectura-ancha">
+    <div class="lectura-ancha" data-revelar-tanda>
 
-      <details class="pregunta">
+      <details class="pregunta" data-revelar>
         <summary>¿En qué se diferencia de cualquier otra app de presupuesto?</summary>
         <p>
           En dos cosas concretas. La primera: trata la tarjeta de crédito como un
@@ -88,7 +93,7 @@
         </p>
       </details>
 
-      <details class="pregunta">
+      <details class="pregunta" data-revelar>
         <summary>¿Tengo que ser bueno con los números?</summary>
         <p>
           No. Un asistente te guía en pocos pasos para armar tu presupuesto: quién
@@ -98,7 +103,7 @@
         </p>
       </details>
 
-      <details class="pregunta">
+      <details class="pregunta" data-revelar>
         <summary>¿Puedo usarla con mi pareja?</summary>
         <p>
           Sí, y está pensada para eso desde el principio. Invitás por correo,
@@ -108,7 +113,7 @@
         </p>
       </details>
 
-      <details class="pregunta">
+      <details class="pregunta" data-revelar>
         <summary>¿Se conecta sola a mi banco?</summary>
         <p>
           No, y es a propósito. Conectarse a tu banco exige entregarle a un tercero
@@ -118,7 +123,7 @@
         </p>
       </details>
 
-      <details class="pregunta">
+      <details class="pregunta" data-revelar>
         <summary>¿Guardan mi número de tarjeta?</summary>
         <p>
           Nunca. Ni el número, ni el código de seguridad, ni la fecha de
@@ -128,7 +133,7 @@
         </p>
       </details>
 
-      <details class="pregunta">
+      <details class="pregunta" data-revelar>
         <summary>¿Puede alguien más ver mis datos?</summary>
         <p>
           Solo las personas que vos invités a tu hogar. La separación entre hogares
@@ -140,7 +145,7 @@
         </p>
       </details>
 
-      <details class="pregunta">
+      <details class="pregunta" data-revelar>
         <summary>¿Funciona sin internet?</summary>
         <p>
           Podés abrirla, pero no registrar. Es una decisión deliberada: si dos
@@ -150,7 +155,7 @@
         </p>
       </details>
 
-      <details class="pregunta">
+      <details class="pregunta" data-revelar>
         <summary>¿Y si se me pierde el teléfono?</summary>
         <p>
           No pasa nada con tus datos: viven en el servidor, no en el aparato. Entrás
@@ -159,7 +164,7 @@
         </p>
       </details>
 
-      <details class="pregunta">
+      <details class="pregunta" data-revelar>
         <summary>¿Puedo llevarme mis datos?</summary>
         <p>
           Sí, cuando querás y sin pedir permiso. Hay una exportación completa en tu
@@ -168,7 +173,7 @@
         </p>
       </details>
 
-      <details class="pregunta">
+      <details class="pregunta" data-revelar>
         <summary>¿Sirve fuera de Honduras?</summary>
         <p>
           Sí. La moneda por omisión es el lempira porque es de donde venimos, pero
@@ -178,7 +183,7 @@
         </p>
       </details>
 
-      <details class="pregunta">
+      <details class="pregunta" data-revelar>
         <summary>¿Cuándo puedo entrar?</summary>
         <p>
           Estamos construyendo. Si nos dejás tu correo, te avisamos apenas abra el
@@ -186,7 +191,7 @@
         </p>
       </details>
 
-      <details class="pregunta">
+      <details class="pregunta" data-revelar>
         <summary>¿Van a tener aplicación en la Play Store y la App Store?</summary>
         <p>
           Sí, está en el plan. Por ahora funciona en el navegador de cualquier
@@ -199,7 +204,7 @@
   </section>
 
   <section class="franja">
-    <div class="lectura">
+    <div class="lectura" data-revelar>
       <h2>¿Falta la tuya?</h2>
       <p>Escribinos y la respondemos. Si le sirve a más gente, la agregamos aquí.</p>
       <div class="acciones">

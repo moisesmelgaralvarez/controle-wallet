@@ -15,6 +15,11 @@
      NEGRA en una máquina con el sistema en oscuro mientras la portada seguía
      siendo papel: el mismo sitio partido en dos a mitad de visita. -->
 <link rel="stylesheet" href="/papel.css">
+<!-- SIN `defer`: la hoja esconde `[data-revelar]` solo cuando el <html> lleva
+     la clase `revela`, y esa clase la pone la primera línea de este archivo.
+     Con `defer` la página se pintaría entera con todo a la vista y medio
+     segundo después lo escondería para revelarlo. -->
+<script src="/revelar.js"></script>
 <script src="/menu.js" defer></script>
 </head>
 <body class="papel">
@@ -80,9 +85,9 @@
   </section>
 
   <section class="franja franja--superficie">
-    <div class="tarjetas">
+    <div class="tarjetas" data-revelar-tanda>
 
-      <article class="tarjeta">
+      <article class="tarjeta" data-revelar="escala">
         <h3>Quiero acceso anticipado</h3>
         <p>
           Contanos cuántas personas van a usarlo y con qué banco trabajás. Nos
@@ -91,7 +96,7 @@
         <p><a href="mailto:hola@controlewallet.com?subject=Acceso%20anticipado">Pedir acceso</a></p>
       </article>
 
-      <article class="tarjeta">
+      <article class="tarjeta" data-revelar="escala">
         <h3>Algo no funciona</h3>
         <p>
           Decinos qué hacías, qué esperabas que pasara y qué pasó en su lugar. Con
@@ -100,7 +105,7 @@
         <p><a href="mailto:hola@controlewallet.com?subject=Reportar%20un%20problema">Reportar un problema</a></p>
       </article>
 
-      <article class="tarjeta">
+      <article class="tarjeta" data-revelar="escala">
         <h3>Sobre mis datos</h3>
         <p>
           Para pedir una copia de tu información, corregirla o borrar tu cuenta.
@@ -113,7 +118,7 @@
   </section>
 
   <section class="franja">
-    <div class="lectura">
+    <div class="lectura" data-revelar>
       <h2>Antes de escribir</h2>
       <p>
         Puede que la respuesta ya esté en las <a href="/preguntas">preguntas

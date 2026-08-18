@@ -52,8 +52,8 @@ const RAIZ    = join(AQUI, '..');
 const DESTINO = join(RAIZ, 'sitio', 'media');
 const SERVIDOR = process.env.PLATO_URL || 'http://localhost:8787/';
 
-const CUADROS = 108;   /* 3.6 s a 30/s */
 const POR_SEG = 30;
+const CUADROS = 108;   /* 3.6 s a 30/s — el de las tres películas de la vitrina */
 
 /* Cuánto mide cada película y con qué tamaño de letra se compone.
    El ancho es el que va a tener en pantalla: se graba 1:1 y se
@@ -70,11 +70,30 @@ const PLATOS = {
   telefono:   { letra: 12, modo: 'light' },
   tableta:    { letra: 12, modo: 'light' },
   escritorio: { letra: 13, modo: 'light' },
-  /* El hero va en OSCURO y los otros tres en claro, y no es un descuido: es
-     la mitad real de un híbrido cuya primera mitad es luz sobre fondo
-     carbón. Un corte de oscuro a claro en mitad de un mismo plano se lee
-     como un error de montaje, no como una transición. */
-  hero:       { letra: 18, modo: 'dark' },
+
+  /* EL HERO VOLVIÓ AL PAPEL, Y DURA TRES VECES MÁS.
+
+     Se filmaba en OSCURO, y no era un capricho: era la mitad real de un
+     híbrido cuya primera mitad —seis segundos generados— era luz sobre
+     fondo carbón, y un corte de oscuro a claro en mitad de un mismo plano
+     se lee como un error de montaje.
+
+     Esa primera mitad ya no existe. Sin ella, el oscuro dejó de tener
+     razón: era el color de lo que se fue. En claro, la película es del
+     mismo mundo que la página que la enmarca.
+
+     LA LETRA EN 19 ESTÁ MEDIDA, NO ELEGIDA. A 18 el tablero ocupaba el
+     68 % del alto del cuadro y el tercio de abajo quedaba en blanco — en el
+     acto principal de una página que vende, eso es un tercio del cuadro sin
+     trabajar. A 21 sube al 95 % y el tablero toca el borde, que se lee como
+     recortado. A 19 ocupa el 86 %, con un margen abajo que se lee como lo
+     que es: una pantalla que sigue.
+
+     Y 330 cuadros —once segundos— porque 3.6 s no daban tiempo de LEER.
+     Una película de producto que no se puede leer no está mostrando el
+     producto: está mostrando que existe. El resto lo pone el reposo
+     final, que es cuando el ojo por fin recorre la pantalla entera. */
+  hero:       { letra: 19, modo: 'light', cuadros: 330, inicio: true },
 };
 
 /* ---------- la curva ----------
@@ -212,10 +231,20 @@ for (const [nombre, cfg] of Object.entries(PLATOS)) {
   await pag.emulateMedia({ colorScheme: cfg.modo });
   await pag.setViewportSize(medida);
 
+  const cuadros = cfg.cuadros || CUADROS;
+
+  /* EL REPOSO FINAL. El último 18 % de la película no anima nada: deja la
+     pantalla armada y quieta. Sin él la película termina en el instante en
+     que la última fila aterriza, y el ojo —que venía siguiendo el
+     movimiento— nunca llega a recorrer el tablero completo. Ese reposo es
+     lo que convierte «vi que se armaba algo» en «leí lo que dice». */
+  const REPOSO = cfg.cuadros ? 0.18 : 0;
+  const utiles = Math.round(cuadros * (1 - REPOSO));
+
   const cocina = mkdtempSync(join(tmpdir(), 'controle-film-'));
-  for (let i = 0; i < CUADROS; i++) {
+  for (let i = 0; i < cuadros; i++) {
     await pag.evaluate(([cuerpo, t, c]) => new Function('return ' + cuerpo)()(t, c),
-                       [PINTOR, i / (CUADROS - 1), curva]);
+                       [PINTOR, Math.min(1, i / (utiles - 1)), curva]);
     await pag.screenshot({ path: join(cocina, `${String(i).padStart(4, '0')}.png`) });
   }
 
@@ -231,15 +260,27 @@ for (const [nombre, cfg] of Object.entries(PLATOS)) {
     '-c:v', 'libx264', '-profile:v', 'high', '-pix_fmt', 'yuv420p',
     '-crf', '26', '-preset', 'veryslow', '-movflags', '+faststart', '-an', mp4]);
 
+  /* Y para el hero, TAMBIÉN el primero. Son dos pósters con dos oficios
+     distintos: el del final es la pantalla terminada, y va donde la película
+     no se reproduce —sin JavaScript, con el movimiento apagado—. El del
+     principio es el armazón vacío, y va de fondo MIENTRAS la película carga:
+     ahí mostrar el final sería enseñar el desenlace para después rebobinar. */
+  if (cfg.inicio) {
+    execFileSync('ffmpeg', ['-y', '-loglevel', 'error',
+      '-i', join(cocina, '0000.png'), '-q:v', '4',
+      join(DESTINO, `app-${nombre}-inicio.jpg`)]);
+  }
+
   /* El póster es el ÚLTIMO cuadro: la pantalla terminada. */
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error',
-    '-i', join(cocina, `${String(CUADROS - 1).padStart(4, '0')}.png`),
+    '-i', join(cocina, `${String(cuadros - 1).padStart(4, '0')}.png`),
     '-q:v', '4', jpg]);
 
   rmSync(cocina, { recursive: true, force: true });
   informe.push({
     pelicula: `app-${nombre}`,
     medida: `${medida.width}×${medida.height} @2x`,
+    dura: (cuadros / POR_SEG).toFixed(1) + ' s',
     mp4: (statSync(mp4).size / 1024).toFixed(1) + ' KB',
     poster: (statSync(jpg).size / 1024).toFixed(1) + ' KB',
   });

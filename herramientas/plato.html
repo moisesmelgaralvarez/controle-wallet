@@ -201,7 +201,13 @@
      igual que en el plano generado, porque ahí va el titular. -->
 <div class="plato plato--hero" data-plato="hero" data-ancho="1280" data-alto="720">
   <div class="ui ui--con-riel">
-    <nav class="riel" data-llega data-de="0.00" data-a="0.10">
+    <!-- SIN `data-llega`, y es lo que hace que el primer cuadro sirva de
+         póster. Antes el riel entraba con todo lo demás, así que el cuadro
+         cero era una hoja en blanco: mostrarla mientras el video carga se ve
+         como que algo falló. Con el armazón puesto desde el principio, el
+         primer cuadro es exactamente lo que la app enseña mientras trae los
+         datos — y eso no hay que inventarlo, ya es así. -->
+    <nav class="riel">
       <b>Controle</b>
       <u class="on">Resumen</u>
       <u>Presupuesto</u>
@@ -211,7 +217,7 @@
     </nav>
 
     <div class="ui">
-      <div class="ui__cabeza" data-llega data-de="0.02" data-a="0.12">
+      <div class="ui__cabeza">
         <span class="ui__titulo">Resumen</span>
         <span class="ui__mes">Agosto 2026 · 7 ago – 6 sep</span>
       </div>

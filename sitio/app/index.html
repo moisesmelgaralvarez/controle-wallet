@@ -115,7 +115,14 @@
         <button class="iconbtn" type="button" id="mesAnterior" aria-label="Mes anterior">‹</button>
         <span class="tope__mes" id="mes"></span>
         <button class="iconbtn" type="button" id="mesSiguiente" aria-label="Mes siguiente">›</button>
-        <button class="boton boton--borde boton--chico" type="button" id="mesHoy" hidden>Volver a hoy</button>
+        <!-- Dos rótulos y no uno: en teléfono «Volver a hoy» hace que el bloque
+             del mes envuelva y el tope crezca a dos renglones. La versión corta
+             dice lo mismo en un tercio del ancho. Van los dos en el marcado y la
+             hoja elige — no JavaScript, porque el texto tiene que estar bien
+             desde el primer pintado. -->
+        <button class="boton boton--borde boton--chico" type="button" id="mesHoy" hidden>
+          <span class="mesHoy__largo">Volver a hoy</span><span class="mesHoy__corto">Hoy</span>
+        </button>
       </div>
       <div class="tope__der">
         <span class="estado" id="estado2" data-estado="cargando">

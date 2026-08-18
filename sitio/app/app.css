@@ -1437,3 +1437,118 @@ body[data-mes-pasado="si"] .mes-nav .tope__mes {
 @media (min-width: 900px) {
   .tema--tope { display: none; }
 }
+
+/* ==========================================================================
+   EL TOPE, EN UNA SOLA LÍNEA
+
+   A 390 salía en TRES renglones y 133 px de alto: el título arriba, el mes
+   en el medio y el punto con el interruptor abajo, cada uno por su lado. El
+   dueño lo pidió uniforme —todo en la misma línea— y tiene razón: son tres
+   cosas del mismo nivel, no una jerarquía.
+
+   La cuenta: el contenido pedía 381 px y había 358. Faltaban 23, y salen de
+   tres lados sin apretar nada:
+
+     el hueco entre piezas, de 16 a 8       −16
+     las flechas del mes, más justas         −18
+     el título, un punto más chico           −12
+
+   `flex-wrap: nowrap` de cinturón: si mañana el mes se llama «Septiembre» y
+   crece, se aprieta —feo pero legible— en vez de partirse en renglones, que
+   es un defecto que nadie reporta porque parece a propósito.
+   ========================================================================== */
+
+@media (max-width: 899px) {
+  .tope {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    padding-inline: 1rem;
+  }
+  .tope h1 {
+    font-size: 1.125rem;
+    flex: none;
+    white-space: nowrap;
+  }
+
+  /* El bloque del mes se queda con el espacio que sobra y se centra: es lo
+     único del tope que cambia con la vista, así que es donde el ojo vuelve. */
+  .tope .mes-nav {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: center;
+    gap: 0.15rem;
+  }
+  .tope .mes-nav .iconbtn {
+    padding: 0.2rem 0.45rem;
+    min-width: 32px;
+  }
+  .tope__mes {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tope__der { flex: none; gap: 0.35rem; }
+}
+
+/* ==========================================================================
+   QUE EL TOPE QUEPA DE VERDAD EN UN TELÉFONO
+
+   `flex-wrap: nowrap` dejó de partirlo en renglones, pero eso no lo hizo
+   caber: lo hizo CRECER. El tope medía 442 px fijos a cualquier ancho y
+   empujaba el documento entero, así que la página se arrastraba a lo ancho
+   —un defecto que no se ve en una captura y que en la mano es evidente.
+
+   Lo que lo clavaba en 442 era `min-width: 8.5rem` en el rótulo del mes.
+   Un `min-width` no se negocia: gana sobre el ancho disponible, sobre
+   `flex-shrink` y sobre el `overflow: hidden` que yo había puesto creyendo
+   que bastaba. Estaba ahí para que el rótulo no bailara al cambiar de mes;
+   en un teléfono ese lujo cuesta la página.
+
+   Se arregla con tres cortes, en este orden:
+     1. el rótulo del mes pasa a «Sep 2026» —la mitad del ancho, lo mismo
+        dicho—, con el largo escondido a la vista pero presente para quien
+        lee con voz;
+     2. «Volver a hoy» pasa a «Hoy»;
+     3. y solo por debajo de 375 px se aprietan márgenes y cuerpos.
+   ========================================================================== */
+
+.mesHoy__corto, .mes__corto { display: none; }
+
+@media (max-width: 899px) {
+  /* El rótulo largo sigue en el documento: un lector de pantalla dice
+     «Septiembre 2026» y «Volver a hoy», no «Sep» ni «Hoy». */
+  .mesHoy__largo,
+  .mes__largo {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .mesHoy__corto, .mes__corto { display: inline; }
+
+  /* El piso de 8.5rem, levantado. Con dos palabras menos el rótulo ya no
+     baila, que era lo único que ese piso compraba. */
+  .tope .mes-nav .tope__mes { min-width: 0; }
+  .tope .mes-nav { flex-wrap: nowrap; }
+  .tope .mes-nav #mesHoy {
+    padding: 0.25rem 0.5rem;
+    font-size: var(--t-xs);
+    white-space: nowrap;
+  }
+}
+
+/* Por debajo de 375 px —el iPhone más angosto que sigue en uso— no sobra
+   un píxel. Se aprieta el aire antes que quitar nada: el título, el mes,
+   el punto y el interruptor siguen los cuatro en la línea. */
+@media (max-width: 23.4375rem) {
+  .tope { padding-inline: 0.75rem; gap: 0.35rem; }
+  .tope h1 { font-size: 1rem; }
+  .tope .mes-nav { gap: 0.1rem; }
+  .tope .mes-nav .iconbtn { padding: 0.2rem 0.3rem; min-width: 28px; }
+  .tope__mes { font-size: var(--t-xs); }
+  .tope__der { gap: 0.15rem; }
+  /* Dos píxeles de más a 320 con «Hoy» a la vista arrastraban la página
+     entera a lo ancho. Salen de acá y de ningún otro lado. */
+  .tope .mes-nav #mesHoy { padding-inline: 0.35rem; }
+}

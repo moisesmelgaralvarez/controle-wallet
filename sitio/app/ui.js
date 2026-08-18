@@ -49,6 +49,14 @@ export const nombreMes = per => {
   return `${cap(MESES[+m - 1] || '')} ${y}`;
 };
 
+/** El período en corto: «Sep 2026». En un teléfono de 360 px el rótulo
+    completo no cabe junto al título y los controles, y lo que sobraba
+    empujaba la página entera a lo ancho. Tres letras dicen lo mismo. */
+export const nombreMesCorto = per => {
+  const [y, m] = String(per).split('-');
+  return `${cap(MES_CORTO[+m - 1] || '')} ${y}`;
+};
+
 /** El mes en tres letras, para las marcas de una gráfica. */
 export const mesCorto = per => MES_CORTO[+String(per).split('-')[1] - 1] || '';
 

@@ -25,7 +25,7 @@
    ============================================================ */
 
 import * as A from '../nucleo/index.js';
-import { $, $$, esc, dinero, pct, diaCorto } from '../ui.js';
+import { $, $$, esc, dinero, redondo, pct, diaCorto } from '../ui.js';
 import { historico } from '../datos/historico.js';
 
 export function resumen({ contenedor, D, periodo }) {
@@ -90,7 +90,11 @@ export function resumen({ contenedor, D, periodo }) {
     { t: 'Gastos del mes', v: dinero(rp.gastado),
       c: rp.hayConQueMedir && rp.diferenciaReferencia < 0 ? 'mal' : '',
       d: rp.hayConQueMedir
-           ? `de L ${esc(String(Math.round(rp.referenciaTotal).toLocaleString('en-US')))} ${rp.soloMedia ? 'de media mensual' : rp.algunaMedia ? 'entre presupuesto y tu media' : 'presupuestados'}`
+           /* La `L` estaba escrita a mano y el agrupado en `en-US`, en la
+              ficha principal de la pantalla principal: un hogar en dólares
+              leía «$ 28,600.00» arriba y «de L 40,000» debajo, en la misma
+              tarjeta. `redondo` es la misma función que usa el resto. */
+           ? `de ${esc(redondo(rp.referenciaTotal))} ${rp.soloMedia ? 'de media mensual' : rp.algunaMedia ? 'entre presupuesto y tu media' : 'presupuestados'}`
            : (rp.hayGasto ? 'sin historial ni presupuesto con qué compararlo' : 'sin movimientos este mes') },
     { t: 'Cuotas', v: dinero(r.cuotas),
       d: r.financiados ? `${r.financiados} vigente${r.financiados === 1 ? '' : 's'}` : 'ninguna' }

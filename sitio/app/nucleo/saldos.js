@@ -392,8 +392,13 @@ function deudaTarjeta(D, tarjeta, hasta) {
   const desde = tarjeta.desdeMes || '0000-00';
   const dentro = per => Boolean(per) && per >= desde && (!hasta || per <= hasta);
 
-  const cargado = sumaMontos((D.movimientos || []).filter(m =>
-    (m.medioPago || 'tarjeta') === 'tarjeta' && m.tarjetaId === tarjeta.id && dentro(perDe(m))));
+  const consumos = (D.movimientos || []).filter(m =>
+    (m.medioPago || 'tarjeta') === 'tarjeta' && m.tarjetaId === tarjeta.id && dentro(perDe(m)));
+  const cargado = sumaMontos(consumos);
+  /* Meses DISTINTOS con consumo. Hace falta para saber cuánto se carga en
+     un mes típico, que es la única vara con la que se puede comprobar si
+     la racha de pagar el total sigue viva. */
+  const mesesConCargo = new Set(consumos.map(perDe)).size;
   const pagado = sumaMontos((D.pagosTarjeta || [])
     .filter(x => x.tarjetaId === tarjeta.id && dentro(perDe(x))));
 
@@ -437,6 +442,30 @@ function deudaTarjeta(D, tarjeta, hasta) {
   // es crédito gratis, no deuda. Solo cuesta lo que se deja revolver.
   const revolvente = pagaTotal ? 0 : deuda;
 
+  /* LA RACHA SE COMPRUEBA, NO SE CREE.
+
+     `pagaTotal` es una CASILLA que alguien marcó una vez, y de ella cuelga
+     la afirmación más fuerte que hace esta app: «no pagan un lempira de
+     interés». Un hogar que marcó la casilla y un mes no alcanzó a cubrir
+     el corte sigue leyendo esa frase mientras el banco le corre la tasa
+     sobre todo el saldo. La aritmética no falla: falla creerle a un dato
+     que nunca se comprobó.
+
+     Contra qué se comprueba: quien salda el total en cada corte llega al
+     fin de un mes debiendo, como mucho, lo del ciclo en vuelo más la punta
+     del siguiente. Deber MÁS DE DOS MESES de consumo típico no lo explica
+     el calendario — lo explica que algo se quedó revolviendo.
+
+     Dos meses y no uno, a propósito: según cómo caigan corte y fecha
+     límite pueden convivir dos estados de cuenta vivos, y acusar a un
+     hogar que paga bien es peor que no acusar a uno que paga mal. Y sin
+     consumos observados no se acusa en absoluto: sin evidencia no hay
+     hallazgo. */
+  const cargoMensual = mesesConCargo > 0 ? cargado / mesesConCargo : 0;
+  const arrastreSinDeclarar = pagaTotal && cargoMensual > 0
+    ? cent(Math.max(0, deuda - cargoMensual * 2))
+    : 0;
+
   // Días sin costo que gana una compra según cuándo se haga. Comprar justo
   // después del corte estira el plazo casi un mes más, y no cuesta nada.
   const corte = num(tarjeta.diaCorte);
@@ -459,6 +488,13 @@ function deudaTarjeta(D, tarjeta, hasta) {
     pagaTotal, revolvente, segunBanco,
     interesMensual: revolvente * (tasa / 100) / 12,
     interesAnual: revolvente * (tasa / 100),
+    /* Lo que dice deber de más quien afirma pagar el total, y lo que
+       costaría al mes si de verdad se quedó revolviendo. NO se suma a
+       `interesMensual`: eso sería cambiar una afirmación sin comprobar por
+       otra. Es una sospecha con número, para poder decirla como sospecha. */
+    mesesConCargo, cargoMensual: cent(cargoMensual),
+    arrastreSinDeclarar,
+    interesLatente: arrastreSinDeclarar * (tasa / 100) / 12,
     diaPago: limite,
     graciaMaxima: limite > 0 ? 30 + trasCorte : 0,   // comprando justo tras el corte
     graciaMinima: limite > 0 ? trasCorte : 0,        // comprando justo antes del corte

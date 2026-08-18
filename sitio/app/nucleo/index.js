@@ -27,6 +27,15 @@
 
 export { HORIZONTE, COLCHON_MIN, perDe } from './base.js';
 
+/* La moneda del hogar sale por la puerta del núcleo porque es el núcleo
+   quien de verdad la usa: escribe cifras DENTRO de frases ya redactadas
+   —la carta del asesor, los pasos del diagnóstico, los bloqueos del
+   cierre, las alertas de cada proyecto—. Mientras la interfaz tuvo su
+   propia tabla de símbolos, las dos se separaron: en un hogar en dólares
+   las fichas del Resumen decían «$ 12,480.00» y el Diagnóstico, tres
+   centímetros más abajo, «L 12,480.00». Una sola tabla, un solo símbolo. */
+export { fmt, fmt0, MONEDAS, fijarMoneda, simboloMoneda } from './base.js';
+
 export {
   sumaMeses, distanciaMeses, diaValido, diasDelMes, hoyLocal,
   inicioMes, periodoDe, rangoPeriodo, diasPeriodo

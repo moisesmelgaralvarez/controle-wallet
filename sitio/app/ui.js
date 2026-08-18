@@ -21,19 +21,28 @@ export const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 export const esc = s => String(s ?? '').replace(/[&<>"']/g,
   c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-/* ---------- números ---------- */
+/* ---------- números ----------
 
-let moneda = 'HNL';
-const SIMBOLO = { HNL: 'L', USD: '$', EUR: '€', MXN: '$', GTQ: 'Q', CRC: '₡' };
+   EL SÍMBOLO Y EL AGRUPADO NO VIVEN AQUÍ. Vivían: esta hoja tenía su
+   propia tabla de seis símbolos y su propio `Intl` clavado en `es-HN`,
+   mientras el núcleo tenía la `L` escrita a mano dentro de `fmt`. Dos
+   tablas separadas se separan de verdad, y esta ya lo había hecho: en un
+   hogar en dólares las fichas del Resumen decían «$ 12,480.00» y el
+   Diagnóstico, tres centímetros más abajo, «L 12,480.00».
 
-export const fijarMoneda = m => { moneda = m || 'HNL'; };
-export const simbolo = () => SIMBOLO[moneda] || moneda;
+   Ahora las dos salen de `nucleo/base.js`, que es quien escribe las
+   frases donde van metidas esas cifras. Es el mismo criterio que ya se
+   aplicó a las categorías de gasto: una lista, un lugar. */
 
-const nf2 = new Intl.NumberFormat('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const nf0 = new Intl.NumberFormat('es-HN', { maximumFractionDigits: 0 });
+import { fmt, fmt0, MONEDAS as MONEDAS_NUCLEO, fijarMoneda as fijarMonedaNucleo, simboloMoneda }
+  from './nucleo/index.js';
 
-export const dinero  = n => `${simbolo()} ${nf2.format(Number(n) || 0)}`;
-export const redondo = n => `${simbolo()} ${nf0.format(Math.round(Number(n) || 0))}`;
+/** Se llama una vez, al cargar el hogar. Manda para el núcleo y para acá. */
+export const fijarMoneda = m => fijarMonedaNucleo(m);
+export const simbolo = () => simboloMoneda();
+
+export const dinero  = n => fmt(n);
+export const redondo = n => fmt0(n);
 export const pct     = n => `${Math.round((Number(n) || 0) * 100)}%`;
 
 /* ---------- fechas ---------- */
@@ -87,17 +96,15 @@ export const mesLocal = () => hoyLocal().slice(0, 7);
 export const CATEGORIAS = ['Alimentación', 'Servicios', 'Transporte', 'Salud',
                            'Hogar', 'Educación', 'Otros'];
 
-/* Una moneda por hogar, sin conversión: eso es fase 2. La lista está
-   aquí por lo mismo que las categorías — el asistente la ofrece al
-   arrancar y el editor del hogar la vuelve a ofrecer después. */
-export const MONEDAS = [
-  { valor: 'HNL', texto: 'Lempira (L)' },
-  { valor: 'USD', texto: 'Dólar ($)' },
-  { valor: 'GTQ', texto: 'Quetzal (Q)' },
-  { valor: 'CRC', texto: 'Colón (₡)' },
-  { valor: 'MXN', texto: 'Peso mexicano ($)' },
-  { valor: 'EUR', texto: 'Euro (€)' }
-];
+/* Una moneda por hogar, sin conversión: convertir necesita tipo de cambio
+   con fecha y una columna `moneda` por cuenta, y eso es otra cosa.
+
+   La lista NO se escribe acá: se deriva de la tabla del núcleo, que es la
+   que sabe símbolo, decimales y agrupado de cada una. Escribirla dos veces
+   fue justo lo que dejó al selector ofreciendo seis monedas mientras las
+   cifras salían todas en lempiras. */
+export const MONEDAS = Object.entries(MONEDAS_NUCLEO)
+  .map(([valor, m]) => ({ valor, texto: `${m.nombre} (${m.simbolo})` }));
 
 /* ---------- avisos ---------- */
 

@@ -176,3 +176,37 @@ test('un PDF real pasa entero por el lector', async (t) => {
   assert.ok(conConcepto.length > 5,
     'los movimientos traen concepto: si la costura falla, acá quedan renglones mudos');
 });
+
+/* ============================================================
+   EL SALDO ANTERIOR VIENE EN INGLÉS
+
+   El estado de cuenta de BAC escribe «Previous balance» —el mismo
+   documento que tiene todo lo demás en español—. Buscar solo «Saldo
+   Anterior» dejaba sin cuadrar un archivo que cuadra al centavo, y la
+   pantalla avisaba «nadie lo verificó» sobre un estado perfectamente
+   verificable.
+
+   Ese aviso no estaba de más: decía la verdad sobre una limitación
+   nuestra, y quien lo leía entendía —con razón— que el problema era su
+   archivo.
+   ============================================================ */
+
+test('un estado de tarjeta con «Previous balance» cuadra al centavo', async (t) => {
+  const { readFileSync, existsSync } = await import('node:fs');
+  const { fileURLToPath } = await import('node:url');
+  const ruta = fileURLToPath(new URL('./muestras/tarjeta-corte.pdf', import.meta.url));
+  if (!existsSync(ruta)) return t.skip('sin muestra local');
+
+  const I = await import('../sitio/app/nucleo/importar.js');
+  const buf = readFileSync(ruta);
+  const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+  const lote = await I.leerArchivo(
+    { name: 'tarjeta-corte.pdf', arrayBuffer: async () => ab },
+    { tarjetas: [], cuentas: [], personas: [] });
+
+  assert.strictEqual(lote.saldoAnterior, -508, 'se leyó el saldo del corte anterior');
+
+  const v = I.verificarTarjeta(lote);
+  assert.ok(v, 'con los dos saldos, el cuadre TIENE que correr');
+  assert.ok(v.cuadra, `no cuadró: ${v.saldoIni} + ${v.suma} ≠ ${v.saldoFin}`);
+});

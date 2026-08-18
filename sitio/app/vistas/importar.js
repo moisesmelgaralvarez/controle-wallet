@@ -41,13 +41,53 @@ import { FILAS } from '../datos/filas.js';
     pantalla no ayuda: abruma. */
 const A_LA_VISTA = 40;
 
+/* ============================================================
+   LA REVISIÓN SOBREVIVE A CAMBIAR DE PESTAÑA
+
+   Esto vivía en variables locales de la función de abajo. Salías a
+   Movimientos a comprobar una cosa, volvías, y los ochenta renglones que
+   acababas de clasificar a mano ya no estaban: la función había muerto y
+   se los llevó.
+
+   Vive en el MÓDULO y no en el dispositivo, y esa diferencia es la regla
+   1: lo único que se guarda en el aparato es el token de sesión. Un
+   estado de cuenta del banco en `localStorage` sería exactamente lo que
+   esa regla prohíbe. Acá se pierde al recargar la página, que es lo
+   correcto — y lo que se pierde es trabajo de revisión, nunca datos:
+   nada de esto se ha escrito todavía.
+
+   Se suelta al importar bien, para que la próxima vez la pantalla abra
+   limpia y nadie aplique dos veces el archivo de la semana pasada.
+   ============================================================ */
+const enRevision = {
+  archivo: null, lote: null, destino: null, plan: null, fallo: null,
+  /* De qué hogar era. Sin esto, quien cambia de hogar en la misma sesión
+     se encuentra el estado de cuenta del otro. */
+  hogarId: null
+};
+
+const soltarRevision = () => {
+  enRevision.archivo = enRevision.lote = enRevision.destino = null;
+  enRevision.plan = enRevision.fallo = enRevision.hogarId = null;
+};
+
 export function importar({ contenedor, D, hogar, recargar }) {
-  let archivo = null;
-  let lote = null;
-  let destino = null;
-  let plan = null;
-  let fallo = null;
+  if (enRevision.hogarId && enRevision.hogarId !== hogar.id) soltarRevision();
+
+  let archivo = enRevision.archivo;
+  let lote = enRevision.lote;
+  let destino = enRevision.destino;
+  let plan = enRevision.plan;
+  let fallo = enRevision.fallo;
   let leyendo = false;
+
+  /* Lo que se guarda entre pestañas. Se llama en cada punto donde el
+     estado cambia, y no en `pintar()`: pintar es dibujar, y una función
+     que dibuja y además guarda es la que un día deja de guardar porque
+     alguien optimizó un repintado. */
+  const recordar = () => {
+    Object.assign(enRevision, { archivo, lote, destino, plan, fallo, hogarId: hogar.id });
+  };
 
   const cuentas = D.cuentas || [];
   const tarjetas = (D.tarjetas || []).filter(t => (t.tipo || 'credito') === 'credito');
@@ -104,6 +144,7 @@ export function importar({ contenedor, D, hogar, recargar }) {
 
   async function leer(f) {
     archivo = f; lote = null; plan = null; fallo = null; leyendo = true;
+    recordar();
     pintar();
     try {
       /* Un Excel de verdad es un formato binario, no un texto con
@@ -126,6 +167,7 @@ export function importar({ contenedor, D, hogar, recargar }) {
       fallo = e.message || 'No se pudo leer el archivo.';
     } finally {
       leyendo = false;
+      recordar();
       pintar();
     }
   }
@@ -138,6 +180,7 @@ export function importar({ contenedor, D, hogar, recargar }) {
       plan = null;
       fallo = e.message || 'No se pudo preparar la importación.';
     }
+    recordar();
   }
 
   /* ---------- piezas ---------- */
@@ -490,13 +533,14 @@ export function importar({ contenedor, D, hogar, recargar }) {
     if (clase) clase.addEventListener('change', () => {
       tipoElegido = clase.value || null;
       destino = null; plan = null;
+      recordar();
       pintar();
     });
 
     const sel = $('select[name="destino"]', contenedor);
     if (sel) sel.addEventListener('change', () => {
       const [clase, id] = sel.value.split(':');
-      if (!id) { destino = null; plan = null; return pintar(); }
+      if (!id) { destino = null; plan = null; recordar(); return pintar(); }
       const lista = clase === 'cuenta' ? cuentas : tarjetas;
       const x = lista.find(y => y.id === id);
       destino = x ? { clase, id, nombre: x.nombre } : null;
@@ -517,6 +561,7 @@ export function importar({ contenedor, D, hogar, recargar }) {
         if (ya) ya.gastoId = s.value;
         else plan.comerciosNuevos.push({ clave, gastoId: s.value });
       }
+      recordar();
       avisar(`«${m.concepto}» queda en ${nombreRubro(s.value)}.`);
     }));
 
@@ -534,6 +579,11 @@ export function importar({ contenedor, D, hogar, recargar }) {
           quitarDuplicados: Boolean(quitar && quitar.checked)
         });
         // Lo que dice la BASE que pasó, no lo que el navegador creía.
+        /* Se suelta ANTES de recargar: si quedara, la pantalla volvería a
+           abrir con el archivo de la semana pasada listo para aplicarse
+           otra vez, que es justo lo que nadie quiere ver en una app de
+           dinero. */
+        soltarRevision();
         avisar(`Listo: ${hecho.movimientos} gastos, ${hecho.retiros} retiros y ` +
                `${hecho.pagos} pagos${hecho.borrados ? `, reemplazando ${hecho.borrados}` : ''}.`);
         recargar();

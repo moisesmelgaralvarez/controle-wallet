@@ -62,6 +62,23 @@ const DE_ENTRADA = [
 /** Los que Postgres escribió para leerse tal cual, desde un disparador. */
 const TAL_CUAL = /mes .* cerrado|solo el propietario/i;
 
+/**
+ * El 409 son DOS cosas distintas y decían la misma.
+ *
+ * PostgREST contesta 409 tanto para `unique_violation` —esto ya existe—
+ * como para `foreign_key_violation` —esto apunta a algo que NO existe—,
+ * que son exactamente opuestas. El texto único, «Ese registro ya existe»,
+ * mandó una búsqueda entera en la dirección contraria: se buscó un
+ * duplicado durante horas cuando lo que había era una referencia rota.
+ *
+ * Un mensaje que puede ser falso es peor que no tener mensaje.
+ */
+const CODIGO_PG = {
+  '23503': 'Esa operación apunta a un registro que ya no existe. Recargá la página y volvé a intentar.',
+  '23505': 'Ese registro ya existe.',
+  '23514': 'Los datos no cumplen una regla del sistema.'
+};
+
 export function traducir(estado, cuerpo) {
   const propio = cuerpo && (cuerpo.message || cuerpo.error_description || cuerpo.msg || cuerpo.error);
 
@@ -76,10 +93,16 @@ export function traducir(estado, cuerpo) {
 
   if (propio && TAL_CUAL.test(propio)) return propio;
 
+  /* El código de Postgres ANTES que el de HTTP: es más específico. Va
+     después de `TAL_CUAL` porque un disparador que escribió su propia
+     frase sabe más que cualquier tabla. */
+  const pg = cuerpo && cuerpo.code;
+  if (pg && CODIGO_PG[pg]) return CODIGO_PG[pg];
+
   const motivo = `${(cuerpo && cuerpo.error_code) || ''} ${propio || ''}`;
   for (const [patron, texto] of DE_ENTRADA) if (patron.test(motivo)) return texto;
 
   return MENSAJES[estado] || propio || `Error ${estado}.`;
 }
 
-export { MENSAJES, DE_ENTRADA };
+export { MENSAJES, DE_ENTRADA, CODIGO_PG };

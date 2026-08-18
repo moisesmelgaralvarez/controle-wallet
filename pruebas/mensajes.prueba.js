@@ -110,3 +110,29 @@ test('un cuerpo que no es objeto no revienta la traducción', () => {
   assert.equal(traducir(500, 'algo se rompió'), MENSAJES[500]);
   assert.equal(traducir(0, null), 'Error 0.');
 });
+
+/* ============================================================
+   EL 409 SON DOS COSAS OPUESTAS
+
+   PostgREST contesta 409 tanto para «esto ya existe» —clave duplicada—
+   como para «esto apunta a algo que NO existe» —llave foránea rota—. El
+   texto era uno solo, «Ese registro ya existe», y mandó la búsqueda de
+   un fallo real entera en la dirección contraria: se buscó un duplicado
+   durante horas cuando lo que había era una referencia al vacío.
+   ============================================================ */
+
+test('una llave foránea rota no se anuncia como un duplicado', () => {
+  const fk = traducir(409, { code: '23503', message: 'insert or update on table "comercios" violates foreign key constraint' });
+  assert.ok(!/ya existe/i.test(fk),
+    'una referencia rota no puede decir «ya existe»: es lo contrario');
+  assert.match(fk, /no existe/i);
+
+  const dup = traducir(409, { code: '23505', message: 'duplicate key value violates unique constraint' });
+  assert.match(dup, /ya existe/i);
+
+  assert.notStrictEqual(fk, dup, 'dos causas opuestas no pueden dar el mismo texto');
+});
+
+test('sin código de Postgres, el 409 sigue teniendo su texto de siempre', () => {
+  assert.strictEqual(traducir(409, {}), MENSAJES[409]);
+});

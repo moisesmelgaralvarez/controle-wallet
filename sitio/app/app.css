@@ -1612,3 +1612,17 @@ body[data-mes-pasado="si"] .mes-nav .tope__mes {
 @media (min-width: 900px) {
   .panel--ancho { grid-column: 1 / -1; }
 }
+
+/* El presupuesto que sale de lo ya gastado. Va dentro del panel de gastos,
+   separado por un filete: es una propuesta, no otra sección. */
+.sugerido {
+  margin-top: var(--e2);
+  padding-top: var(--e2);
+  border-top: 1px solid var(--borde);
+}
+.sugerido__que { margin: 0 0 0.35rem; }
+.sugerido__como {
+  margin: 0.35rem 0 0;
+  font-size: var(--t-xs); color: var(--tenue);
+}
+.sugerido .acciones { margin-top: var(--e2); }

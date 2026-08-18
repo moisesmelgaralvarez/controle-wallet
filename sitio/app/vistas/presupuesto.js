@@ -161,6 +161,10 @@ export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
   const desdeCopia = copiables.length ? A.mesConfirmadoPrevio(D, copiables[0].id, periodo) : null;
   const totalGastos = gastos.reduce((s, g) => s + (Number(g.monto) || 0), 0);
 
+  /* Lo que saldría de presupuesto si se mirara lo ya gastado. Se calcula
+     siempre —es barato y puro— pero solo se enseña si hay con qué. */
+  const sug = A.presupuestoSugerido(D, periodo, 12);
+
   /* ---------- piezas de la lista ---------- */
 
   const encabezado = (titulo, accion, texto) => `
@@ -251,6 +255,53 @@ export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
               dinero(g.monto), Number(g.monto) ? '' : 'sin monto')))}
             ${total('Total del plan', totalGastos)}`
           : nada('Sin gastos registrados. Comida, servicios, transporte: lo que se va cada mes.')}
+
+          <!-- ==========================================================
+               EL PRESUPUESTO QUE SALE DE LO YA GASTADO
+
+               «presupuestoSugerido» existía desde el principio —usa mediana
+               en vez de promedio, para que un mes con una compra grande no
+               infle el resto, y separa lo recurrente de lo puntual— pero
+               solo alimentaba un indicador interno. Nunca se le ofreció a
+               nadie.
+
+               Y esa es la razón del arranque en frío que dejó al dueño sin
+               entender su propio resumen: sin presupuesto no hay contra qué
+               medir lo gastado, el pulso del mes queda en blanco, y la app
+               que existe para decir «cómo vamos» no puede decir nada.
+
+               Poner quince cifras a mano, inventadas, es justo lo que este
+               producto vino a evitar. Acá están, sacadas de lo que de
+               verdad se gastó.
+               ========================================================== -->
+          ${sug.hayDatos && sug.recurrentes.length ? `
+            <div class="sugerido">
+              <p class="sugerido__que">
+                <strong>Partí de lo que ya gastaste.</strong>
+                De ${esc(String(sug.periodos.length))} ${sug.periodos.length === 1 ? 'mes' : 'meses'}
+                con movimientos salen estos montos${sug.parcial ? ', y el último va a medias — así que son un piso, no un mes completo' : ''}.
+              </p>
+              <p class="sugerido__como">
+                Es la <strong>mediana</strong>, no el promedio: un mes con una compra
+                grande no debe arrastrar el presupuesto de todos los demás. Y lo que
+                apareció una sola vez queda fuera — fue un evento, no un costo del mes.
+              </p>
+              ${lista(sug.recurrentes.slice(0, 8).map(f => fila('gasto', f.gastoId,
+                esc(f.concepto),
+                `${esc(f.clase === 'fijo' ? 'casi todos los meses' : 'algunos meses')} · hoy ${esc(dinero(f.actual))}`,
+                dinero(f.sugerido), 'sugerido')))}
+              ${sug.recurrentes.length > 8
+                ? `<p class="sugerido__como">y ${esc(String(sug.recurrentes.length - 8))} rubros más.</p>` : ''}
+              <div class="acciones">
+                <button class="boton boton--principal" type="button" data-aplicar-sugerido>
+                  Usar estos montos${sug.recurrentes.length > 8 ? ` (${esc(String(sug.recurrentes.length))} rubros)` : ''}
+                </button>
+              </div>
+              <p class="sugerido__como">
+                Cambia solo el monto de cada rubro; no borra ni crea ninguno, y
+                después los podés ajustar uno por uno.
+              </p>
+            </div>` : ''}
         </section>
 
         <section class="panel">
@@ -394,6 +445,9 @@ export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
 
   const botonCopiar = $('[data-copiar]', contenedor);
   if (botonCopiar) botonCopiar.addEventListener('click', copiarDelMesAnterior);
+
+  const botonSugerido = $('[data-aplicar-sugerido]', contenedor);
+  if (botonSugerido) botonSugerido.addEventListener('click', aplicarSugerido);
 
   /* ---------- opciones de los selectores ---------- */
 
@@ -776,6 +830,50 @@ export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
    * hecho. La marca se va sola cuando alguien abre el pago y lo
    * guarda, porque abrirlo y guardarlo ES revisarlo.
    */
+  /**
+   * Pone en cada rubro el monto que sale de lo ya gastado.
+   *
+   * SOLO TOCA EL MONTO. No crea rubros, no borra ninguno y no mueve un solo
+   * movimiento: si algo sale mal, lo que se pierde es una cifra que se puede
+   * volver a escribir, no información.
+   *
+   * Y SOLO LOS RECURRENTES. Lo que apareció una vez fue un evento —una
+   * llanta, una consulta— y meterlo al presupuesto mensual haría creer que
+   * cada mes hay que apartar ese dinero. `presupuestoSugerido` ya los separa
+   * por presencia; acá solo se respeta esa decisión.
+   *
+   * No hay confirmación previa a propósito: el botón dice exactamente lo que
+   * va a pasar, los montos se ven antes de tocarlo, y cada uno se puede
+   * corregir después. Un diálogo de «¿está seguro?» sobre algo reversible
+   * solo enseña a la gente a decir que sí sin leer.
+   */
+  async function aplicarSugerido() {
+    const filas = (sug.recurrentes || []).filter(f => f.gastoId && f.sugerido > 0);
+    if (!filas.length) return avisar('No hay suficiente historial para sugerir montos.', 'mal');
+
+    botonSugerido.disabled = true;
+    const antes = botonSugerido.textContent;
+    botonSugerido.textContent = 'Aplicando…';
+    let cuantos = 0;
+    try {
+      for (const f of filas) {
+        const g = porId(gastos, f.gastoId);
+        if (!g) continue;                       // un rubro borrado desde otro aparato
+        await actualizar('gastos', g.id, { monto: f.sugerido });
+        cuantos++;
+      }
+    } catch (e) {
+      botonSugerido.disabled = false;
+      botonSugerido.textContent = antes;
+      /* Se dice CUÁNTOS entraron antes de fallar. «No se pudo» a secas deja
+         sin saber si hay que volver a empezar o solo terminar. */
+      return avisar(`${e.message || 'No se pudo aplicar.'}` +
+                    (cuantos ? ` Alcanzaron a quedar ${cuantos}.` : ''), 'mal');
+    }
+    avisar(`Listo: ${cuantos} rubro${cuantos === 1 ? '' : 's'} con su monto. Ajustá el que no cuadre.`);
+    recargar();
+  }
+
   async function copiarDelMesAnterior() {
     let cuantos = 0;
     try {

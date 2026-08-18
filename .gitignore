@@ -47,3 +47,7 @@ Captura*.png
 # Los crudos de Higgsfield y los cuadros de revisión. Lo que se publica es el
 # codificado en sitio/media/, no el master de 2 MB.
 /revision/
+
+# Estados de cuenta reales para las pruebas del lector de PDF. No se
+# publican: son datos del hogar del dueño.
+pruebas/muestras/

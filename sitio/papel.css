@@ -355,15 +355,66 @@
 .papel .sesion,
 .papel .tirador { flex: none; }
 
+/* ---------- LA CÁPSULA FLOTA, Y ENVUELVE TODO ----------
+
+   Antes era una barra a lo ancho con filete abajo, y la píldora envolvía
+   solo los enlaces. La referencia que trajo el dueño —agroporthonduras.com,
+   medida: radio 9999, `rgba(10,15,11,.8)`, `blur(40px)`, filete de
+   `rgba(255,255,255,.1)`— hace otra cosa: UNA sola cápsula flotante que
+   envuelve el logo, la navegación y las acciones, centrada y despegada del
+   borde. Comprobado además que NO cambia con el scroll: queda igual a
+   cualquier altura.
+
+   Se toma la ESTRUCTURA, que es composición y es mejor. No el material: su
+   vidrio oscuro translúcido es el vocabulario que esta hoja abandonó a
+   propósito —el vacío, el neón, el cristal dicen especulación—. Acá el
+   material es papel: superficie casi opaca con filete y la sombra única
+   del ADN.
+
+   PERO EL DESENFOQUE SE QUEDA, Y NO COMO ADORNO. La cápsula flota fija y el
+   contenido pasa POR DEBAJO. Un velo apenas translúcido deja ver que hay
+   algo detrás, que es información real sobre la profundidad de la página.
+   Opaca sería una tapa y el scroll perdería su pista. */
 .papel .cabecera {
   position: fixed;
-  inset-inline: 0;
-  top: 0;
-  z-index: 5;
-  background: color-mix(in srgb, var(--fondo) 88%, transparent);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--filete);
+  top: clamp(0.6rem, 1.6vh, 1rem);
+  left: 50%;
+  translate: -50% 0;
+  z-index: 20;
+  width: min(78rem, calc(100% - clamp(1.25rem, 5vw, 3rem)));
+  padding: 5px 5px 5px clamp(0.9rem, 2vw, 1.4rem);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--superficie) 86%, transparent);
+  border: 1px solid var(--filete);
+  box-shadow: var(--sombra);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
+
+/* La cápsula tapa el arranque del contenido, así que la página se corre.
+   Va con una propiedad y no con números sueltos: la usan `main`, la portada
+   y el `scroll-margin` de los anclajes, y tres números escritos a mano se
+   desincronizan al primer ajuste.
+
+   5.5rem = 88px, y está MEDIDO, no elegido: la cápsula mide entre 56 y 66px
+   de alto según el ancho, más su separación del borde de 10 a 16px. El peor
+   caso da 80px; 88 deja 8 de aire. Un `clamp` con `vh` no servía —lo probé y
+   fallaba a 768 de alto— porque la altura de la cápsula depende de su
+   contenido, no de la ventana. */
+.papel { --alto-capsula: 5.5rem; }
+.papel main { padding-top: var(--alto-capsula); }
+.papel :target { scroll-margin-top: calc(var(--alto-capsula) + 1rem); }
+
+/* Y las secciones que ya traían su propio relleno de arranque lo bajan, o
+   el hueco se cuenta dos veces. La portada tenía 7rem para despegar del
+   borde de la ventana; ahora despega de la cápsula. */
+.papel .portada:has(.portada__dicho) {
+  min-height: calc(100svh - var(--alto-capsula));
+  padding-block: clamp(1.5rem, 5vh, 3.5rem) 0;
+}
+.papel .portada:not(:has(.portada__dicho)) { padding-block: clamp(2rem, 7vh, 4.5rem) clamp(2rem, 6vh, 4rem); }
+.papel .acceso { padding-block: clamp(1.5rem, 6vh, 3.5rem); }
+.papel .legal { padding-block: clamp(2rem, 7vh, 4.5rem); }
 
 .papel .cabecera .marca,
 .papel .cabecera .marca span { color: var(--tinta); }
@@ -2341,18 +2392,17 @@
    ========================================================================== */
 
 @media (min-width: 57.0625rem) {
+  /* EL MENÚ NO LLEVA CÁPSULA PROPIA, y esto se corrigió mirándolo. Tenía
+     fondo, filete y sombra, igual que la cabecera — o sea una cápsula
+     dentro de otra, con dos contornos concéntricos a 5px uno del otro. Se
+     lee como un error de render, no como jerarquía.
+
+     La referencia hace lo correcto: los enlaces van sueltos dentro de la
+     única cápsula, y lo único que se rellena es la sección donde uno está. */
   .papel .cabecera .menu {
     display: inline-flex;
     align-items: center;
     gap: 2px;
-    padding: 5px;
-    border-radius: 999px;
-    background: var(--superficie);
-    border: 1px solid var(--filete);
-    /* La sombra única del ADN. Acá gana su lugar: la cápsula es lo único de
-       la cabecera que está POR ENCIMA del papel, y es lo que la separa de
-       una fila de enlaces sueltos. */
-    box-shadow: var(--sombra);
   }
 
   .papel .cabecera .menu a:not(.boton) {

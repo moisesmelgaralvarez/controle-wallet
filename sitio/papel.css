@@ -2636,21 +2636,11 @@
     border-top: 1px solid var(--borde);
     border-left: 0;
   }
-  .papel .cabecera--con-tirador .menu .sesion a:not(.boton) {
-    padding-block: 0.85rem;
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    font-size: 1rem;
-    border-bottom: 1px solid var(--borde);
-  }
-  /* «Crear cuenta» sigue siendo el botón lleno, ahora a todo el ancho del
-     panel: es la acción principal y en un desplegable el ancho es la única
-     jerarquía que queda. */
-  .papel .cabecera--con-tirador .menu .sesion .boton {
-    width: 100%;
-    margin-top: 0.5rem;
-  }
+  /* El vestido de estas dos vive al final de la hoja, donde se decidió que
+     fueran píldoras en un renglón. Acá quedaban las reglas del diseño
+     anterior —«Entrar» como renglón de lista, «Crear cuenta» a todo el
+     ancho— y le ganaban por especificidad a las nuevas: una salía de 55 px
+     de alto y la otra de 44, en la misma fila. */
 }
 
 /* ==========================================================================
@@ -2739,3 +2729,77 @@
 /* Y el instrumento respira arriba, que además es lo que lo separa como
    pieza distinta y no como continuación de los botones. */
 .papel .desfase { margin-top: clamp(1rem, 3vh, 2rem); }
+
+/* ==========================================================================
+   EL DESPLEGABLE ES UNA TARJETA, Y LOS DOS ACCESOS VAN EN UN RENGLÓN
+
+   Dos defectos que se veían juntos y tenían causas distintas.
+
+   EL RECUADRO. El panel nació cuando la cabecera era una barra pegada al
+   borde: colgaba `inset-inline: 0` con un filete abajo y sin radio, y eso
+   estaba bien porque continuaba una barra que también llegaba a los bordes.
+   La cabecera es hoy una cápsula flotante, y el panel se quedó con la forma
+   de la barra que ya no existe: una franja cuadrada colgando de una píldora.
+   Ahora es lo que debe ser — una tarjeta con el mismo radio, el mismo filete
+   y la misma sombra que la cápsula, separada por medio espacio para que se
+   lean como dos piezas y no como una a la que le falta un pedazo.
+
+   LOS DOS ACCESOS. «Entrar» caía como un renglón más de la lista y «Crear
+   cuenta» como un botón a todo el ancho debajo: dos tratamientos distintos
+   para dos acciones que son la misma cosa —entrar al servicio— y que en la
+   cápsula ya viven una al lado de la otra. Adentro del panel van igual: dos
+   píldoras en un renglón, con los mismos tokens de control que el resto.
+   La jerarquía la sigue dando el relleno, no el ancho.
+   ========================================================================== */
+
+@media (max-width: 72rem) {
+  .papel .cabecera--con-tirador .menu {
+    margin-top: 0.5rem;
+    padding: 0.35rem 0.75rem 0.5rem;
+    background: var(--superficie);
+    border: 1px solid var(--filete);
+    border-radius: var(--radio);
+    box-shadow: var(--sombra);
+  }
+
+  /* El último separador sobraba: el borde de la tarjeta ya cierra la lista,
+     y dos líneas paralelas a 8 px una de otra se leen como un error. */
+  .papel .cabecera--con-tirador .menu > a:last-of-type { border-bottom: 0; }
+}
+
+@media (max-width: 40rem) {
+  .papel .cabecera--con-tirador .menu .sesion {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    padding-top: 0.65rem;
+    margin-top: 0.15rem;
+    border-top: 1px solid var(--filete);
+  }
+
+  /* Los dos, píldoras del sistema. `> a` y no `a` a secas: el selector de
+     lista de arriba alcanza a cualquier enlace del panel, incluidos estos,
+     y les ponía 44 px de alto y un filete abajo que acá no van. */
+  .papel .cabecera--con-tirador .menu .sesion > a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--control-alto);
+    padding: 0 var(--control-aire);
+    border-radius: var(--control-radio);
+    font-size: var(--control-letra);
+    font-weight: var(--control-peso);
+    letter-spacing: var(--ls-cuerpo);
+    white-space: nowrap;
+    border-bottom: 0;
+    margin: 0;
+    width: auto;
+  }
+
+  /* «Entrar» es la acción secundaria: el mismo cuerpo, marcado con filete.
+     Es la pareja de «Crear cuenta», no un renglón de la lista. */
+  .papel .cabecera--con-tirador .menu .sesion > a:not(.boton) {
+    border: 1px solid var(--borde-fuerte);
+    color: var(--tinta);
+  }
+}

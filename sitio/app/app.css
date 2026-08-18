@@ -1552,3 +1552,63 @@ body[data-mes-pasado="si"] .mes-nav .tope__mes {
      entera a lo ancho. Salen de acá y de ningún otro lado. */
   .tope .mes-nav #mesHoy { padding-inline: 0.35rem; }
 }
+
+/* ==========================================================================
+   LO GASTADO POR RUBRO
+
+   La respuesta a «¿dónde está lo que llevo gastado respecto al presupuesto?».
+   Un renglón por rubro, la cifra gastada a la derecha y debajo la vía que
+   dice cuánto de lo presupuestado se lleva consumido.
+
+   LA VÍA SE LLENA HASTA EL 100 % Y NO MÁS, aunque se hayan gastado el 137 %.
+   Una barra que se sale de su carril no comunica «me pasé», comunica que la
+   pantalla está rota. El exceso lo dice la cifra de abajo, con su color.
+   ========================================================================== */
+
+.rubro-real { padding: 0.75rem 0; border-bottom: 1px solid var(--borde); }
+.rubro-real:last-of-type { border-bottom: 0; }
+
+.rubro-real__f {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: var(--e2);
+}
+.rubro-real__f em { font-style: normal; }
+.rubro-real__f .cifra { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.rubro-real__pie {
+  margin-top: 0.15rem;
+  font-size: var(--t-xs); color: var(--tenue);
+}
+.rubro-real__pie span { font-variant-numeric: tabular-nums; }
+
+/* La vía. Dos píxeles de alto: es un dato de apoyo, no el protagonista —
+   el protagonista es la cifra. */
+.rubro-real__via {
+  margin: 0.4rem 0 0.15rem;
+  height: 4px; border-radius: 99px;
+  background: var(--elevado);
+  overflow: hidden;
+}
+.rubro-real__via i {
+  display: block; height: 100%;
+  background: var(--acento);
+  border-radius: 99px;
+}
+.rubro-real__via i.mal { background: var(--alerta); }
+
+/* El total se separa del resto con un filete más marcado y algo más de
+   cuerpo: es la línea que se lee primero cuando se baja la vista. */
+.rubro-real--total {
+  border-top: 1px solid var(--borde-fuerte);
+  border-bottom: 0;
+  margin-top: 0.35rem;
+  padding-top: 0.85rem;
+}
+.rubro-real--total .rubro-real__f .cifra { font-size: 1.125rem; }
+
+/* En escritorio el panel puede ocupar las dos columnas: una lista de quince
+   rubros en media pantalla obliga a hacer scroll para ver dónde se va la
+   plata, que es justo lo que este panel viene a evitar. */
+@media (min-width: 900px) {
+  .panel--ancho { grid-column: 1 / -1; }
+}

@@ -1754,3 +1754,58 @@ probar('con el saldo declarado por el banco ya no hay nada que denunciar', () =>
   return { ok: cerca(t.deuda, 20741.20) && t.pagadoDeMas === 0,
            det: `deuda ${t.deuda} · pagado de más ${t.pagadoDeMas}` };
 });
+
+/* ============================================================
+   LO GASTADO CONTRA LO PRESUPUESTADO
+
+   El Resumen enseñaba `gastosMes` —que recorre los rubros con el monto
+   PLANEADO y no mira un solo movimiento— bajo el rótulo «Gastos del
+   mes». Con 145 movimientos y L 82,935.61 encima decía L 0.00, porque
+   ningún rubro tenía monto todavía. Y «Disponible real» devolvía el
+   ingreso íntegro: la cifra más peligrosa que puede enseñar una app de
+   dinero, porque invita a gastar lo que ya se gastó.
+   ============================================================ */
+
+grupo('Lo gastado por rubro');
+
+const conGasto = () => ({
+  gastos: [
+    { id: 'v', concepto: 'Vehículo',     categoria: 'Transporte',   monto: 8000 },
+    { id: 'c', concepto: 'Comida fuera', categoria: 'Alimentación', monto: 3000 },
+    { id: 's', concepto: 'Seguros',      categoria: 'Servicios',    monto: 0 }
+  ],
+  movimientos: [
+    { id: '1', fecha: '2026-08-15', periodo: '2026-08', monto: 10958,   gastoId: 'v' },
+    { id: '2', fecha: '2026-08-10', periodo: '2026-08', monto: 4533.52, gastoId: 'c' },
+    { id: '3', fecha: '2026-08-08', periodo: '2026-08', monto: 619,     gastoId: null },
+    { id: '4', fecha: '2026-07-15', periodo: '2026-07', monto: 99999,   gastoId: 'v' }
+  ]
+});
+
+probar('el rubro que se pasó lo dice con el signo, no con un rótulo', () => {
+  const r = A.realPorRubro(conGasto(), '2026-08');
+  const v = r.filas.find(f => f.id === 'v');
+  return { ok: cerca(v.gastado, 10958) && cerca(v.diferencia, -2958) && v.consumido > 1,
+           det: `gastado ${v.gastado} · diferencia ${v.diferencia}` };
+});
+
+probar('otro mes no se cuela en el total', () => {
+  const r = A.realPorRubro(conGasto(), '2026-08');
+  return { ok: cerca(r.gastado, 16110.52),
+           det: `total ${r.gastado} — los 99,999 de julio quedan fuera` };
+});
+
+probar('lo que no se pudo clasificar cuenta en el total y se declara aparte', () => {
+  const r = A.realPorRubro(conGasto(), '2026-08');
+  const suma = r.filas.reduce((s, f) => s + f.gastado, 0);
+  return { ok: cerca(r.sinClasificar, 619) && r.movimientosSinClasificar === 1 &&
+               cerca(r.gastado, suma + r.sinClasificar),
+           det: `sin clasificar ${r.sinClasificar} · total ${r.gastado} = partes ${suma} + ${r.sinClasificar}` };
+});
+
+probar('un rubro sin presupuesto no inventa un porcentaje', () => {
+  const r = A.realPorRubro(conGasto(), '2026-08');
+  const s = r.filas.find(f => f.id === 's');
+  return { ok: s.consumido === null,
+           det: `dividir entre cero daría Infinity y la barra se dibujaría hasta el infinito` };
+});

@@ -688,4 +688,72 @@ function conciliaciones(D, per) {
 }
 
 
-export { montosDeMes, mesCongelado, mesCerrado, fotoDelPlan, gastosMes, cierreDeMes, cicloDe, cicloTarjeta, efectivo, saldoCuenta, saldosCuentas, pagoPendiente, deudaTarjeta, deudaTarjetas, cent, esCredito, estadoTarjeta, estadoTarjetas, efectivoHasta, saldosCierre, aperturaDe, movimientoCuenta, TOLERANCIA, conciliaciones };
+/* ============================================================
+   LO GASTADO CONTRA LO PRESUPUESTADO, RUBRO POR RUBRO
+
+   La pieza que faltaba, y que explica la queja más dura que recibió este
+   producto: «no entiendo el resumen, no sé con cuánto contamos, si
+   estamos en rojo o en verde».
+
+   `gastosMes` recorre `D.gastos` —los rubros con el monto que se PLANEÓ—
+   y no mira `D.movimientos` ni una vez. Es correcto para proyectar: sirve
+   para decir «así va a ser septiembre». Pero el Resumen lo estaba
+   enseñando bajo el rótulo «Gastos del mes», y con 145 movimientos y
+   L 82,935.61 encima decía L 0.00, porque ningún rubro tenía monto.
+
+   Un presupuesto sin lo real es una lista de deseos. Esto los junta.
+   ============================================================ */
+
+/**
+ * Por cada rubro: cuánto se presupuestó, cuánto se lleva gastado de verdad
+ * y qué diferencia hay. Más una fila para lo que no se pudo clasificar,
+ * que cuenta en el total pero contra ningún rubro — y hay que decirlo, o
+ * el total no cuadra con la suma de las partes y nadie sabe por qué.
+ */
+function realPorRubro(D, per) {
+  const plan = gastosMes(D, 0, per).detalle;
+  const porRubro = new Map(plan.map(g => [g.id, {
+    id: g.id, concepto: g.concepto, categoria: g.categoria,
+    presupuestado: g.monto, gastado: 0, movimientos: 0
+  }]));
+
+  let sinClasificar = 0, nSinClasificar = 0;
+  for (const m of (D.movimientos || [])) {
+    if (perDe(m) !== per) continue;
+    const f = m.gastoId && porRubro.get(m.gastoId);
+    if (!f) { sinClasificar += num(m.monto); nSinClasificar++; continue; }
+    f.gastado += num(m.monto);
+    f.movimientos++;
+  }
+
+  const filas = [...porRubro.values()].map(f => ({
+    ...f,
+    gastado: cent(f.gastado),
+    /* Positivo = queda margen. Negativo = se pasaron. Se guarda con signo
+       porque el signo ES el mensaje; poner el valor absoluto y un rótulo
+       aparte obliga a leer dos cosas para entender una. */
+    diferencia: cent(f.presupuestado - f.gastado),
+    /* Sin presupuesto no hay porcentaje que valga: dividir entre cero da
+       Infinity y la barra se dibuja hasta el infinito. Es `null`, y la
+       pantalla dice «sin presupuesto» en vez de inventar un número. */
+    consumido: f.presupuestado > 0 ? f.gastado / f.presupuestado : null
+  })).sort((a, b) => b.gastado - a.gastado);
+
+  const presupuestado = cent(filas.reduce((s, f) => s + f.presupuestado, 0));
+  const gastado = cent(filas.reduce((s, f) => s + f.gastado, 0) + sinClasificar);
+
+  return {
+    filas,
+    sinClasificar: cent(sinClasificar),
+    movimientosSinClasificar: nSinClasificar,
+    presupuestado,
+    gastado,
+    diferencia: cent(presupuestado - gastado),
+    /* Sin un solo rubro con monto no hay con qué comparar, y decirlo es
+       más útil que enseñar una tabla de ceros. */
+    hayPresupuesto: presupuestado > 0,
+    hayGasto: gastado > 0
+  };
+}
+
+export { montosDeMes, mesCongelado, mesCerrado, fotoDelPlan, gastosMes, cierreDeMes, cicloDe, cicloTarjeta, efectivo, saldoCuenta, saldosCuentas, pagoPendiente, deudaTarjeta, deudaTarjetas, cent, esCredito, estadoTarjeta, estadoTarjetas, efectivoHasta, saldosCierre, aperturaDe, movimientoCuenta, TOLERANCIA, conciliaciones, realPorRubro };

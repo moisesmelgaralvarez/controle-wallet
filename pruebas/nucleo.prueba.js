@@ -1716,3 +1716,41 @@ probar('Rellenar NO es confirmar', () => {
 });
 
 /* ============ salida ============ */
+
+/* ============================================================
+   UN PAGO MAYOR A LA DEUDA CONOCIDA SE REPORTA, NO SE REDONDEA
+
+   Se encontró con datos reales: un hogar había pagado L 44,920.58 a una
+   tarjeta cuyo saldo inicial era 0 y sin un solo consumo registrado. El
+   `Math.max(0, …)` de la deuda lo redondeaba a cero y la pantalla decía
+   «Sobra L 33,675.40» sobre una tarjeta recién pagada.
+
+   Que alguien pague más de lo que la app cree que debe es la señal más
+   fuerte de que a esa tarjeta le falta su saldo. Borrarla es borrar el
+   único dato que lo dice.
+   ============================================================ */
+
+grupo('Un pago mayor a la deuda conocida');
+
+probar('lo que se pagó de más sobrevive al redondeo', () => {
+  const D = {
+    tarjetas: [{ id: 'T', nombre: 'Walmart', tipo: 'credito', diaCorte: 6, saldoInicial: 0 }],
+    movimientos: [],
+    pagosTarjeta: [{ id: 'p1', tarjetaId: 'T', fecha: '2026-08-06', periodo: '2026-08', monto: 44920.58 }]
+  };
+  const [t] = A.deudaTarjetas(D, '2026-08');
+  return { ok: t.deuda === 0 && cerca(t.pagadoDeMas, 44920.58),
+           det: `deuda ${t.deuda} · pagado de más ${t.pagadoDeMas}` };
+});
+
+probar('con el saldo declarado por el banco ya no hay nada que denunciar', () => {
+  const D = {
+    tarjetas: [{ id: 'T', nombre: 'Walmart', tipo: 'credito', diaCorte: 6, saldoInicial: 0,
+                 saldoBanco: { monto: 20741.20, fecha: '2026-08-18' } }],
+    movimientos: [],
+    pagosTarjeta: [{ id: 'p1', tarjetaId: 'T', fecha: '2026-08-06', periodo: '2026-08', monto: 44920.58 }]
+  };
+  const [t] = A.deudaTarjetas(D, '2026-08');
+  return { ok: cerca(t.deuda, 20741.20) && t.pagadoDeMas === 0,
+           det: `deuda ${t.deuda} · pagado de más ${t.pagadoDeMas}` };
+});

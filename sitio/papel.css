@@ -2322,3 +2322,62 @@
   background: var(--borde-fuerte);
 }
 .papel .legal strong { color: var(--tinta); font-weight: 500; }
+
+/* ==========================================================================
+   LA CÁPSULA — la navegación como una píldora flotante
+
+   Pedida con una referencia de otro proyecto: la navegación entera es una
+   cápsula y la sección activa es otra píldora rellena adentro.
+
+   DE LA REFERENCIA SE TOMA LA FORMA, NO EL COLOR. Ahí la píldora activa es
+   oro sobre un mundo de vidrio oscuro; acá va en `--acento`, el verde hondo
+   de esta marca. Es la regla que ya tenía escrita el proyecto, y es lo que
+   evita que el sitio termine pareciéndose a otro.
+
+   POR QUÉ FUNCIONA ACÁ Y NO EN LA APP. Una cápsula se lee como control
+   mientras tenga pocas entradas: el sitio tiene cuatro. La app tiene NUEVE
+   destinos, y meterlos en una píldora sería el mismo error que tenía la
+   barra del teléfono. Ahí la navegación es el riel.
+   ========================================================================== */
+
+@media (min-width: 57.0625rem) {
+  .papel .cabecera .menu {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 5px;
+    border-radius: 999px;
+    background: var(--superficie);
+    border: 1px solid var(--filete);
+    /* La sombra única del ADN. Acá gana su lugar: la cápsula es lo único de
+       la cabecera que está POR ENCIMA del papel, y es lo que la separa de
+       una fila de enlaces sueltos. */
+    box-shadow: var(--sombra);
+  }
+
+  .papel .cabecera .menu a:not(.boton) {
+    padding: 0.55rem 1.15rem;
+    border-radius: 999px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--tenue);
+    white-space: nowrap;
+    /* Propiedades exactas y no `all`: `all` vigila decenas de propiedades
+       para animar dos, y arrastra cualquiera que se agregue después. */
+    transition: color 160ms var(--curva), background-color 160ms var(--curva);
+  }
+
+  /* La sección donde uno está. Es el único relleno de acento de la cabecera,
+     así que no compite con «Crear cuenta»: ese es una acción, esto es una
+     posición. */
+  .papel .cabecera .menu a[aria-current="page"]:not(.boton) {
+    background: var(--acento);
+    color: var(--acento-ct);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 57.0625rem) {
+  .papel .cabecera .menu a:not(.boton):hover { color: var(--tinta); }
+  .papel .cabecera .menu a[aria-current="page"]:not(.boton):hover { color: var(--acento-ct); }
+}

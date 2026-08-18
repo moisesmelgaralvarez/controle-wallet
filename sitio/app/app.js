@@ -82,10 +82,40 @@ function marcarNavegacion() {
 
 /* ---------- estado visible ---------- */
 
-const TEXTOS = { cargando: 'Cargando…', ok: 'Al día', error: 'No se pudo cargar', 'sin-red': 'Sin conexión' };
+/* «AL DÍA» NO SE ENTENDÍA, Y ESO ERA UN DEFECTO DE DISEÑO, NO DEL LECTOR.
+   El dueño preguntó para qué servía este indicador. Su propósito es real
+   —y `app.css` lo justifica: cuando los datos vienen de la red, no decir
+   en qué estado se está es dejar que la gente confíe en una pantalla
+   vieja— pero «Al día» solo no dice AL DÍA CON QUÉ.
+
+   Ahora cada estado dice de qué habla, y el `title` explica la
+   consecuencia: no basta con nombrar el estado si nadie sabe qué hacer
+   con él. */
+const TEXTOS = {
+  cargando:  'Consultando…',
+  ok:        'Datos al día',
+  error:     'No se pudo cargar',
+  'sin-red': 'Sin conexión',
+};
+
+const PORQUES = {
+  cargando:  'Pidiéndole al servidor lo último de este hogar.',
+  ok:        'Lo que ves es lo que hay en el servidor ahora mismo, incluido lo que haya registrado la otra persona del hogar.',
+  error:     'No se pudo traer lo último. Lo que ves puede estar viejo.',
+  'sin-red': 'Sin internet no se puede registrar nada. Lo que ves es de la última vez que sí hubo.',
+};
 
 function marcar(estado) {
-  for (const id of ['#estado', '#estado2']) { const e = $(id); if (e) e.dataset.estado = estado; }
+  for (const id of ['#estado', '#estado2']) {
+    const e = $(id);
+    if (!e) continue;
+    e.dataset.estado = estado;
+    /* El porqué va en `title` y en `aria-label`: quien pasa el mouse lo
+       lee, y quien usa lector de pantalla también. Sin el segundo, la
+       explicación existiría solo para quien puede apuntar. */
+    e.title = PORQUES[estado] || '';
+    e.setAttribute('aria-label', `${TEXTOS[estado] || estado}. ${PORQUES[estado] || ''}`.trim());
+  }
   for (const id of ['#estadoTexto', '#estadoTexto2']) { const e = $(id); if (e) e.textContent = TEXTOS[estado] || estado; }
   const sl = $('#soloLectura');
   if (sl) sl.hidden = estado !== 'sin-red';

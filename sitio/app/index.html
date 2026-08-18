@@ -16,48 +16,76 @@
   <!-- El MISMO juego de destinos en los dos sitios: riel en pantalla
        grande, barra de pestañas en teléfono. Un solo lugar donde
        cambiar cuando se agregue una vista. -->
-  <aside class="riel-app app__riel">
+  <aside class="riel-app app__riel" id="rielApp">
+    <!-- El pliegue. Va DENTRO del riel y no en la cabecera porque lo que
+         pliega es el riel: un control lejos de lo que controla obliga a
+         aprender dónde está.
+
+         `aria-expanded` y no una clase: es lo que un lector de pantalla
+         entiende sin que nadie se lo explique. -->
+    <button class="riel-app__pliegue" type="button" data-pliegue
+            aria-expanded="true" aria-controls="rielApp"
+            title="Plegar el menú">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 5.5v13"/><path d="M20 12H9"/><path d="M13 8l-4 4 4 4"/>
+      </svg>
+      <span class="nav__voz">Plegar el menú</span>
+    </button>
+
     <a class="riel-app__marca" href="/app/">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg>
       <span>Controle Wallet</span>
     </a>
     <a class="nav" href="#/resumen" data-ruta="resumen" aria-current="page">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg>
-      Resumen
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg><span class="nav__voz">Resumen</span>
     </a>
     <a class="nav" href="#/movimientos" data-ruta="movimientos">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13M4 8l3.4-3.4M4 8l3.4 3.4M20 16H7M20 16l-3.4-3.4M20 16l-3.4 3.4"/></svg>
-      Movimientos
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13M4 8l3.4-3.4M4 8l3.4 3.4M20 16H7M20 16l-3.4-3.4M20 16l-3.4 3.4"/></svg><span class="nav__voz">Movimientos</span>
     </a>
     <a class="nav" href="#/presupuesto" data-ruta="presupuesto">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h9M17 7.5h3M4 16.5h3M11 16.5h9"/><circle cx="15" cy="7.5" r="2.2"/><circle cx="9" cy="16.5" r="2.2"/></svg>
-      Presupuesto
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h9M17 7.5h3M4 16.5h3M11 16.5h9"/><circle cx="15" cy="7.5" r="2.2"/><circle cx="9" cy="16.5" r="2.2"/></svg><span class="nav__voz">Presupuesto</span>
     </a>
     <a class="nav" href="#/proyectos" data-ruta="proyectos">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5V9M12 9l-4.5-4.5M12 9l4.5-4.5"/><circle cx="12" cy="20.5" r="1.6"/><path d="M4.5 12.5a7.5 7.5 0 0 0 15 0"/></svg>
-      Proyectos
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5V9M12 9l-4.5-4.5M12 9l4.5-4.5"/><circle cx="12" cy="20.5" r="1.6"/><path d="M4.5 12.5a7.5 7.5 0 0 0 15 0"/></svg><span class="nav__voz">Proyectos</span>
     </a>
     <a class="nav" href="#/historia" data-ruta="historia">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5h16"/><path d="M6.5 19.5v-6M11 19.5V8M15.5 19.5v-9M20 19.5V5"/></svg>
-      Historia
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5h16"/><path d="M6.5 19.5v-6M11 19.5V8M15.5 19.5v-9M20 19.5V5"/></svg><span class="nav__voz">Historia</span>
     </a>
     <a class="nav" href="#/cierre" data-ruta="cierre">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/><path d="M9.8 15.2l1.7 1.7 3-3.2"/></svg>
-      Cierre
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/><path d="M9.8 15.2l1.7 1.7 3-3.2"/></svg><span class="nav__voz">Cierre</span>
     </a>
     <a class="nav" href="#/importar" data-ruta="importar">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11M12 14l-4-4M12 14l4-4"/><path d="M4 17v2.5a1.5 1.5 0 0 0 1.5 1.5h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg>
-      Importar
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11M12 14l-4-4M12 14l4-4"/><path d="M4 17v2.5a1.5 1.5 0 0 0 1.5 1.5h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg><span class="nav__voz">Importar</span>
     </a>
     <a class="nav" href="#/informe" data-ruta="informe">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4"/><path d="M9 12h6M9 15.5h6M9 8.5h2"/></svg>
-      Informe
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4"/><path d="M9 12h6M9 15.5h6M9 8.5h2"/></svg><span class="nav__voz">Informe</span>
     </a>
     <a class="nav" href="#/cuenta" data-ruta="cuenta">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg>
-      Tu cuenta
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg><span class="nav__voz">Tu cuenta</span>
     </a>
     <div class="riel-app__pie">
+      <!-- Día y noche. Tres estados y no dos: «sistema» es el que respeta lo
+           que la persona YA eligió en su aparato, y es distinto de elegir
+           claro a mano. Un interruptor de dos posiciones obliga a decidir a
+           quien no quería decidir nada.
+
+           Nace con `hidden` y lo enciende `tema.js`: sin JavaScript no hay
+           quien lo aplique, y un control que no hace nada es peor que
+           ninguno. -->
+      <button class="tema" type="button" id="tema" data-interruptor hidden
+              aria-label="Cambiar entre claro y oscuro">
+        <span class="tema__cara" data-cara="sistema" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/><path d="M12 7.8a4.2 4.2 0 0 0 0 8.4z" fill="currentColor" stroke="none"/></svg>
+        </span>
+        <span class="tema__cara" data-cara="claro" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/></svg>
+        </span>
+        <span class="tema__cara" data-cara="oscuro" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
+        </span>
+        <span class="nav__voz" data-tema-voz>Automático</span>
+      </button>
+
       <span class="estado" id="estado" data-estado="cargando">
         <span class="estado__punto" aria-hidden="true"></span>
         <span id="estadoTexto">Cargando…</span>
@@ -99,35 +127,74 @@
     </main>
   </div>
 
+  <!-- ── la barra del teléfono ──────────────────────────────────
+       CUATRO FIJAS Y UNA PUERTA, Y NO SEIS SUELTAS.
+
+       Tenía seis entradas para NUEVE destinos. Importar, Informe y Tu
+       cuenta simplemente no estaban en el marcado: desde un teléfono no
+       se llegaba a ellos por ningún camino. Y «Tu cuenta» es donde se
+       exportan y se borran los datos, que `privacidad.html` promete poder
+       hacer «cuando querás». No era una falta de estilo: era una promesa
+       rota.
+
+       Por qué una hoja abajo y no un desplegable arriba, que fue lo
+       primero que se pidió: en un teléfono la navegación se toca con el
+       pulgar, y el pulgar llega abajo. Un menú arriba aleja de la mano lo
+       que más se usa y esconde detrás de un toque lo que hoy se ve.
+
+       Cuatro fijas —las de todos los días— y una puerta con el resto. -->
   <nav class="barra-app app__barra" aria-label="Secciones">
-    <a href="#/resumen" data-ruta="resumen" aria-current="page">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg>
-      Resumen
+    <a href="#/resumen" data-ruta="resumen">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg><span class="nav__voz">Resumen</span>
     </a>
     <a href="#/movimientos" data-ruta="movimientos">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13M4 8l3.4-3.4M4 8l3.4 3.4M20 16H7M20 16l-3.4-3.4M20 16l-3.4 3.4"/></svg>
-      Movimientos
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13M4 8l3.4-3.4M4 8l3.4 3.4M20 16H7M20 16l-3.4-3.4M20 16l-3.4 3.4"/></svg><span class="nav__voz">Movimientos</span>
     </a>
     <a href="#/presupuesto" data-ruta="presupuesto">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h9M17 7.5h3M4 16.5h3M11 16.5h9"/><circle cx="15" cy="7.5" r="2.2"/><circle cx="9" cy="16.5" r="2.2"/></svg>
-      Presupuesto
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h9M17 7.5h3M4 16.5h3M11 16.5h9"/><circle cx="15" cy="7.5" r="2.2"/><circle cx="9" cy="16.5" r="2.2"/></svg><span class="nav__voz">Presupuesto</span>
     </a>
     <a href="#/proyectos" data-ruta="proyectos">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5V9M12 9l-4.5-4.5M12 9l4.5-4.5"/><circle cx="12" cy="20.5" r="1.6"/><path d="M4.5 12.5a7.5 7.5 0 0 0 15 0"/></svg>
-      Proyectos
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5V9M12 9l-4.5-4.5M12 9l4.5-4.5"/><circle cx="12" cy="20.5" r="1.6"/><path d="M4.5 12.5a7.5 7.5 0 0 0 15 0"/></svg><span class="nav__voz">Proyectos</span>
     </a>
-    <a href="#/historia" data-ruta="historia">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5h16"/><path d="M6.5 19.5v-6M11 19.5V8M15.5 19.5v-9M20 19.5V5"/></svg>
-      Historia
-    </a>
-    <a href="#/cierre" data-ruta="cierre">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/><path d="M9.8 15.2l1.7 1.7 3-3.2"/></svg>
-      Cierre
-    </a>
+    <button class="barra-app__mas" type="button" data-mas hidden
+            aria-expanded="false" aria-controls="hojaMas">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg><span class="nav__voz">Más</span>
+    </button>
   </nav>
+
+  <!-- Lo que no cabe en la barra, y no por eso menos alcanzable.
+
+       `hidden` de entrada: sin JavaScript no hay quien la abra, y una hoja
+       desplegada de golpe sobre el contenido sería peor que no tenerla.
+       Quien navegue sin JS tiene los nueve enlaces en el riel, que en
+       teléfono se muestra al final del documento. -->
+  <div class="hoja-mas" id="hojaMas" data-hoja-mas hidden>
+    <div class="hoja-mas__fondo" data-cerrar-mas></div>
+    <div class="hoja-mas__panel" role="dialog" aria-modal="true" aria-label="Más secciones">
+      <p class="hoja-mas__titulo">Más</p>
+      <a class="hoja-mas__ir" href="#/historia" data-ruta="historia">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5h16"/><path d="M6.5 19.5v-6M11 19.5V8M15.5 19.5v-9M20 19.5V5"/></svg><span class="nav__voz">Historia</span>
+    </a>
+      <a class="hoja-mas__ir" href="#/cierre" data-ruta="cierre">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/><path d="M9.8 15.2l1.7 1.7 3-3.2"/></svg><span class="nav__voz">Cierre</span>
+    </a>
+      <a class="hoja-mas__ir" href="#/importar" data-ruta="importar">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11M12 14l-4-4M12 14l4-4"/><path d="M4 17v2.5a1.5 1.5 0 0 0 1.5 1.5h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg><span class="nav__voz">Importar</span>
+    </a>
+      <a class="hoja-mas__ir" href="#/informe" data-ruta="informe">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4"/><path d="M9 12h6M9 15.5h6M9 8.5h2"/></svg><span class="nav__voz">Informe</span>
+    </a>
+      <a class="hoja-mas__ir" href="#/cuenta" data-ruta="cuenta">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg><span class="nav__voz">Tu cuenta</span>
+    </a>
+    </div>
+  </div>
 
 </div>
 
 <script type="module" src="/app/app.js"></script>
+<script type="module" src="/app/riel.js"></script>
+<script type="module" src="/app/mas.js"></script>
+<script type="module" src="/app/tema.js"></script>
 </body>
 </html>

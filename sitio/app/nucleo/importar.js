@@ -396,33 +396,54 @@ async function renglonesPdf(buffer) {
 function coserDescripcionesPartidas(renglones) {
   const FECHA = /\d{1,2}\/\d{1,2}\/\d{2,4}|\d{4}-\d{2}-\d{2}/;
   const MONTO = /-?[\d,]+\.\d{2}/;
-  /* Lo que queda de un renglón al quitarle fecha, montos, moneda y signos.
-     Si no sobra ni una letra, es un movimiento sin descripción. */
-  const palabras = t => t.replace(FECHA, ' ').replace(/-?[\d,]+\.\d{2}/g, ' ')
-                         .replace(/\b(LPS|USD|HNL)\b/gi, ' ')
-                         .replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ]/g, '').trim();
-  const esMovimiento = t => FECHA.test(t) && MONTO.test(t);
-  const esSoloTexto  = t => !FECHA.test(t) && !MONTO.test(t) && palabras(t).length >= 3;
+
+  /* CADA RENGLÓN ES UN ARREGLO DE CELDAS, no una cadena, y confundir las dos
+     cosas rompió la importación de PDF en producción con «t.replace is not a
+     function». `unirFragmentos` devuelve las columnas por separado a
+     propósito: los adaptadores las necesitan así para saber cuál es la fecha
+     y cuál el monto. */
+  const texto = r => (Array.isArray(r) ? r.join(' ') : String(r || ''));
+
+  /* Lo que queda al quitarle fecha, montos, moneda y puntuación. Si no sobra
+     ni una letra, es un movimiento sin descripción. */
+  const palabras = r => texto(r)
+    .replace(FECHA, ' ')
+    .replace(/-?[\d,]+\.\d{2}/g, ' ')
+    .replace(/\b(LPS|USD|HNL)\b/gi, ' ')
+    .replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ]/g, '')
+    .trim();
+
+  const esMovimiento = r => FECHA.test(texto(r)) && MONTO.test(texto(r));
+  const esSoloTexto  = r => !FECHA.test(texto(r)) && !MONTO.test(texto(r)) &&
+                            palabras(r).length >= 3;
 
   const usados = new Set();
-  const out = renglones.map((t, i) => {
-    if (!esMovimiento(t) || palabras(t).length) return t;
+  const out = renglones.map((r, i) => {
+    if (!esMovimiento(r) || palabras(r).length) return r;
     /* Arriba primero: el banco escribe el principio de la descripción antes
-       de la línea del monto, así que unir en el otro orden dejaría el
-       concepto al revés — «MO\HND PEDIDOS YA…». */
+       de la línea del monto, así que unir al revés dejaría el concepto dado
+       vuelta — «MO\HND PEDIDOS YA…». */
     const trozos = [];
     if (i > 0 && esSoloTexto(renglones[i - 1]) && !usados.has(i - 1)) {
-      trozos.push(renglones[i - 1]); usados.add(i - 1);
+      trozos.push(...(Array.isArray(renglones[i - 1]) ? renglones[i - 1] : [renglones[i - 1]]));
+      usados.add(i - 1);
     }
     if (i + 1 < renglones.length && esSoloTexto(renglones[i + 1]) && !usados.has(i + 1)) {
-      trozos.push(renglones[i + 1]); usados.add(i + 1);
+      trozos.push(...(Array.isArray(renglones[i + 1]) ? renglones[i + 1] : [renglones[i + 1]]));
+      usados.add(i + 1);
     }
-    return trozos.length ? `${trozos.join(' ')} ${t}` : t;
+    if (!trozos.length) return r;
+    /* Las celdas de texto se anteponen a las del movimiento: el adaptador
+       sigue encontrando la fecha y el monto donde los buscaba, y ahora
+       además hay una celda con el concepto. */
+    return Array.isArray(r) ? [...trozos, ...r] : [...trozos, r];
   });
+
   /* Los trozos ya cosidos se van: dejarlos duplicaría el texto y algún
      adaptador podría leerlos como un movimiento más. */
   return out.filter((_, i) => !usados.has(i));
 }
+
 
 /* ============================================================
    3. Lectura del CSV — genérico, para cualquier banco

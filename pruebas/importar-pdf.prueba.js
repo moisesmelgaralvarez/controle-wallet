@@ -142,3 +142,37 @@ test('el mensaje de un PDF ilegible dice QUÉ hace falta', () => {
   assert.ok(motor.includes('la fecha, el concepto y el SALDO que queda después'),
     'el mensaje no dice qué necesita un PDF para poder leerse');
 });
+
+/* ============================================================
+   LOS PDF DE VERDAD SE LEEN SIN REVENTAR
+
+   La costura de descripciones partidas rompió la importación de PDF en
+   producción —«t.replace is not a function»— y las pruebas no la
+   atraparon porque le pasaban cadenas y el código real pasa arreglos de
+   celdas. Esta prueba usa el camino completo: bytes de PDF adentro,
+   renglones afuera. Es la única que puede fallar por esa causa.
+
+   Los archivos van en `pruebas/muestras/`. Si no están, la prueba se
+   salta en vez de fallar: no todos los clones tienen estados de cuenta
+   reales, y una prueba que exige datos privados bloquea a cualquiera.
+   ============================================================ */
+
+test('un PDF real pasa entero por el lector', async (t) => {
+  const { readFileSync, existsSync } = await import('node:fs');
+  const { fileURLToPath } = await import('node:url');
+  const ruta = fileURLToPath(new URL('./muestras/tarjeta-partida.pdf', import.meta.url));
+  if (!existsSync(ruta)) return t.skip('sin muestra local');
+
+  const I = await import('../sitio/app/nucleo/importar.js');
+  const buf = readFileSync(ruta);
+  const renglones = await I.renglonesPdf(
+    buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
+
+  assert.ok(renglones.length > 10, 'se leyó algo');
+  const conConcepto = renglones.filter(r => {
+    const t = Array.isArray(r) ? r.join(' ') : String(r);
+    return /\d{2}\/\d{2}\/\d{4}/.test(t) && /[\d,]+\.\d{2}/.test(t) && /[A-Za-z]{4}/.test(t);
+  });
+  assert.ok(conConcepto.length > 5,
+    'los movimientos traen concepto: si la costura falla, acá quedan renglones mudos');
+});

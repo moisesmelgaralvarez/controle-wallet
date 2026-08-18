@@ -60,7 +60,15 @@ export function resumen({ contenedor, D, periodo }) {
 
      El dueño lo dijo mejor que cualquier informe: «no entiendo el resumen,
      no sé con cuánto contamos, si estamos en rojo o en verde». */
-  const rp = A.realPorRubro(D, periodo);
+  /* La media de lo ya gastado, por rubro, como respaldo del presupuesto. El
+     dueño lo dijo así: «pasé una serie de estados de cuenta que ayudarán a
+     sacar una media de consumo por rubro, necesito que aparezca ahí». Tenía
+     razón — la app ya la tenía calculada y no la usaba para esto. */
+  const sug = A.presupuestoSugerido(D, periodo, 12);
+  const medias = {};
+  for (const f of (sug.filas || [])) if (f.gastoId) medias[f.gastoId] = f.sugerido;
+
+  const rp = A.realPorRubro(D, periodo, medias);
 
   /* Y el disponible se mide contra lo gastado, no contra el plan. Un plan
      vacío daba el ingreso íntegro como disponible: la cifra más peligrosa
@@ -75,10 +83,10 @@ export function resumen({ contenedor, D, periodo }) {
     { t: 'Ingreso neto', v: dinero(r.neto),
       d: r.confirmado ? 'confirmado' : r.parcial ? 'confirmado a medias' : 'sin confirmar' },
     { t: 'Gastos del mes', v: dinero(rp.gastado),
-      c: rp.hayPresupuesto && rp.diferencia < 0 ? 'mal' : '',
-      d: rp.hayPresupuesto
-           ? `de L ${esc(String(Math.round(rp.presupuestado).toLocaleString('en-US')))} presupuestados`
-           : (rp.hayGasto ? 'todavía sin presupuesto con qué compararlo' : 'sin movimientos este mes') },
+      c: rp.hayConQueMedir && rp.diferenciaReferencia < 0 ? 'mal' : '',
+      d: rp.hayConQueMedir
+           ? `de L ${esc(String(Math.round(rp.referenciaTotal).toLocaleString('en-US')))} ${rp.soloMedia ? 'de media mensual' : rp.algunaMedia ? 'entre presupuesto y tu media' : 'presupuestados'}`
+           : (rp.hayGasto ? 'sin historial ni presupuesto con qué compararlo' : 'sin movimientos este mes') },
     { t: 'Cuotas', v: dinero(r.cuotas),
       d: r.financiados ? `${r.financiados} vigente${r.financiados === 1 ? '' : 's'}` : 'ninguna' }
   ];
@@ -140,25 +148,25 @@ export function resumen({ contenedor, D, periodo }) {
       <section class="panel panel--ancho">
         <h2>Lo gastado por rubro</h2>
         ${rp.hayGasto ? `
-          ${rp.filas.filter(f => f.gastado > 0 || f.presupuestado > 0).map(f => {
-            const pasado = f.presupuestado > 0 && f.gastado > f.presupuestado;
+          ${rp.filas.filter(f => f.gastado > 0 || f.referencia > 0).map(f => {
+            const pasado = f.referencia > 0 && f.gastado > f.referencia;
             return `
             <div class="rubro-real">
               <div class="rubro-real__f">
                 <em>${esc(f.concepto)}</em>
-                <span class="cifra">${esc(dinero(f.gastado))}</span>
+                <span class="cifra ${pasado ? 'mal' : ''}">${esc(dinero(f.gastado))}</span>
               </div>
-              ${f.presupuestado > 0 ? `
+              ${f.referencia > 0 ? `
                 <div class="rubro-real__via" aria-hidden="true">
                   <i class="${pasado ? 'mal' : ''}" data-ancho="${esc(String(barra(Math.min(1, f.consumido))))}"></i>
                 </div>
                 <div class="rubro-real__f rubro-real__pie">
-                  <em>de ${esc(dinero(f.presupuestado))}</em>
+                  <em>de ${esc(dinero(f.referencia))}${f.deLaMedia ? ' · tu media mensual' : ''}</em>
                   <span class="${pasado ? 'mal' : 'bien'}">
                     ${pasado ? `${esc(dinero(-f.diferencia))} de más` : `quedan ${esc(dinero(f.diferencia))}`}
                   </span>
                 </div>`
-              : '<div class="rubro-real__f rubro-real__pie"><em class="ojo">sin presupuesto con qué compararlo</em></div>'}
+              : '<div class="rubro-real__f rubro-real__pie"><em class="ojo">sin historial ni presupuesto con qué compararlo</em></div>'}
             </div>`;
           }).join('')}
 
@@ -178,20 +186,27 @@ export function resumen({ contenedor, D, periodo }) {
               <em>Total gastado</em>
               <span class="cifra">${esc(dinero(rp.gastado))}</span>
             </div>
-            ${rp.hayPresupuesto ? `
+            ${rp.hayConQueMedir ? `
               <div class="rubro-real__f rubro-real__pie">
-                <em>de ${esc(dinero(rp.presupuestado))} presupuestados</em>
-                <span class="${rp.diferencia < 0 ? 'mal' : 'bien'}">
-                  ${rp.diferencia < 0 ? `${esc(dinero(-rp.diferencia))} de más` : `quedan ${esc(dinero(rp.diferencia))}`}
+                <em>de ${esc(dinero(rp.referenciaTotal))} ${rp.soloMedia ? 'de media mensual' : rp.algunaMedia ? 'entre presupuesto y tu media' : 'presupuestados'}</em>
+                <span class="${rp.diferenciaReferencia < 0 ? 'mal' : 'bien'}">
+                  ${rp.diferenciaReferencia < 0 ? `${esc(dinero(-rp.diferenciaReferencia))} de más` : `quedan ${esc(dinero(rp.diferenciaReferencia))}`}
                 </span>
               </div>` : ''}
           </div>
 
-          ${!rp.hayPresupuesto ? `
+          ${rp.soloMedia || rp.algunaMedia ? `
             <p class="pulso-app__pie">
-              Hay ${esc(dinero(rp.gastado))} gastados este mes y ningún rubro tiene monto,
-              así que no hay contra qué medirlos. En <strong>Presupuesto</strong> podés
-              partir de lo que ya gastaste en vez de inventar cifras.
+              Los rubros sin presupuesto fijado se miden contra
+              <strong>tu media mensual</strong> de ${esc(String((sug.periodos || []).length))}
+              ${(sug.periodos || []).length === 1 ? 'mes' : 'meses'} de estados de cuenta.
+              Es lo que viene pasando, no una meta: en <strong>Presupuesto</strong> podés
+              fijarla como plan y ajustar lo que no te cuadre.
+            </p>` : ''}
+          ${!rp.hayConQueMedir && rp.hayGasto ? `
+            <p class="pulso-app__pie">
+              Hay ${esc(dinero(rp.gastado))} gastados y todavía no hay historial ni
+              presupuesto con qué medirlos.
             </p>` : ''}
         ` : `<p class="pulso-app__pie">Todavía no hay movimientos en este mes.
              Importá un estado de cuenta y acá vas a ver en qué se está yendo.</p>`}

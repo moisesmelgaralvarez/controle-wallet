@@ -710,8 +710,12 @@ function conciliaciones(D, per) {
  * que cuenta en el total pero contra ningún rubro — y hay que decirlo, o
  * el total no cuadra con la suma de las partes y nadie sabe por qué.
  */
-function realPorRubro(D, per) {
+function realPorRubro(D, per, referencias) {
   const plan = gastosMes(D, 0, per).detalle;
+  /* La media histórica del rubro, si la hay. Entra como parámetro y no se
+     calcula acá para no atar este módulo al del presupuesto sugerido. */
+  const media = id => Math.max(0, num((referencias || {})[id]));
+
   const porRubro = new Map(plan.map(g => [g.id, {
     id: g.id, concepto: g.concepto, categoria: g.categoria,
     presupuestado: g.monto, gastado: 0, movimientos: 0
@@ -726,20 +730,39 @@ function realPorRubro(D, per) {
     f.movimientos++;
   }
 
-  const filas = [...porRubro.values()].map(f => ({
-    ...f,
-    gastado: cent(f.gastado),
-    /* Positivo = queda margen. Negativo = se pasaron. Se guarda con signo
-       porque el signo ES el mensaje; poner el valor absoluto y un rótulo
-       aparte obliga a leer dos cosas para entender una. */
-    diferencia: cent(f.presupuestado - f.gastado),
-    /* Sin presupuesto no hay porcentaje que valga: dividir entre cero da
-       Infinity y la barra se dibuja hasta el infinito. Es `null`, y la
-       pantalla dice «sin presupuesto» en vez de inventar un número. */
-    consumido: f.presupuestado > 0 ? f.gastado / f.presupuestado : null
-  })).sort((a, b) => b.gastado - a.gastado);
+  const filas = [...porRubro.values()].map(f => {
+    /* CONTRA QUÉ SE MIDE, Y POR QUÉ NO SIEMPRE ES EL PRESUPUESTO.
+
+       Manda el monto que la persona fijó. Pero cuando no fijó ninguno y hay
+       histórico, se mide contra la MEDIA de lo que se ha gastado en ese
+       rubro. Decir «sin presupuesto con qué compararlo» con doce meses de
+       estados de cuenta cargados es falso: hay con qué, y mandarla a otra
+       pantalla a apretar un botón para verlo es pedirle trabajo por un dato
+       que la app ya tiene.
+
+       Se marca de dónde sale la referencia. Una media no es una decisión de
+       nadie —es lo que viene pasando— y confundirla con un presupuesto haría
+       creer que uno se pasó de algo que nunca acordó. */
+    const referencia = f.presupuestado > 0 ? f.presupuestado : media(f.id);
+    const deLaMedia = f.presupuestado <= 0 && referencia > 0;
+    return {
+      ...f,
+      gastado: cent(f.gastado),
+      referencia: cent(referencia),
+      deLaMedia,
+      /* Positivo = queda margen. Negativo = se pasaron. Se guarda con signo
+         porque el signo ES el mensaje; poner el valor absoluto y un rótulo
+         aparte obliga a leer dos cosas para entender una. */
+      diferencia: cent(referencia - f.gastado),
+      /* Sin referencia no hay porcentaje que valga: dividir entre cero da
+         Infinity y la barra se dibuja hasta el infinito. Es `null`, y la
+         pantalla lo dice en vez de inventar un número. */
+      consumido: referencia > 0 ? f.gastado / referencia : null
+    };
+  }).sort((a, b) => b.gastado - a.gastado);
 
   const presupuestado = cent(filas.reduce((s, f) => s + f.presupuestado, 0));
+  const referenciaTotal = cent(filas.reduce((s, f) => s + f.referencia, 0));
   const gastado = cent(filas.reduce((s, f) => s + f.gastado, 0) + sinClasificar);
 
   return {
@@ -751,7 +774,16 @@ function realPorRubro(D, per) {
     diferencia: cent(presupuestado - gastado),
     /* Sin un solo rubro con monto no hay con qué comparar, y decirlo es
        más útil que enseñar una tabla de ceros. */
+    referenciaTotal,
+    diferenciaReferencia: cent(referenciaTotal - gastado),
     hayPresupuesto: presupuestado > 0,
+    /* Con qué medir, venga de donde venga. Es lo que decide si la pantalla
+       dibuja barras o se disculpa. */
+    hayConQueMedir: referenciaTotal > 0,
+    soloMedia: presupuestado <= 0 && referenciaTotal > 0,
+    /* Si aunque sea un rubro se mide contra la media, el total NO se puede
+       rotular «presupuestado»: sería llamar decisión a lo que es costumbre. */
+    algunaMedia: filas.some(f => f.deLaMedia),
     hayGasto: gastado > 0
   };
 }

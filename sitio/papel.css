@@ -915,7 +915,17 @@
      centrado. */
   width: 100%;
   aspect-ratio: 1920 / 1080;
-  background: #0E0F11 center / cover no-repeat url("/media/hero-poster.jpg");
+  /* El fondo era carbón porque la película empezaba en carbón. Ahora empieza
+     en papel, y las dos franjas que deja `object-fit: contain` tienen que ser
+     del mismo mundo: dos barras negras alrededor de un tablero claro se leen
+     como un video mal encuadrado, no como una sala de cine. */
+  /* `contain` Y NO `cover`, Y SE VIO RECIÉN AL PASAR A CLARO. El video se
+     encuadra con `contain`; el fondo iba con `cover`. Mientras los dos eran
+     oscuros la diferencia se perdía en el negro, pero con dos tableros claros
+     uno encima del otro a distinta escala aparecía un «Controle» fantasma
+     corrido unos píxeles del bueno. Los dos encuadres tienen que ser el
+     mismo, o no están mostrando la misma imagen. */
+  background: var(--superficie) center / contain no-repeat url("/media/app-hero-inicio.jpg");
 }
 
 .pantalla__cinta {
@@ -1132,7 +1142,7 @@
    sus lempiras y su ciclo. Una composición terminada, no la disculpa de un
    video que no llegó. */
 @media (prefers-reduced-motion: reduce) {
-  .pantalla__vidrio { background-image: url("/media/hero-final.jpg"); }
+  .pantalla__vidrio { background-image: url("/media/app-hero-poster.jpg"); }
   .pantalla__cinta { display: none; }
 }
 
@@ -2855,3 +2865,99 @@
     filter: none;
   }
 }
+
+/* ==========================================================================
+   EL ACENTO ESTABA EN 0.9 % CUANDO EL ADN PIDE 10 %
+
+   Se midió con `herramientas/medir-proporcion.js` en las cinco pantallas de
+   la portada, a 1440. El resultado, antes de esto:
+
+     portada          96.4 fondo ·  0.0 superficie ·  0.9 acento
+     acto del ciclo   35.0       · 61.8            ·  0.6
+     la vitrina       86.2       · 10.4            ·  0.8
+     el pulso         96.3       ·  0.1            ·  0.9
+     la resolución    95.8       ·  0.3            ·  1.3
+
+   El dominante oscila con lo que haya en pantalla —un acto con panel tiene
+   superficie, uno de solo texto no— y eso es normal. Lo que NO oscila es el
+   acento: se queda en torno al 1 % en las cinco. Diez veces menos de lo que
+   pide el ADN, y es la razón por la que la página se siente plana aunque
+   cada pieza esté bien resuelta. No le falta textura: le falta color con
+   significado.
+
+   NO SE ARREGLA REPARTIENDO VERDE. `--acento` significa una cosa —lo que va
+   a favor— y pintarlo donde no significa nada lo gastaría. Se arregla dándole
+   un campo al único lugar donde el significado es literal: el acto que pide
+   la cuenta.
+
+   Y el campo es `--suave` y no `--acento`. `--suave` está definido en
+   `marca.css` como «fondo teñido de acento», que es exactamente este oficio.
+   Un cierre en verde profundo a pantalla completa sería otro mundo, no éste:
+   el papel es claro, y una página que termina en un rectángulo oscuro se lee
+   como que cambió de sitio.
+   ========================================================================== */
+
+.papel .resolucion {
+  background: var(--suave);
+  /* El filete arriba y no una sombra: es el mismo recurso con que este mundo
+     separa una superficie de otra en todos lados. */
+  border-top: 1px solid var(--filete);
+}
+
+/* Acá había un `color-mix` para aclarar el riel del mes sobre el fondo
+   teñido, y el propio medidor lo delató: «FUERA-DEL-ADN(166,174,170)». Un
+   color que no sale de ningún token no se defiende diciendo que se veía
+   bien — la regla del ADN es que un color nuevo se discute y se agrega a
+   `marca.css`, no se inventa en la hoja donde uno está trabajando. El riel
+   se queda con `--borde-fuerte`, que sobre `--suave` ya contrasta.
+
+   Y la cifra mayor pasa a acento: es lo único de la página que cambia de
+   color por esto, y se lo gana. Es «cuánto podés gastar hoy sin romper el
+   mes», o sea la definición literal de lo que va a favor. En tinta era un
+   número; en acento es un veredicto. */
+.papel .mayor__valor { color: var(--acento); }
+.papel .mayor__valor i { color: var(--tenue); }
+
+/* ==========================================================================
+   LAS CARTAS TAMBIÉN CONTESTAN
+
+   Los botones, los enlaces del menú, los pasos y las preguntas ya tenían
+   estado de contacto. Las cartas no: pasabas el puntero por encima de un
+   bloque de texto con filete y no ocurría nada, así que no se leía como una
+   pieza — se leía como un párrafo con borde.
+
+   Y CONTESTAN CON UN MILÍMETRO. Un píxel de subida y el filete que se
+   oscurece. Nada de sombra creciendo, nada de escala: `IDENTIDAD.md` dice
+   que el filete es la identidad y que el movimiento se mide en milímetros.
+   Una carta que salta tres píxeles y se hincha con una sombra es el lenguaje
+   de otro producto.
+
+   Y solo donde hay puntero fino. En una pantalla táctil `:hover` se queda
+   PEGADO después de tocar: la carta se levanta y no vuelve a bajar hasta que
+   toques otra cosa, que se lee como un defecto y no como una respuesta.
+   ========================================================================== */
+
+@media (hover: hover) and (pointer: fine) {
+  .papel .tarjeta,
+  .papel .plan {
+    transition: border-color 200ms var(--curva), translate 200ms var(--curva);
+  }
+  .papel .tarjeta:hover,
+  .papel .plan:hover {
+    border-color: var(--borde-fuerte);
+    translate: 0 -1px;
+  }
+
+  /* Los enlaces del pie se subrayan al pasar. Es el único sitio del documento
+     donde un enlace de navegación no vive dentro de un control con forma, y
+     sin respuesta parecía texto muerto. */
+  .papel .pie nav a { transition: color 160ms var(--curva); }
+  .papel .pie nav a:hover { color: var(--tinta); }
+}
+
+/* Al soltar, la carta vuelve a su sitio: el `translate` se cancela. Va FUERA
+   del bloque de puntero fino porque `:active` sí existe al tocar, y ahí es
+   justamente donde más se agradece — es el único acuse de recibo que da una
+   pantalla sin puntero. */
+.papel .tarjeta:active,
+.papel .plan:active { translate: 0 0; }

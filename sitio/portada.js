@@ -19,14 +19,14 @@
 
    Acá no se raspa nada: la película se reproduce una vez. Con un
    `src` directo el navegador la transmite progresivamente y empieza
-   a verse antes, sin esperar los 6.3 MB completos.
+   a verse antes, sin esperar el archivo completo.
 
    Y hay una razón mejor: el objeto en memoria se sirve por una URL
    `blob:`, que la CSP de este sitio prohíbe. Se midió —
    «MEDIA_ELEMENT_ERROR: Media load rejected» — y la salida NO era
    agregarle `blob:` a `media-src`. Era no necesitarlo.
 
-   LAS COMPUERTAS, Y NADIE MÁS DESCARGA 6.3 MB
+   LAS COMPUERTAS
 
    Cuatro acá, y en `papel.css` las mismas cuatro repartidas en dos
    grupos: tres de TAMAÑO, que esconden el acto entero porque a esa
@@ -110,8 +110,9 @@ document.addEventListener('DOMContentLoaded', () => {
   for (const m of LISTAS) m.addEventListener('change', decidir);
 
   /* No arranca al cargar: arranca cuando el acto se acerca. La portada va
-     antes, así que bajar 6.3 MB de entrada le quita ancho de banda a lo que
-     el visitante sí está viendo. */
+     antes, y todo lo que se baje de entrada le quita ancho de banda a lo que
+     el visitante sí está viendo. Con 218 KB ya no es el problema que era con
+     6.3 MB, pero la regla sigue siendo correcta y no cuesta nada. */
   if ('IntersectionObserver' in window) {
     const vigia = new IntersectionObserver((entradas) => {
       if (entradas.some((e) => e.isIntersecting)) {

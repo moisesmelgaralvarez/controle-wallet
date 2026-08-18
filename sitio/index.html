@@ -185,19 +185,33 @@
          .acto-pantalla__pin   lo que se queda CLAVADO mientras la pista pasa.
          .acto-pantalla__caja  lo que se encoge y se vuelve a armar.
 
-       LO QUE SE VE ADENTRO SON DOS COSAS UNIDAS. Los primeros seis segundos
-       son generados —un documento deshaciéndose en luz, sin una sola letra en
-       el cuadro, que es lo único que un modelo de video no puede arruinar—.
-       Los últimos tres y medio son la INTERFAZ REAL, grabada de la app con
-       `herramientas/filmar.js`: categorías en español, lempiras, el ciclo
-       7 ago – 6 sep. El empalme es invisible porque las columnas de luz y las
-       barras de la gráfica son la misma forma, y las cifras están a medio
-       contar justo cuando la luz aterriza.
+       LO QUE SE VE ADENTRO ES EL PRODUCTO, Y NADA MÁS. Once segundos de la
+       interfaz real, grabada con `herramientas/filmar.js`: categorías en
+       español, lempiras, el ciclo 7 ago – 6 sep.
+
+       Antes eran nueve segundos de los cuales los primeros seis eran
+       generados —un documento deshaciéndose en luz—. Se quitaron, y la
+       razón no es de gusto:
+
+         · Aquello era DECORATIVO. Luz abstracta que podía vender un banco,
+           una aseguradora o un gimnasio. Nadie compra una herramienta de
+           finanzas del hogar por ver luz.
+         · Y no tenía arreglo. `PANTALLA.md` dejó escrita la regla que salió
+           de aquel intento: lo generado NO MUESTRA INTERFAZ NUNCA, porque
+           inventa texto, pone cifras en dólares y logos ajenos. Un video que
+           no puede mostrar el producto es un techo, no un ajuste.
+         · Pesaba 6.3 MB. Las tres películas reales de la vitrina pesan 56,
+           59 y 87 KB. Lo que no mostraba el producto costaba setenta veces
+           más y convencía menos.
+
+       Once y no tres y medio porque 3.6 s no daban tiempo de LEER, y el
+       último quinto no anima nada: deja la pantalla armada y quieta, que es
+       cuando el ojo por fin la recorre entera.
 
        El `src` no va en el marcado: lo pone /portada.js, y solo cuando de
        verdad se va a usar. Abajo de 1080 el acto entero no existe —a esa
        escala el tablero no se lee y la vitrina ya enseña la app en un
-       teléfono—, así que nadie descarga 6.3 MB para nada. -->
+       teléfono—. -->
   <section class="franja acto-pantalla">
     <div class="acto-pantalla__pin">
       <div class="acto-pantalla__caja">
@@ -209,7 +223,7 @@
               <i></i><i></i><i></i><span>controlewallet.com/app</span>
             </div>
             <div class="pantalla__vidrio">
-              <video class="pantalla__cinta" data-cinta="/media/hero-scrub.mp4"
+              <video class="pantalla__cinta" data-cinta="/media/app-hero.mp4"
                      muted playsinline preload="none"
                      aria-hidden="true" tabindex="-1"></video>
             </div>

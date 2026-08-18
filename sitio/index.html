@@ -46,21 +46,24 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg>
     <span>Controle Wallet</span>
   </a>
-  <!-- «Entrar» y «Crear cuenta» salen del <nav>: son acciones de sesión, no
-       navegación. Además de ser lo correcto para un lector de pantalla, es lo
-       que permite dejarlas SIEMPRE a la vista mientras la navegación se
-       recoge — que es justo lo que hay que conservar en un teléfono. -->
   <nav class="menu" id="menu-principal" aria-label="Principal">
     <a href="/" aria-current="page">Inicio</a>
     <a href="/precios">Precios</a>
     <a href="/preguntas">Preguntas</a>
     <a href="/contacto">Contacto</a>
+
   </nav>
 
+  <!-- «Entrar» y «Crear cuenta» son acciones de sesión, no navegación, y por
+       eso viven fuera del <nav>. En teléfono tienen que aparecer DENTRO del
+       desplegable, y eso lo resuelve `menu.js` moviendo el nodo — no una
+       copia. Duplicar el marcado sería peor que el problema: dos «Crear
+       cuenta» en el documento son dos para un lector de pantalla, aunque uno
+       esté escondido. -->
   <span class="sesion">
     <a href="/entrar">Entrar</a>
     <a class="boton boton--principal" href="/registro">Crear cuenta</a>
-  </span>
+    </span>
 
   <!-- El tirador del menú. Va en el MARCADO y no lo agrega JavaScript, porque
        tiene que existir antes del primer pintado: si apareciera después, la

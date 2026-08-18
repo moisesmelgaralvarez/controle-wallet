@@ -381,7 +381,13 @@
   left: 50%;
   translate: -50% 0;
   z-index: 20;
-  width: min(78rem, calc(100% - clamp(1.25rem, 5vw, 3rem)));
+  /* 70% DEL ANCHO, que es lo que pidió el dueño, con un tope arriba: en un
+     monitor de 2560 el 70% serían 1792 px y los cuatro enlaces quedarían
+     nadando con el logo a media cuadra. 78rem es el mismo ancho de la hoja
+     que usa todo el resto de la página, así que la cápsula se alinea con el
+     contenido en vez de flotar a otra medida. */
+  width: min(78rem, 70%);
+
   padding: 5px 5px 5px clamp(0.9rem, 2vw, 1.4rem);
   border-radius: 999px;
   background: color-mix(in srgb, var(--superficie) 86%, transparent);
@@ -760,7 +766,7 @@
 
    Los 14px de margen sobre 898 no son superstición: si mañana se agrega una
    entrada al menú, el corte aguanta antes de volver a partirse. */
-@media (max-width: 57rem) {
+@media (max-width: 64rem) {
   .papel .cabecera--con-tirador { flex-wrap: nowrap; gap: 0.6rem; }
   .papel .cabecera--con-tirador .tirador { display: inline-flex; }
 
@@ -839,7 +845,7 @@
 
 /* De 46rem para arriba el tirador no existe y los cuatro enlaces van sueltos:
    es lo correcto cuando hay lugar, y evita esconder navegación por gusto. */
-@media (min-width: 57.0625rem) {
+@media (min-width: 64.0625rem) {
   .papel .cabecera--con-tirador .tirador { display: none; }
 }
 
@@ -2393,7 +2399,7 @@
    barra del teléfono. Ahí la navegación es el riel.
    ========================================================================== */
 
-@media (min-width: 57.0625rem) {
+@media (min-width: 64.0625rem) {
   /* EL MENÚ NO LLEVA CÁPSULA PROPIA, y esto se corrigió mirándolo. Tenía
      fondo, filete y sombra, igual que la cabecera — o sea una cápsula
      dentro de otra, con dos contornos concéntricos a 5px uno del otro. Se
@@ -2429,7 +2435,7 @@
   }
 }
 
-@media (hover: hover) and (pointer: fine) and (min-width: 57.0625rem) {
+@media (hover: hover) and (pointer: fine) and (min-width: 64.0625rem) {
   .papel .cabecera .menu a:not(.boton):hover { color: var(--tinta); }
   .papel .cabecera .menu a[aria-current="page"]:not(.boton):hover { color: var(--acento-ct); }
 }
@@ -2520,7 +2526,7 @@
    Con los controles en 40px, el relleno de 5px daba 54 de alto. Cuatro
    bastan, y la cápsula baja a 48 sin que nada quede apretado contra el
    filete. */
-@media (min-width: 57.0625rem) {
+@media (min-width: 64.0625rem) {
   .papel .cabecera { padding: 4px 4px 4px clamp(0.85rem, 1.8vw, 1.2rem); }
 
   /* La píldora de la sección activa acompaña la altura del resto. Sigue
@@ -2533,5 +2539,120 @@
     padding-inline: 0.95rem;
     font-size: var(--control-letra);
     font-weight: var(--control-peso);
+  }
+}
+
+/* ==========================================================================
+   EN UN TELÉFONO EL LÍMITE ES EL BORDE, NO UN PORCENTAJE
+
+   Recogida, la cápsula lleva logo, «Entrar», «Crear cuenta» y el tirador:
+   365 px de contenido, medidos. El 70% alcanza esa medida recién a los
+   521 px de ventana — en un teléfono de 390 daría 273 y todo se apretaría
+   unos contra otros.
+
+   Por debajo de 34rem, entonces, toma lo que hay menos el canal.
+
+   VA AL FINAL DE LA HOJA A PROPÓSITO. Con la misma especificidad manda el
+   ORDEN: un `@media` acota cuándo aplica una regla, no le sube la prioridad.
+   Y hay otro `@media (max-width: 34rem)` más arriba, el del contraste del
+   pulso, que no tiene nada que ver — dos bloques con la misma condición y
+   distinto propósito conviven sin problema, pero el de la cápsula tiene que
+   ir después de donde se declara su ancho.
+   ========================================================================== */
+
+@media (max-width: 34rem) {
+  .papel .cabecera { width: calc(100% - clamp(1rem, 5vw, 2rem)); }
+}
+
+/* ---------- y más abajo, el logotipo suelta la palabra ----------
+
+   Medido: recogida, la cápsula lleva marca 148 + sesión 175 + tirador 42 =
+   365 px. A 390 de ventana sobran −3, a 360 faltan 31 y a 320 faltan 69. No
+   se solapan —lo comprobé— pero se aprietan hasta quedar pegados.
+
+   La palabra «Controle Wallet» son ~100 de esos 148. Soltarla y dejar el
+   trazo de la marca resuelve los tres anchos de una, y no pierde nada: el
+   trazo ES el logotipo, y quien está en el sitio ya sabe en qué sitio está.
+
+   `clip-path: inset(50%)` y no `display: none`: así el texto sigue en el
+   documento para un lector de pantalla, que es lo que evita que el enlace a
+   la portada quede sin nombre. */
+@media (max-width: 26rem) {
+  .papel .cabecera .marca span {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* ==========================================================================
+   LA CÁPSULA EN TRES ESTADOS
+
+   Pedido con la referencia de agroporthonduras.com, mirando cómo se comporta
+   al angostar:
+
+     ESCRITORIO (≥64rem)  logo · enlaces · filete · Entrar · Crear cuenta
+     TABLETA (34–64rem)   logo · tirador · Entrar · Crear cuenta
+                          — los enlaces bajan al desplegable
+     TELÉFONO (≤34rem)    logo · tirador
+                          — TODO lo demás baja al desplegable, sesión incluida
+
+   La sesión vive dentro del <nav> justamente por el estado de teléfono: al
+   volverse panel, baja con él sin duplicar marcado. Duplicarla sería peor
+   que el problema — dos «Crear cuenta» en el documento son dos para un
+   lector de pantalla, aunque uno esté escondido.
+
+   Y en tableta se la vuelve a subir a la cápsula. Eso exige sacarla del
+   panel, que es `position: absolute`, así que se ancla desde su borde
+   superior con la altura de la cápsula. `--capsula-h` existe para no
+   escribir ese número dos veces.
+   ========================================================================== */
+
+.papel .cabecera { --capsula-h: 3.5rem; }
+
+/* ---------- tableta: la sesión se queda en la cápsula ----------
+   No hace falta ninguna regla: `menu.js` deja el nodo donde ya estaba. Lo
+   único que se ajusta es el orden visual, para que el tirador quede entre el
+   logo y las acciones como en la referencia. */
+@media (max-width: 64rem) {
+  .papel .cabecera--con-tirador { justify-content: flex-start; gap: 0.6rem; }
+  .papel .cabecera--con-tirador .marca { margin-right: auto; }
+}
+
+/* ---------- teléfono: solo el logotipo y el botón ---------- */
+@media (max-width: 34rem) {
+  /* La sesión se queda en el panel — no hay regla que la saque, y esa
+     ausencia es la que produce el estado pedido. Lo único que hace falta es
+     que dentro del panel se lea como las demás entradas. */
+  .papel .cabecera--con-tirador .menu .sesion {
+    display: grid;
+    /* A lo ancho de la columna. Sin esto se dimensiona a su contenido —127 px
+       en una columna de 364— y queda alineada a la derecha, con «Entrar»
+       flotando a media hoja mientras los enlaces arrancan del margen. */
+    width: 100%;
+    justify-self: stretch;
+    justify-items: stretch;
+    gap: 0;
+    padding-top: 0.5rem;
+    margin-top: 0.25rem;
+    border-top: 1px solid var(--borde);
+    border-left: 0;
+  }
+  .papel .cabecera--con-tirador .menu .sesion a:not(.boton) {
+    padding-block: 0.85rem;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    border-bottom: 1px solid var(--borde);
+  }
+  /* «Crear cuenta» sigue siendo el botón lleno, ahora a todo el ancho del
+     panel: es la acción principal y en un desplegable el ancho es la única
+     jerarquía que queda. */
+  .papel .cabecera--con-tirador .menu .sesion .boton {
+    width: 100%;
+    margin-top: 0.5rem;
   }
 }

@@ -39,7 +39,50 @@ document.addEventListener('DOMContentLoaded', () => {
      al revés— y el resultado es una cabecera partida en dos renglones que
      nadie sabe de dónde salió. Ya pasó: estaban en 46rem y la cabecera dejaba
      de caber a los 898px, dejando 162px rotos. */
-  const angosto = matchMedia('(max-width: 57rem)');
+  /* 64rem = 1024, subido desde 57rem cuando la cápsula pasó a medir el 70%
+     del ancho: con ese porcentaje, entre 912 y 1100 de ventana la cápsula
+     quedaba en 644 px y su contenido necesitaba 679, así que se partía en
+     dos renglones. Medido, no elegido. Y sigue siendo IDÉNTICO al corte de
+     `papel.css`: si los dos se separan, aparece una franja donde la hoja
+     recoge el menú y el JS no. */
+  const angosto = matchMedia('(max-width: 64rem)');
+
+  /* ---------- el tercer estado: el teléfono ----------
+
+     La cápsula tiene tres formas y no dos:
+
+       escritorio  logo · enlaces · Entrar · Crear cuenta
+       tableta     logo · tirador · Entrar · Crear cuenta
+       teléfono    logo · tirador          — todo lo demás al desplegable
+
+     La diferencia entre tableta y teléfono es dónde VIVE el bloque de
+     sesión, y eso es un cambio de lugar en el documento, no de estilo. Se
+     intentó con CSS —sacarlo del panel con `position: fixed`— y salió mal
+     dos veces: primero porque `backdrop-filter` en la cápsula la convierte
+     en bloque contenedor de sus hijos `fixed`, y después porque la opacidad
+     del panel cerrado apaga el subárbol entero y un hijo no puede
+     encenderse.
+
+     Mover el NODO es más simple y no tiene esquinas: el mismo elemento, en
+     el lugar que le toca. Y se mueve, no se copia — dos «Crear cuenta» en el
+     documento son dos para un lector de pantalla, aunque uno esté oculto. */
+  const telefono = matchMedia('(max-width: 34rem)');
+  const sesion   = cabecera.querySelector('.sesion');
+
+  const ubicarSesion = () => {
+    if (!sesion) return;
+    if (telefono.matches) {
+      if (sesion.parentElement !== menu) menu.appendChild(sesion);
+    } else if (sesion.parentElement !== cabecera) {
+      /* Vuelve a la cápsula, y ANTES del tirador: el orden visual es
+         logo · tirador · Entrar · Crear cuenta, y el orden del documento
+         tiene que coincidir o el recorrido con teclado salta de un lado a
+         otro sin motivo. */
+      cabecera.insertBefore(sesion, tirador);
+    }
+  };
+  ubicarSesion();
+  telefono.addEventListener('change', ubicarSesion);
 
   /* Recién acá existe el tirador. Hasta esta línea la cabecera es la de
      siempre, con los cuatro enlaces puestos. */

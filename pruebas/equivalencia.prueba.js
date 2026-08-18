@@ -79,11 +79,34 @@ test('cada nombre sigue siendo de la misma naturaleza', () => {
   assert.deepEqual(distintos, [], distintos.join(' · '));
 });
 
+/* `REGLAS` es la tabla de comercio → rubro, y es la única constante que
+   TIENE que poder crecer: cada vez que aparece un comercio que la app no
+   conoce, la forma de arreglarlo es agregar su patrón.
+
+   Pero crecer no es lo mismo que cambiar. Lo que esta prueba defiende es
+   que la migración desde `asesor.js` no PERDIÓ ninguna regla: si mañana
+   alguien reescribe la tabla y se le cae «farmacia», medio historial se
+   reclasifica solo y nadie se entera hasta que no cuadre un mes. */
+const CRECEN = new Set(['REGLAS', 'REGLAS_PEGADAS']);
+
 test('las constantes valen exactamente lo mismo', () => {
-  const constantes = Object.keys(viejo).filter(k => typeof viejo[k] !== 'function');
+  const constantes = Object.keys(viejo)
+    .filter(k => typeof viejo[k] !== 'function' && !CRECEN.has(k));
   assert.ok(constantes.length > 0, 'no se encontró ninguna constante que comparar');
   for (const k of constantes) {
     assert.deepEqual(nuevo[k], viejo[k], `la constante ${k} cambió de valor`);
+  }
+});
+
+test('la tabla de reglas puede crecer, pero no perder ninguna', () => {
+  for (const k of [...CRECEN].filter(k => k in viejo && Array.isArray(viejo[k]))) {
+    /* Se comparan por el RUBRO al que llevan, no por el texto del patrón:
+       ampliar un patrón —agregarle «fressco»— es exactamente lo que se
+       quiere permitir; que desaparezca el rubro «Farmacia», no. */
+    const rubros = tabla => new Set(tabla.map(r => `${r[1]} · ${r[2]}`));
+    const antes = rubros(viejo[k]), ahora = rubros(nuevo[k]);
+    const perdidos = [...antes].filter(x => !ahora.has(x));
+    assert.deepEqual(perdidos, [], `${k} perdió: ${perdidos.join(', ')}`);
   }
 });
 

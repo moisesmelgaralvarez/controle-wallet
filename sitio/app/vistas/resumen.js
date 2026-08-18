@@ -60,13 +60,18 @@ export function resumen({ contenedor, D, periodo }) {
 
      El dueño lo dijo mejor que cualquier informe: «no entiendo el resumen,
      no sé con cuánto contamos, si estamos en rojo o en verde». */
-  /* La media de lo ya gastado, por rubro, como respaldo del presupuesto. El
-     dueño lo dijo así: «pasé una serie de estados de cuenta que ayudarán a
-     sacar una media de consumo por rubro, necesito que aparezca ahí». Tenía
-     razón — la app ya la tenía calculada y no la usaba para esto. */
-  const sug = A.presupuestoSugerido(D, periodo, 12);
+  /* LA MEDIA VIENE DEL SERVIDOR, NO DEL MES.
+
+     Acá se calculaba con `D`, que solo tiene el mes en curso: la mediana de
+     un mes es ese mes, así que la referencia salía igual al gasto y todas
+     las barras aparecían llenas. El dueño subió doce estados de cuenta
+     justamente para esto, y el cálculo no los miraba.
+
+     Llega con el resto del histórico. Mientras no llegue no hay referencia
+     —y eso es correcto: mejor sin barra que con una barra que miente. */
+  const sug = (servidor && servidor.sugerido) || null;
   const medias = {};
-  for (const f of (sug.filas || [])) if (f.gastoId) medias[f.gastoId] = f.sugerido;
+  for (const f of ((sug && sug.filas) || [])) if (f.gastoId) medias[f.gastoId] = f.sugerido;
 
   const rp = A.realPorRubro(D, periodo, medias);
 
@@ -198,8 +203,8 @@ export function resumen({ contenedor, D, periodo }) {
           ${rp.soloMedia || rp.algunaMedia ? `
             <p class="pulso-app__pie">
               Los rubros sin presupuesto fijado se miden contra
-              <strong>tu media mensual</strong> de ${esc(String((sug.periodos || []).length))}
-              ${(sug.periodos || []).length === 1 ? 'mes' : 'meses'} de estados de cuenta.
+              <strong>tu media mensual</strong> de ${esc(String(((sug && sug.periodos) || []).length))}
+              ${((sug && sug.periodos) || []).length === 1 ? 'mes' : 'meses'} de estados de cuenta.
               Es lo que viene pasando, no una meta: en <strong>Presupuesto</strong> podés
               fijarla como plan y ajustar lo que no te cuadre.
             </p>` : ''}

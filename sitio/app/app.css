@@ -1228,3 +1228,106 @@ body[data-mes-pasado="si"] .mes-nav .tope__mes {
 @media (prefers-reduced-motion: reduce) {
   .tema, .tema__cara { transition: none; }
 }
+
+/* ==========================================================================
+   EL RIEL PLEGADO: UNA SOLA COLUMNA, Y EL HUECO SE CIERRA
+
+   Dos defectos que se vieron plegándolo de verdad:
+
+   1. EL HUECO NO SE CERRABA. `.app` declaraba `grid-template-columns:
+      15rem 1fr`, o sea la columna del riel clavada. Al plegarse, el riel
+      medía 68 px dentro de una columna de 240 y quedaban 172 px de vacío
+      entre la tira de iconos y el contenido. Ahora la columna es `auto` y
+      el ancho lo pone el riel, así que encogerlo encoge la columna — y la
+      misma transición que mueve el riel mueve el contenido.
+
+   2. CERRAR SESIÓN Y EL TEMA SE SALÍAN DE LA TIRA. Eran un botón ancho de
+      texto y un control de dos columnas; plegados desbordaban el riel.
+      Ahora los dos son iconos de la misma medida que las entradas de
+      navegación, en la misma columna vertical y dentro del panel.
+   ========================================================================== */
+
+@media (min-width: 900px) {
+  .app { grid-template-columns: auto 1fr; }
+  .riel-app { width: 15rem; }
+}
+@media (min-width: 1500px) { .riel-app { width: 17rem; } }
+
+/* El pie del riel: lo que va abajo, separado por un filete, en la misma
+   columna que todo lo de arriba. */
+.riel-app__pie {
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--borde);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.salir {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.5rem 0.6rem;
+  border: 0;
+  border-radius: var(--radio-chico, 8px);
+  background: transparent;
+  color: var(--tenue);
+  font: inherit;
+  font-size: var(--t-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+.salir svg {
+  width: 20px; height: 20px;
+  fill: none; stroke: currentColor; stroke-width: 1.6;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.salir:active { transform: scale(0.97); }
+@media (hover: hover) and (pointer: fine) {
+  .salir:hover { background: var(--elevado); color: var(--alerta); }
+}
+
+/* El estado de sincronización, en la misma columna y sin desbordar. */
+.riel-app__pie .estado {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.6rem;
+  font-size: var(--t-xs);
+}
+.riel-app__pie .estado__punto { justify-self: center; }
+
+@media (hover: hover) and (pointer: fine) {
+  /* Plegado: los tres controles de abajo se comportan igual que la
+     navegación — una sola columna de iconos centrados. */
+  .riel-app[data-plegado] .riel-app__pie .estado,
+  .riel-app[data-plegado] .salir,
+  .riel-app[data-plegado] .tema {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding-inline: 0;
+  }
+  .riel-app[data-plegado] .riel-app__pie .estado > :not(.estado__punto),
+  .riel-app[data-plegado] .salir .nav__voz {
+    position: absolute;
+    left: calc(100% + 0.5rem); top: 50%;
+    translate: 0 -50%;
+    z-index: 40;
+    white-space: nowrap;
+    padding: 0.4rem 0.7rem;
+    border-radius: var(--radio-chico, 8px);
+    background: var(--tinta); color: var(--fondo);
+    font-size: var(--t-xs); font-weight: 500;
+    opacity: 0; pointer-events: none;
+    transition: opacity 140ms ease;
+  }
+  .riel-app[data-plegado] .riel-app__pie .estado,
+  .riel-app[data-plegado] .salir { position: relative; }
+  .riel-app[data-plegado] .salir:hover .nav__voz,
+  .riel-app[data-plegado] .riel-app__pie .estado:hover > :not(.estado__punto) { opacity: 1; }
+}

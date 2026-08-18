@@ -90,7 +90,12 @@
         <span class="estado__punto" aria-hidden="true"></span>
         <span id="estadoTexto">Cargando…</span>
       </span>
-      <button class="boton boton--borde" type="button" id="salir">Cerrar sesión</button>
+      <!-- Cerrar sesión con su icono, para que al plegar el riel quede en la
+           MISMA columna vertical que todo lo demás. Antes era un botón ancho
+           con solo texto: plegado se salía de la tira. -->
+      <button class="salir" type="button" id="salir">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4.5H18a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5h-3"/><path d="M11 8l-4 4 4 4"/><path d="M7 12h9"/></svg><span class="nav__voz">Cerrar sesión</span>
+      </button>
     </div>
   </aside>
 

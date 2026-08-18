@@ -15,6 +15,7 @@
      NEGRA en una máquina con el sistema en oscuro mientras la portada seguía
      siendo papel: el mismo sitio partido en dos a mitad de visita. -->
 <link rel="stylesheet" href="/papel.css">
+<script src="/menu.js" defer></script>
 </head>
 <body class="papel">
 
@@ -25,7 +26,7 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg>
     <span>Controle Wallet</span>
   </a>
-  <nav class="menu" aria-label="Principal">
+  <nav class="menu" id="menu-principal" aria-label="Principal">
     <a href="/">Inicio</a>
     <a href="/precios">Precios</a>
     <a href="/preguntas" aria-current="page">Preguntas</a>
@@ -45,6 +46,23 @@
       <a class="boton boton--principal" href="/registro">Crear cuenta</a>
     </span>
 
+
+  <!-- El tirador del menú. Va en el MARCADO y no lo agrega JavaScript, porque
+       tiene que existir antes del primer pintado: si apareciera después, la
+       cabecera daría un salto en cada carga.
+
+       Nace con `hidden`: sin /menu.js el botón no abriría nada, y un control
+       que no hace nada es peor que ningún control. `menu.js` le quita el
+       `hidden` y recién ahí la navegación se recoge. Sin JavaScript quedan
+       los cuatro enlaces a la vista, que es una cabecera correcta. -->
+  <button class="tirador" type="button" hidden
+          aria-expanded="false" aria-controls="menu-principal">
+    <span class="tirador__caja" aria-hidden="true">
+      <span class="tirador__raya"></span>
+      <span class="tirador__raya"></span>
+    </span>
+    <span class="tirador__dicho">Menú</span>
+  </button>
 </header>
 
 <main id="principal">

@@ -25,7 +25,7 @@
    ============================================================ */
 
 import * as A from '../nucleo/index.js';
-import { $, $$, esc, dinero, pct, diaCorto } from '../ui.js';
+import { $, $$, esc, dinero, redondo, pct, diaCorto } from '../ui.js';
 import { historico } from '../datos/historico.js';
 
 export function resumen({ contenedor, D, periodo }) {
@@ -75,22 +75,49 @@ export function resumen({ contenedor, D, periodo }) {
 
   const rp = A.realPorRubro(D, periodo, medias);
 
-  /* Y el disponible se mide contra lo gastado, no contra el plan. Un plan
-     vacío daba el ingreso íntegro como disponible: la cifra más peligrosa
-     que puede enseñar una app de dinero, porque invita a gastar lo que ya
-     se gastó. */
-  const disponibleReal = Math.round((r.neto - rp.gastado - r.cuotas) * 100) / 100;
+  /* DISPONIBLE REAL = LO QUE HAY. NO INGRESO MENOS GASTOS.
+
+     Acá se restaba `neto − gastado − cuotas`, y el dueño lo cazó con una
+     frase: «no tengo nada en mi cuenta, lo que entró el 6 fue para pagar la
+     tarjeta de julio, quedé en 0, no sé de dónde sale eso».
+
+     Tenía razón dos veces. Primero, esa resta no toca los L 44,920 de pagos
+     a la tarjeta que SÍ salieron de las cuentas. Y segundo, trata todo el
+     ingreso del mes como disponible para el mes, cuando la tarjeta se paga
+     un mes después de gastarla — el desfase que este producto existe para
+     explicar, ignorado en su propia cifra principal.
+
+     Peor: la misma pantalla se contradecía. Arriba «disponible L 23,474» y
+     abajo «en el banco L 31,878, tarjetas −L 20,741, capital L 13,337». Dos
+     respuestas a la misma pregunta, y la de abajo era la buena porque sale
+     de saldos y no de una proyección.
+
+     Ahora sale de ahí: banco más efectivo, que es lo que se puede gastar
+     hoy. Llega con el histórico; mientras no llegue, la ficha dice que está
+     esperando en vez de inventar. Un número provisional en la cifra más
+     grande de la pantalla es peor que un guion. */
+  const pat = servidor && servidor.patrimonio;
+  const disponibleReal = pat ? Math.round((pat.enBanco + pat.enMano) * 100) / 100 : null;
 
   const fichas = [
-    { t: 'Disponible real', v: dinero(disponibleReal), c: disponibleReal >= 0 ? 'bien' : 'mal',
-      d: rp.hayGasto ? 'lo que entró menos lo que ya salió'
-                     : (r.confirmado ? 'con lo que de verdad entró' : 'con montos estimados') },
+    { t: 'Disponible real',
+      v: disponibleReal === null ? '—' : dinero(disponibleReal),
+      c: disponibleReal === null ? '' : disponibleReal >= 0 ? 'bien' : 'mal',
+      d: disponibleReal === null
+           ? 'consultando los saldos…'
+           : (pat.retenidoBanco > 0
+               ? `en banco y efectivo, sin ${dinero(pat.retenidoBanco)} ya gastado`
+               : 'lo que hay en banco y efectivo, hoy') },
     { t: 'Ingreso neto', v: dinero(r.neto),
       d: r.confirmado ? 'confirmado' : r.parcial ? 'confirmado a medias' : 'sin confirmar' },
     { t: 'Gastos del mes', v: dinero(rp.gastado),
       c: rp.hayConQueMedir && rp.diferenciaReferencia < 0 ? 'mal' : '',
       d: rp.hayConQueMedir
-           ? `de L ${esc(String(Math.round(rp.referenciaTotal).toLocaleString('en-US')))} ${rp.soloMedia ? 'de media mensual' : rp.algunaMedia ? 'entre presupuesto y tu media' : 'presupuestados'}`
+           /* La `L` estaba escrita a mano y el agrupado en `en-US`, en la
+              ficha principal de la pantalla principal: un hogar en dólares
+              leía «$ 28,600.00» arriba y «de L 40,000» debajo, en la misma
+              tarjeta. `redondo` es la misma función que usa el resto. */
+           ? `de ${esc(redondo(rp.referenciaTotal))} ${rp.soloMedia ? 'de media mensual' : rp.algunaMedia ? 'entre presupuesto y tu media' : 'presupuestados'}`
            : (rp.hayGasto ? 'sin historial ni presupuesto con qué compararlo' : 'sin movimientos este mes') },
     { t: 'Cuotas', v: dinero(r.cuotas),
       d: r.financiados ? `${r.financiados} vigente${r.financiados === 1 ? '' : 's'}` : 'ninguna' }

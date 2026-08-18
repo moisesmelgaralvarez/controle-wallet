@@ -53,6 +53,26 @@ test('la API nueva expone todo lo que exponía la vieja', () => {
    La lista existe para que agregar algo sea una decisión y no un
    descuido: si aparece un nombre que no está aquí, la prueba falla. */
 const NUEVOS_A_PROPOSITO = {
+  fmt: 'escribe una cifra de dinero con el símbolo, el agrupado y los ' +
+       'decimales del hogar. Ya existía dentro de `base.js` —la app vieja la ' +
+       'tenía igual de interna— pero con la `L` escrita a mano. Sale por la ' +
+       'puerta para que la interfaz deje de tener su propia tabla de símbolos: ' +
+       'eran dos, y se separaron.',
+
+  fmt0: 'la misma sin centavos, para titulares y marcas de gráfica. La tenía ' +
+        '`ui.js` con el nombre `redondo` y su propio `Intl` clavado en es-HN.',
+
+  MONEDAS: 'símbolo, decimales y agrupado de cada moneda. Es la tabla de la ' +
+           'que el selector del asistente deriva su lista, en vez de tener ' +
+           'una lista aparte que se desincroniza.',
+
+  fijarMoneda: 'fija la moneda del hogar para el núcleo y para la interfaz de ' +
+               'una sola vez. La app vieja no la necesitaba porque solo ' +
+               'existía el lempira.',
+
+  simboloMoneda: 'el símbolo de la moneda en curso. Lo usa `ui.js` donde ' +
+                 'antes leía su propia tabla.',
+
   adaptadorSaldos: 'lee el PDF de cualquier banco guiándose por el saldo que ' +
                    'arrastra, en vez de adivinar columnas. Hacía falta porque del ' +
                    'mes en curso los bancos solo dan PDF.',

@@ -127,7 +127,39 @@ function saludFinanciera(D, per) {
   // ingreso no alcance el corte. Ahí se rompe la racha y empieza a costar.
   const cubreElCorte = liquido + r.neto >= porPagar;
 
-  if (porPagar > 0 && !caras.length) {
+  /* LAS TARJETAS QUE DICEN PAGARSE AL CONTADO Y DEBEN MÁS DE LO QUE ESO
+     EXPLICA.
+
+     `deudaTarjeta` compara la deuda de hoy contra dos meses de consumo
+     típico de esa misma tarjeta. Lo que sobra no lo explica la ventana de
+     gracia: quedó revolviendo. Es una sospecha con número, no un hecho, y
+     por eso NO entra en `interesMensual` —que sigue midiendo solo lo
+     declarado— sino en su propio renglón.
+
+     Mientras haya una racha en duda, la app deja de decir «no pagan un
+     lempira de interés». Esa frase es la afirmación más fuerte de todo el
+     diagnóstico y no puede salir de una casilla marcada una vez. */
+  const rachaRota = p.tarjetas
+    .filter(t => t.arrastreSinDeclarar > 0 && t.tasa > 0)
+    .sort((a, b) => b.interesLatente - a.interesLatente);
+  const interesLatente = rachaRota.reduce((s, t) => s + t.interesLatente, 0);
+
+  if (rachaRota.length) {
+    const t = rachaRota[0];
+    pasos.push({
+      orden: pasos.length + 1, clave: 'racha-rota', nivel: 'critical',
+      titulo: `Revisen el estado de cuenta de ${t.nombre}`,
+      texto: `Está marcada como «se paga completa cada mes», pero deben ${fmt(t.deuda)} ` +
+             `y en esa tarjeta se cargan ${fmt(t.cargoMensual)} en un mes típico. ` +
+             `Sobran ${fmt(t.arrastreSinDeclarar)} que la ventana de gracia no explica: ` +
+             `o falta registrar un pago, o ese saldo se quedó revolviendo. Si se quedó, ` +
+             `al ${nf0.format(t.tasa)}% cuesta ${fmt(t.interesLatente)} al mes ` +
+             `—${fmt(t.interesLatente * 12)} al año— y esta app lo está contando como cero. ` +
+             `Compruébenlo en el estado de cuenta antes que cualquier otra cosa de esta lista.`
+    });
+  }
+
+  if (porPagar > 0 && !caras.length && !rachaRota.length) {
     pasos.push({
       orden: pasos.length + 1, clave: 'racha', nivel: 'good',
       titulo: 'Van bien: la tarjeta no les cuesta nada',
@@ -191,6 +223,11 @@ function saludFinanciera(D, per) {
     baseReal,
     metaColchon: gastoMensual * MESES_COLCHON,
     caras, interesMensual, interesAnual: interesMensual * 12,
+    /* Las que dicen pagarse al contado y deben más de lo que eso explica, y
+       lo que costaría al mes si de verdad se quedó revolviendo. Va aparte
+       de `interesMensual` a propósito: una sospecha bien fundada no es un
+       hecho, y mezclarlas convertiría el diagnóstico en una adivinanza. */
+    rachaRota, interesLatente,
     alContado, porPagar, cubreElCorte,
     disponibleReal, disponibleDeclarado: r.disponible,
     mordidaInteres: r.disponible > 0 ? interesMensual / r.disponible : 0,

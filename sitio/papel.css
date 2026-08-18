@@ -385,8 +385,11 @@
      monitor de 2560 el 70% serían 1792 px y los cuatro enlaces quedarían
      nadando con el logo a media cuadra. 78rem es el mismo ancho de la hoja
      que usa todo el resto de la página, así que la cápsula se alinea con el
-     contenido en vez de flotar a otra medida. */
-  width: min(78rem, 70%);
+     contenido en vez de flotar a otra medida.
+
+     60% desde el 17 de agosto de 2026, a pedido del dueño. Bajar de 70 a 60
+     obligó a subir el corte del menú: ver la nota de 72rem más abajo. */
+  width: min(78rem, 60%);
 
   padding: 5px 5px 5px clamp(0.9rem, 2vw, 1.4rem);
   border-radius: 999px;
@@ -766,7 +769,7 @@
 
    Los 14px de margen sobre 898 no son superstición: si mañana se agrega una
    entrada al menú, el corte aguanta antes de volver a partirse. */
-@media (max-width: 64rem) {
+@media (max-width: 72rem) {
   .papel .cabecera--con-tirador { flex-wrap: nowrap; gap: 0.6rem; }
   .papel .cabecera--con-tirador .tirador { display: inline-flex; }
 
@@ -845,7 +848,7 @@
 
 /* De 46rem para arriba el tirador no existe y los cuatro enlaces van sueltos:
    es lo correcto cuando hay lugar, y evita esconder navegación por gusto. */
-@media (min-width: 64.0625rem) {
+@media (min-width: 72.0625rem) {
   .papel .cabecera--con-tirador .tirador { display: none; }
 }
 
@@ -2399,7 +2402,7 @@
    barra del teléfono. Ahí la navegación es el riel.
    ========================================================================== */
 
-@media (min-width: 64.0625rem) {
+@media (min-width: 72.0625rem) {
   /* EL MENÚ NO LLEVA CÁPSULA PROPIA, y esto se corrigió mirándolo. Tenía
      fondo, filete y sombra, igual que la cabecera — o sea una cápsula
      dentro de otra, con dos contornos concéntricos a 5px uno del otro. Se
@@ -2435,7 +2438,7 @@
   }
 }
 
-@media (hover: hover) and (pointer: fine) and (min-width: 64.0625rem) {
+@media (hover: hover) and (pointer: fine) and (min-width: 72.0625rem) {
   .papel .cabecera .menu a:not(.boton):hover { color: var(--tinta); }
   .papel .cabecera .menu a[aria-current="page"]:not(.boton):hover { color: var(--acento-ct); }
 }
@@ -2526,7 +2529,7 @@
    Con los controles en 40px, el relleno de 5px daba 54 de alto. Cuatro
    bastan, y la cápsula baja a 48 sin que nada quede apretado contra el
    filete. */
-@media (min-width: 64.0625rem) {
+@media (min-width: 72.0625rem) {
   .papel .cabecera { padding: 4px 4px 4px clamp(0.85rem, 1.8vw, 1.2rem); }
 
   /* La píldora de la sección activa acompaña la altura del resto. Sigue
@@ -2545,12 +2548,14 @@
 /* ==========================================================================
    EN UN TELÉFONO EL LÍMITE ES EL BORDE, NO UN PORCENTAJE
 
-   Recogida, la cápsula lleva logo, «Entrar», «Crear cuenta» y el tirador:
-   365 px de contenido, medidos. El 70% alcanza esa medida recién a los
-   521 px de ventana — en un teléfono de 390 daría 273 y todo se apretaría
-   unos contra otros.
+   Recogida, la cápsula lleva logo, «Entrar», «Crear cuenta» y el botón:
+   367 px de contenido, medidos. Con la cápsula al 60%, esa medida se alcanza
+   recién a los ~640 px de ventana — a 600 faltaban 26 px y a 560 faltaban 50,
+   y aunque nada se cortaba, las piezas quedaban pegadas.
 
-   Por debajo de 34rem, entonces, toma lo que hay menos el canal.
+   Por debajo de 40rem, entonces, toma lo que hay menos el canal. El corte
+   subió de 34 a 40rem cuando la cápsula bajó de 70% a 60%: cada vez que la
+   cápsula se angosta, el ancho donde deja de alcanzar sube con ella.
 
    VA AL FINAL DE LA HOJA A PROPÓSITO. Con la misma especificidad manda el
    ORDEN: un `@media` acota cuándo aplica una regla, no le sube la prioridad.
@@ -2560,7 +2565,7 @@
    ir después de donde se declara su ancho.
    ========================================================================== */
 
-@media (max-width: 34rem) {
+@media (max-width: 40rem) {
   .papel .cabecera { width: calc(100% - clamp(1rem, 5vw, 2rem)); }
 }
 
@@ -2616,13 +2621,13 @@
    No hace falta ninguna regla: `menu.js` deja el nodo donde ya estaba. Lo
    único que se ajusta es el orden visual, para que el tirador quede entre el
    logo y las acciones como en la referencia. */
-@media (max-width: 64rem) {
+@media (max-width: 72rem) {
   .papel .cabecera--con-tirador { justify-content: flex-start; gap: 0.6rem; }
   .papel .cabecera--con-tirador .marca { margin-right: auto; }
 }
 
 /* ---------- teléfono: solo el logotipo y el botón ---------- */
-@media (max-width: 34rem) {
+@media (max-width: 40rem) {
   /* La sesión se queda en el panel — no hay regla que la saque, y esa
      ausencia es la que produce el estado pedido. Lo único que hace falta es
      que dentro del panel se lea como las demás entradas. */
@@ -2655,4 +2660,37 @@
     width: 100%;
     margin-top: 0.5rem;
   }
+}
+
+/* ==========================================================================
+   EL BOTÓN DE MENÚ ES UN CONTROL MÁS
+
+   Tenía forma propia —`--radio-chico`, 44 px de alto, 13 px de letra— y al
+   lado de «Entrar» y «Crear cuenta» dentro de la misma cápsula se leía como
+   una pieza de otro juego: un cuadrado redondeado entre dos píldoras.
+
+   Ahora cuelga de los mismos tres tokens que el resto. Cuadrado porque solo
+   lleva un icono —una píldora vacía se vería como un botón al que le falta
+   el texto— pero el radio, el alto y el peso son los del sistema.
+   ========================================================================== */
+
+.papel .tirador {
+  min-height: var(--control-alto);
+  width: var(--control-alto);      /* cuadrado: solo hay un icono adentro */
+  padding: 0;
+  justify-content: center;
+  border-radius: var(--control-radio);
+  border-color: var(--filete);
+  font-size: var(--control-letra);
+  font-weight: var(--control-peso);
+}
+
+/* La palabra «Menú» sale del botón: dentro de un cuadrado no cabe, y el
+   icono con `aria-label` ya lo nombra para quien no lo ve. */
+.papel .tirador .tirador__dicho {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

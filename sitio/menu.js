@@ -39,13 +39,18 @@ document.addEventListener('DOMContentLoaded', () => {
      al revés— y el resultado es una cabecera partida en dos renglones que
      nadie sabe de dónde salió. Ya pasó: estaban en 46rem y la cabecera dejaba
      de caber a los 898px, dejando 162px rotos. */
-  /* 64rem = 1024, subido desde 57rem cuando la cápsula pasó a medir el 70%
-     del ancho: con ese porcentaje, entre 912 y 1100 de ventana la cápsula
-     quedaba en 644 px y su contenido necesitaba 679, así que se partía en
-     dos renglones. Medido, no elegido. Y sigue siendo IDÉNTICO al corte de
-     `papel.css`: si los dos se separan, aparece una franja donde la hoja
-     recoge el menú y el JS no. */
-  const angosto = matchMedia('(max-width: 64rem)');
+  /* 72rem = 1152, y el número sale de una cuenta, no del gusto: el contenido
+     en línea de la cápsula mide 679 px, y con la cápsula al 60% del ancho
+     hace falta una ventana de 679 ÷ 0.6 ≈ 1132 para que entre. 1152 deja
+     margen.
+
+     Ya subió dos veces —57 → 64 → 72— y siempre por lo mismo: cada vez que
+     la cápsula se angosta, el menú en línea necesita más ventana. Si mañana
+     se achica otra vez, este número sube con ella.
+
+     IDÉNTICO al corte de `papel.css`: si los dos se separan, aparece una
+     franja de anchos donde la hoja recoge el menú y el JS no. */
+  const angosto = matchMedia('(max-width: 72rem)');
 
   /* ---------- el tercer estado: el teléfono ----------
 
@@ -66,7 +71,10 @@ document.addEventListener('DOMContentLoaded', () => {
      Mover el NODO es más simple y no tiene esquinas: el mismo elemento, en
      el lugar que le toca. Y se mueve, no se copia — dos «Crear cuenta» en el
      documento son dos para un lector de pantalla, aunque uno esté oculto. */
-  const telefono = matchMedia('(max-width: 34rem)');
+  /* 40rem = 640, subido desde 34 cuando la cápsula bajó de 70% a 60%: con ese
+     porcentaje el contenido de tableta —367 px— no entra hasta los ~640 de
+     ventana. IDÉNTICO al corte de `papel.css`. */
+  const telefono = matchMedia('(max-width: 40rem)');
   const sesion   = cabecera.querySelector('.sesion');
 
   const ubicarSesion = () => {

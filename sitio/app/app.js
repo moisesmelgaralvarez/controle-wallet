@@ -29,7 +29,7 @@ import { haySesion, salir, capturarSesionDeURL, ErrorDatos, llamar, ponerClave }
 import { cargarHogar, datosDelHogar, mesDeHoy, olvidar } from './datos/hogar.js';
 import { olvidarHistorico } from './datos/historico.js';
 import * as A from './nucleo/index.js';
-import { $, esc, fijarMoneda, nombreMes, cerrarHoja, cargando } from './ui.js';
+import { $, esc, fijarMoneda, nombreMes, nombreMesCorto, cerrarHoja, cargando } from './ui.js';
 import { limites, mover, esElActual } from './datos/periodos.js';
 import { resumen } from './vistas/resumen.js';
 import { movimientos } from './vistas/movimientos.js';
@@ -165,7 +165,14 @@ function irAlMes(destino) {
 function pintarMesNav() {
   const nav = $('#mesNav');
   nav.hidden = false;
-  $('#mes').textContent = nombreMes(periodo);
+  /* Dos rótulos y no uno. El largo manda desde tableta para arriba; en
+     teléfono cabe el corto y nada más. Se escriben los dos y la hoja de
+     estilo elige: así el rótulo correcto está desde el primer pintado, sin
+     que un cambio de ancho tenga que avisarle a JavaScript. */
+  $('#mes').replaceChildren(
+    Object.assign(document.createElement('span'), { className: 'mes__largo', textContent: nombreMes(periodo) }),
+    Object.assign(document.createElement('span'), { className: 'mes__corto', textContent: nombreMesCorto(periodo) }),
+  );
 
   const atras = mover(periodo, -1, limitesDeMes);
   const adelante = mover(periodo, 1, limitesDeMes);

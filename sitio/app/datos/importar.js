@@ -36,9 +36,8 @@
 
 import * as A from '../nucleo/index.js';
 import { periodoDe } from '../nucleo/fechas.js';
-import { FILAS } from './filas.js';
 import * as api from './api.js';
-import { crearVarias, fusionar, actualizar } from './escribir.js';
+import { actualizar } from './escribir.js';
 import { invalidarConfiguracion } from './hogar.js';
 import { olvidarHistorico } from './historico.js';
 
@@ -160,6 +159,32 @@ function duplicadosManuales(D, lote, destino) {
 
 /* Del documento a la fila de la base. El motor habla camelCase y la
    función de la base recibe las columnas tal como se llaman. */
+/**
+ * Un rubro nuevo, con SU IDENTIFICADOR.
+ *
+ * `FILAS.gastos` no lo manda —y hace bien: al crear un rubro a mano, el
+ * identificador lo pone la base—. Acá no puede ser así. El núcleo es puro,
+ * no conoce la base, y a un rubro nuevo le pone un uuid que inventa el
+ * navegador; ese mismo uuid ya quedó metido en el `gasto_id` de ochenta
+ * movimientos y en el aprendizaje de los comercios.
+ *
+ * Si no viaja, Postgres asigna otro con `gen_random_uuid()`, el del
+ * navegador se pierde, y todo lo que apuntaba a él queda apuntando al
+ * vacío. Eso es una violación de llave foránea, que PostgREST contesta
+ * con 409 y el cliente traducía como «Ese registro ya existe» — justo lo
+ * contrario de lo que pasaba, y por eso costó encontrarlo.
+ */
+export const filaRubro = (g, orden) => ({
+  id: g.id,
+  concepto: g.concepto,
+  monto: g.monto || 0,
+  categoria: g.categoria || 'Otros',
+  medio_pago: g.medioPago || 'tarjeta',
+  tarjeta_id: g.medioPago === 'efectivo' ? null : (g.tarjetaId || null),
+  crecimiento: g.crecimiento || 0,
+  orden
+});
+
 const filaMovimiento = m => ({
   fecha: m.fecha, periodo: m.periodo, monto: m.monto, concepto: m.concepto || '',
   /* `'otros'` NO es un rubro: es lo que el motor devuelve cuando no
@@ -222,18 +247,20 @@ export async function aplicar({ plan, lote, destino, hogarId, aprenderNumero, qu
     await actualizar(tabla, destino.id, { numero: String(lote.cuenta) });
   }
 
-  if (plan.rubrosNuevos.length) {
-    await crearVarias('gastos', plan.rubrosNuevos.map((g, i) =>
-      FILAS.gastos(g, { hogarId, orden: 900 + i })));
-  }
+  /* LOS RUBROS Y LOS COMERCIOS VAN DENTRO DE LA MISMA LLAMADA, y antes
+     iban en dos peticiones sueltas justo acá. La pantalla promete «entra
+     todo o no entra nada»: era cierto dentro del RPC y mentira fuera.
 
-  if (plan.comerciosNuevos.length) {
-    await fusionar('comercios',
-      plan.comerciosNuevos.map(c => ({ hogar_id: hogarId, clave: c.clave, gasto_id: c.gastoId })),
-      'hogar_id,clave');
-  }
+     Lo que costó descubrirlo: el primer paso —crear los rubros— sí
+     funcionaba y no se deshacía; el segundo se caía. Y como la recarga
+     del documento va después, al reintentar el navegador seguía sin saber
+     que esos rubros ya existían y los volvía a crear. Cinco intentos
+     dejaron cinco copias de cada uno de los catorce rubros. Un fallo que
+     se multiplica a sí mismo es peor que uno que solo falla. */
 
   const hecho = await api.llamar('importar_lote', {
+    p_rubros: plan.rubrosNuevos.map((g, i) => filaRubro(g, 900 + i)),
+    p_comercios: plan.comerciosNuevos.map(c => ({ clave: c.clave, gasto_id: c.gastoId })),
     p_destino_clase: destino.clase,
     p_destino_id: destino.id,
     p_desde: lote.desde,

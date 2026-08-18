@@ -73,3 +73,39 @@ test('un archivo sin columnas reconocibles se rechaza, no se adivina', () => {
   // Leer mal un estado de cuenta es peor que no leerlo.
   assert.equal(A.adaptadorCsv('hola\nque tal\n123'), null);
 });
+
+/* ============================================================
+   EL RUBRO NUEVO VIAJA CON SU IDENTIFICADOR
+
+   El núcleo es puro y no conoce la base, así que a un rubro nuevo le
+   pone un uuid que inventa el navegador. Ese mismo uuid queda metido en
+   el `gasto_id` de cada movimiento del lote y en el aprendizaje de los
+   comercios.
+
+   Cuando la fila que se le mandaba a la base NO lo llevaba, Postgres
+   asignaba otro, el del navegador se perdía, y ochenta movimientos más
+   catorce comercios quedaban apuntando al vacío. La importación entera
+   se caía con un 409 que decía «ya existe» — lo contrario de lo que
+   pasaba.
+
+   Esta prueba mira lo único que importa: que el identificador que el
+   motor le puso al rubro sea EL MISMO que referencian sus movimientos,
+   y que sobreviva el viaje a la base.
+   ============================================================ */
+
+test('el rubro nuevo y lo que lo referencia comparten identificador', async () => {
+  const { filaRubro } = await import('../sitio/app/datos/importar.js');
+
+  const rubro = {
+    id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+    concepto: 'Farmacia', monto: 0, categoria: 'Salud',
+    medioPago: 'tarjeta', crecimiento: 0, tarjetaId: null
+  };
+  const fila = filaRubro(rubro, 900);
+
+  assert.strictEqual(fila.id, rubro.id,
+    'sin el id, la base asigna otro y todo lo que apunta a este rubro queda huérfano');
+  assert.strictEqual(fila.concepto, 'Farmacia');
+  assert.strictEqual(fila.categoria, 'Salud');
+  assert.strictEqual(fila.orden, 900);
+});

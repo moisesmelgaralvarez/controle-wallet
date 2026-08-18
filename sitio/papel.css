@@ -2569,28 +2569,19 @@
   .papel .cabecera { width: calc(100% - clamp(1rem, 5vw, 2rem)); }
 }
 
-/* ---------- y más abajo, el logotipo suelta la palabra ----------
+/* ---------- el nombre se queda, y la regla que lo escondía se va ----------
 
-   Medido: recogida, la cápsula lleva marca 148 + sesión 175 + tirador 42 =
-   365 px. A 390 de ventana sobran −3, a 360 faltan 31 y a 320 faltan 69. No
-   se solapan —lo comprobé— pero se aprietan hasta quedar pegados.
+   Hubo un `@media (max-width: 26rem)` que ocultaba «Controle Wallet» y
+   dejaba solo el trazo. Tenía sentido cuando lo escribí: la cápsula todavía
+   llevaba «Entrar» y «Crear cuenta» en teléfono y faltaban 69 px a 320.
 
-   La palabra «Controle Wallet» son ~100 de esos 148. Soltarla y dejar el
-   trazo de la marca resuelve los tres anchos de una, y no pierde nada: el
-   trazo ES el logotipo, y quien está en el sitio ya sabe en qué sitio está.
+   Desde que el teléfono muestra únicamente logo y botón, el cálculo cambió:
+   el nombre pide 197 px y a 320 sobran 88. La regla quedó resolviendo un
+   problema que ya no existe, y de paso se llevaba lo único que identifica el
+   sitio en la pantalla más chica. Se borra.
 
-   `clip-path: inset(50%)` y no `display: none`: así el texto sigue en el
-   documento para un lector de pantalla, que es lo que evita que el enlace a
-   la portada quede sin nombre. */
-@media (max-width: 26rem) {
-  .papel .cabecera .marca span {
-    position: absolute;
-    width: 1px; height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-}
+   Es la clase de resto que sobrevive callado a un rediseño: no da error, no
+   rompe nada, y sigue escondiendo algo que ya cabía. */
 
 /* ==========================================================================
    LA CÁPSULA EN TRES ESTADOS
@@ -2725,3 +2716,26 @@
   .papel .cabecera { min-width: fit-content; }
   .papel .cabecera .menu { flex-wrap: nowrap; }
 }
+
+/* ==========================================================================
+   LAS ACCIONES DE LA PORTADA NO SE PEGAN AL INSTRUMENTO
+
+   Medido a 390: los botones terminaban en y=582 y el instrumento del
+   desfase arrancaba en y=577. CINCO PÍXELES DE SOLAPE — el filete superior
+   del instrumento cruzaba justo por la base de «Crear cuenta».
+
+   La causa es la rejilla de la portada: `grid-template-rows: 1fr auto` con
+   el instrumento pegado abajo. En una ventana de teléfono el bloque de
+   texto ya no cabe en su fila, se desborda, y lo que sigue no se corre —
+   porque `auto` reserva solo lo que el instrumento mide, no lo que el
+   vecino invade.
+
+   Se resuelve dándole al bloque de texto un colchón propio abajo, que en la
+   ventana alta no se nota y en la corta es lo que evita el choque.
+   ========================================================================== */
+
+.papel .portada__dicho { padding-bottom: clamp(1.5rem, 4vh, 2.5rem); }
+
+/* Y el instrumento respira arriba, que además es lo que lo separa como
+   pieza distinta y no como continuación de los botones. */
+.papel .desfase { margin-top: clamp(1rem, 3vh, 2rem); }

@@ -842,18 +842,63 @@ function esPagoDeTarjeta(t, D) {
 }
 
 /**
+ * ¿La plata se queda en el hogar?
+ *
+ * SE MIRA EL DESTINO, NO LA LÍNEA ENTERA, Y ESA ES TODA LA CORRECCIÓN.
+ *
+ * Antes se buscaba si el nombre de alguien del hogar aparecía en cualquier
+ * parte del concepto. Pero un renglón de banco se escribe
+ * «Transferencia entre Cuentas-ORIGEN-DESTINO», y el ORIGEN es siempre el
+ * titular de la cuenta que uno acaba de importar — o sea, siempre alguien
+ * del hogar. La comprobación no podía dar «no» nunca: TODA transferencia
+ * salía como traslado propio.
+ *
+ * Se midió con archivos reales: L 900 a una hermana y L 2,060 a otros dos
+ * terceros quedaron marcados como «la misma plata cambiando de bolsillo» y
+ * no se registraron. Casi tres mil lempiras que salieron de verdad y que la
+ * app no vio. Y peor: un ACH de L 1,200 a un tercero se registró como PAGO
+ * DE TARJETA, porque esa regla también preguntaba `propio`.
+ *
+ * NOMBRE DE PILA Y UN APELLIDO, NO DOS APELLIDOS. La comprobación vieja
+ * pedía dos coincidencias cualesquiera, y en una familia los apellidos se
+ * repiten: «Katherine Alejandra Vallejos Aguilera» daba dos contra «Judith
+ * Maryorie Vallejos Aguilera» y pasaba por la misma persona. El nombre de
+ * pila es lo que de verdad distingue a un hermano de un cónyuge.
+ */
+function vaAlHogar(concepto, D) {
+  const destino = destinoDelRenglon(concepto);
+  if (!destino) return false;
+  return (D.personas || []).map(p => SIN_TILDES(p.nombre || '')).filter(Boolean).some(n => {
+    const partes = n.split(/\s+/).filter(x => x.length > 2);
+    if (partes.length < 2) return false;
+    const [pila, ...resto] = partes;
+    return destino.includes(pila) && resto.some(x => destino.includes(x));
+  });
+}
+
+/**
+ * A quién va el renglón. El banco escribe el destino al final, después del
+ * último guion: «Transferencia entre Cuentas-JUDITH …-KATHERINE …» y
+ * «ACH Debito-Daniel Josue Vallejos Aguilera».
+ *
+ * Si el renglón no tiene esa forma no hay destino que mirar, y entonces no
+ * se puede afirmar que la plata se queda en casa.
+ */
+function destinoDelRenglon(t) {
+  if (!/transferencia entre cuentas|ach debito/.test(t)) return '';
+  const partes = t.split('-').map(x => x.trim()).filter(Boolean);
+  return partes.length >= 2 ? partes[partes.length - 1] : '';
+}
+
+/**
  * Decide qué es cada movimiento. Lo delicado son los traslados: una
  * transferencia a la esposa NO es ingreso ni gasto —es la misma plata
  * cambiando de bolsillo— pero una a un tercero sí sale de verdad.
- * Se distinguen comparando contra las personas registradas.
+ * Se distinguen comparando el DESTINO contra las personas registradas.
  */
 function clasificar(mov, D, lote) {
   const t = SIN_TILDES(mov.concepto);
-  const nombres = (D.personas || []).map(p => SIN_TILDES(p.nombre)).filter(Boolean);
-  const propio = nombres.some(n => {
-    const partes = n.split(/\s+/).filter(x => x.length > 2);
-    return partes.length >= 2 && partes.filter(p => t.includes(p)).length >= 2;
-  });
+  const propio = vaAlHogar(t, D);
 
   if (/reverso|^cr\s|credito por intereses/.test(t)) return 'reverso';
   if (/comision/.test(t)) return 'comision';

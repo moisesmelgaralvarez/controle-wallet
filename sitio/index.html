@@ -31,6 +31,12 @@
      `hero.js` y `mundo.js` salieron los dos. El primero raspaba un mp4 contra
      el scroll; el segundo lo reemplazó por un lienzo de luz. Ninguno sobrevive
      al cambio de idioma: sobre papel, el instrumento se IMPRIME. -->
+<!-- SIN `defer`, y es lo único en este documento que no lo lleva. La hoja
+     esconde `[data-revelar]` solo cuando el <html> lleva la clase `revela`, y
+     esa clase la pone la primera línea de este archivo. Con `defer` la página
+     se pintaría entera con todo a la vista y medio segundo después lo
+     escondería para revelarlo — un parpadeo peor que no animar. -->
+<script src="/revelar.js"></script>
 <script src="/menu.js" defer></script>
 <script src="/portada.js" defer></script>
 <script src="/ciclo.js" defer></script>
@@ -274,8 +280,8 @@
            acá el orden ES el dato — el ciclo pasa en ese orden y por eso el
            dinero se cuenta dos veces. La fecha carga información que el
            lector necesita; un número ordinal no. -->
-      <div class="fijo__texto">
-        <div class="hito">
+      <div class="fijo__texto" data-revelar-tanda>
+        <div class="hito" data-revelar>
           <span class="hito__fecha"><time datetime="2026-07-07">7 jul</time></span>
           <h3>Apertura del ciclo</h3>
           <p>
@@ -284,7 +290,7 @@
           </p>
         </div>
 
-        <div class="hito">
+        <div class="hito" data-revelar>
           <span class="hito__fecha"><time datetime="2026-08-06">6 ago</time></span>
           <h3>Corte</h3>
           <p>
@@ -294,7 +300,7 @@
           </p>
         </div>
 
-        <div class="hito">
+        <div class="hito" data-revelar>
           <span class="hito__fecha"><time datetime="2026-08-15">15 ago</time></span>
           <h3>Pago</h3>
           <p>
@@ -304,7 +310,7 @@
           </p>
         </div>
 
-        <div class="hito">
+        <div class="hito" data-revelar>
           <span class="hito__fecha">Resto de agosto</span>
           <h3>El saldo que engaña</h3>
           <p>
@@ -330,7 +336,7 @@
        Sin JavaScript, la sección se ve completa con el ciclo del ejemplo y
        el control no aparece. Nunca un control que no hace nada. -->
   <section class="franja propio">
-    <div class="propio__intro revelar">
+    <div class="propio__intro" data-revelar>
       <h2 class="lectura">El desfase no es del ejemplo. Es del tuyo.</h2>
       <p class="lectura">
         Indicá el día de corte de tu tarjeta y medí cuánto se corre tu mes real
@@ -338,7 +344,7 @@
       </p>
     </div>
 
-    <div class="vidrio propio__panel revelar" data-panel>
+    <div class="vidrio propio__panel" data-revelar="velo" data-panel>
       <!-- La leyenda rotula el dibujo y por eso carga los rangos: es lo que
            evita meter texto dentro del SVG, que al escalar con el viewBox
            quedaría en 8 px a 390 de ancho. -->
@@ -432,7 +438,7 @@
        silencio y sin error. La escena clavada no se clavaba por eso. Lo único
        que aportaba la clase era el halo, que este mundo ya apaga. -->
   <section class="franja franja--alta vitrina">
-    <div class="vitrina__intro">
+    <div class="vitrina__intro" data-revelar>
       <h2 class="titular">El mismo hogar, se abra donde se abra</h2>
       <p class="bajada">
         Cada tamaño muestra lo que corresponde, no la misma pantalla estirada.
@@ -528,7 +534,7 @@
        decidir hoy. El rótulo va DEBAJO: encima de una cifra o de un titular
        está prohibido, y al pie de un instrumento es donde trabaja. -->
   <section class="franja franja--alta acto-pulso">
-    <div class="mayor">
+    <div class="mayor" data-revelar="velo">
       <p class="mayor__valor"><i>L</i>1,340</p>
       <p class="mayor__rotulo">disponible por día para cerrar el mes sin déficit</p>
       <p class="mayor__pie">
@@ -539,20 +545,20 @@
 
     <!-- La misma cifra dos veces, y el veredicto opuesto. Es el argumento
          entero del pulso sin una sola línea de explicación previa. -->
-    <div class="contraste">
-      <div class="contraste__cara">
+    <div class="contraste" data-revelar-tanda>
+      <div class="contraste__cara" data-revelar="derecha">
         <span class="contraste__pct">26%</span>
         <span class="contraste__dia">del presupuesto, el día 20</span>
         <span class="contraste__juicio contraste__juicio--bien">Normal</span>
       </div>
-      <div class="contraste__cara">
+      <div class="contraste__cara" data-revelar="izquierda">
         <span class="contraste__pct">26%</span>
         <span class="contraste__dia">del presupuesto, el día 4</span>
         <span class="contraste__juicio contraste__juicio--mal">Alarma</span>
       </div>
     </div>
 
-    <p class="contraste__pie">
+    <p class="contraste__pie" data-revelar>
       Lo que cambia no es el gasto, sino cuánto mes ha transcurrido. Esa
       comparación es la única señal que hace falta para corregir a tiempo.
     </p>
@@ -562,10 +568,10 @@
 
   <!-- ── acto VI · lo que cambia ───────────────────────────── -->
   <section class="franja franja--alta acto-rejilla">
-    <h2 class="titular">Cuatro supuestos que este presupuesto no hace</h2>
+    <h2 class="titular" data-revelar>Cuatro supuestos que este presupuesto no hace</h2>
 
-    <div class="tarjetas tarjetas--densa">
-      <article class="tarjeta">
+    <div class="tarjetas tarjetas--densa" data-revelar-tanda>
+      <article class="tarjeta" data-revelar="escala">
         <span class="tarjeta__num" aria-hidden="true">1</span>
         <h3>Que el ingreso es el mismo todos los meses</h3>
         <p>
@@ -575,7 +581,7 @@
         </p>
       </article>
 
-      <article class="tarjeta">
+      <article class="tarjeta" data-revelar="escala">
         <span class="tarjeta__num" aria-hidden="true">2</span>
         <h3>Que una cuota dura para siempre</h3>
         <p>
@@ -585,7 +591,7 @@
         </p>
       </article>
 
-      <article class="tarjeta">
+      <article class="tarjeta" data-revelar="escala">
         <span class="tarjeta__num" aria-hidden="true">3</span>
         <h3>Que el mes empieza el día 1</h3>
         <p>
@@ -595,7 +601,7 @@
         </p>
       </article>
 
-      <article class="tarjeta">
+      <article class="tarjeta" data-revelar="escala">
         <span class="tarjeta__num" aria-hidden="true">4</span>
         <h3>Que administra una sola persona</h3>
         <p>
@@ -612,7 +618,7 @@
   <!-- Lista con filetes y aire, no cartas: son hechos, y un hecho no necesita
        caja. Cada renglón se traza al entrar, de arriba abajo. -->
   <section class="franja franja--alta acto-hechos">
-    <div class="hechos__intro">
+    <div class="hechos__intro" data-revelar>
       <h2 class="titular">En operación, no en la hoja de ruta</h2>
       <p class="bajada">
         Nada de lo que sigue es una promesa a futuro. Está funcionando hoy, y se
@@ -620,20 +626,20 @@
       </p>
     </div>
 
-    <ul class="hechos">
-      <li class="hecho">
+    <ul class="hechos" data-revelar-tanda>
+      <li class="hecho" data-revelar>
         <b>Cierre de mes</b>
         <span>con el presupuesto congelado: ajustar septiembre no reescribe agosto hacia atrás.</span>
       </li>
-      <li class="hecho">
+      <li class="hecho" data-revelar>
         <b>Estados de cuenta</b>
         <span>de BAC y Ficohsa, o cualquier CSV, importados y conciliados sin duplicar movimientos.</span>
       </li>
-      <li class="hecho">
+      <li class="hecho" data-revelar>
         <b>Proyectos con veredicto</b>
         <span>viable, ajustado o no viable, con el monto mensual a reservar y el plazo para llegar.</span>
       </li>
-      <li class="hecho">
+      <li class="hecho" data-revelar>
         <b>Efectivo y retiros</b>
         <span>tratados como traslado y no como gasto: sacar del cajero no consume presupuesto.</span>
       </li>
@@ -657,19 +663,19 @@
         <span class="carriles__costura"></span>
       </div>
 
-      <h2 class="titular titular--centro">
+      <h2 class="titular titular--centro" data-revelar>
         Cuando el mes y el ciclo coinciden, se acaban las sorpresas
       </h2>
 
       <!-- El sitio se estaba disculpando por algo terminado. Según TRASPASO.md
            §8 no falta ninguna función; lo pendiente son decisiones del negocio.
            Y el «sin costo» sigue siendo cierto, así que se dice sin rodeos. -->
-      <p class="bajada bajada--centro">
+      <p class="bajada bajada--centro" data-revelar>
         Todo lo anterior está en operación hoy, sin costo. Un asistente configura
         tu hogar en pocos pasos y cualquier cosa se puede cambiar después.
       </p>
 
-      <div class="portada__acciones portada__acciones--centro">
+      <div class="portada__acciones portada__acciones--centro" data-revelar>
         <a class="pulsar pulsar--tinta" href="/registro">Crear cuenta</a>
         <a class="pulsar pulsar--borde" href="/entrar">Entrar</a>
       </div>

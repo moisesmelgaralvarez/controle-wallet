@@ -15,6 +15,11 @@
      NEGRA en una máquina con el sistema en oscuro mientras la portada seguía
      siendo papel: el mismo sitio partido en dos a mitad de visita. -->
 <link rel="stylesheet" href="/papel.css">
+<!-- SIN `defer`: la hoja esconde `[data-revelar]` solo cuando el <html> lleva
+     la clase `revela`, y esa clase la pone la primera línea de este archivo.
+     Con `defer` la página se pintaría entera con todo a la vista y medio
+     segundo después lo escondería para revelarlo. -->
+<script src="/revelar.js"></script>
 <script src="/menu.js" defer></script>
 </head>
 <body class="papel">
@@ -75,14 +80,14 @@
   </section>
 
   <section class="franja franja--superficie">
-    <div class="planes">
+    <div class="planes" data-revelar-tanda>
 
-      <article class="plan plan--destacado">
+      <article class="plan plan--destacado" data-revelar="escala">
         <p class="rotulo">Ahora</p>
         <h2>Acceso anticipado</h2>
         <p class="plan__precio">Sin costo</p>
         <p class="plan__nota">Mientras dure la construcción.</p>
-        <ul class="lista">
+        <ul class="lista" data-revelar>
           <li>Todas las funciones, sin recortes</li>
           <li>Tu hogar con las personas que quieras</li>
           <li>Exportar tus datos cuando se te antoje</li>
@@ -93,12 +98,12 @@
         </div>
       </article>
 
-      <article class="plan">
+      <article class="plan" data-revelar="escala">
         <p class="rotulo">Después</p>
         <h2>Suscripción</h2>
         <p class="plan__precio">Por anunciar</p>
         <p class="plan__nota">Con aviso previo, nunca de sorpresa.</p>
-        <ul class="lista">
+        <ul class="lista" data-revelar>
           <li>El precio se publica <strong>antes</strong> de empezar a cobrar</li>
           <li>Vas a poder cancelar desde tu propio panel, sin escribirle a nadie</li>
           <li>Si no seguís, <strong>tus datos no se borran</strong>: se bloquea la escritura y podés exportarlo todo</li>
@@ -113,7 +118,7 @@
   </section>
 
   <section class="franja">
-    <div class="lectura">
+    <div class="lectura" data-revelar>
       <h2>Por qué no hay un número todavía</h2>
       <p>
         Poner un precio antes de tener el producto terminado obliga a una de dos
@@ -121,7 +126,7 @@
         decir la verdad — que aún no lo sabemos — y comprometernos con lo que sí
         podemos prometer desde ya:
       </p>
-      <ul class="lista">
+      <ul class="lista" data-revelar>
         <li>El precio se anuncia con anticipación, no aparece un día en tu tarjeta.</li>
         <li>Quien esté usando el servicio en acceso anticipado se entera primero.</li>
         <li><strong>Nunca vamos a guardar tu número de tarjeta.</strong> El cobro lo maneja una pasarela especializada; nosotros no vemos ni almacenamos esos datos.</li>

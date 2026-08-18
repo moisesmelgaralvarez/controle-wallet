@@ -15,6 +15,11 @@
      NEGRA en una máquina con el sistema en oscuro mientras la portada seguía
      siendo papel: el mismo sitio partido en dos a mitad de visita. -->
 <link rel="stylesheet" href="/papel.css">
+<!-- SIN `defer`: la hoja esconde `[data-revelar]` solo cuando el <html> lleva
+     la clase `revela`, y esa clase la pone la primera línea de este archivo.
+     Con `defer` la página se pintaría entera con todo a la vista y medio
+     segundo después lo escondería para revelarlo. -->
+<script src="/revelar.js"></script>
 <script src="/menu.js" defer></script>
 </head>
 <body class="papel">
@@ -64,7 +69,7 @@
 </header>
 
 <main id="principal" class="franja legal">
-  <div class="lectura">
+  <div class="lectura" data-revelar>
 
     <p class="rotulo">Legal</p>
     <h1>Términos y condiciones</h1>

@@ -157,75 +157,31 @@
 /* ---------- números grandes ---------- */
 
 .cifra { font-variant-numeric: tabular-nums; }
-.cifra__valor {
-  display: block;
-  font-size: clamp(2.2rem, 1rem + 4vw, 4rem);
-  font-weight: 700; letter-spacing: -0.04em; line-height: 1;
-}
-.cifra__pie { display: block; color: var(--tenue); font-size: var(--t-sm); margin-top: 0.6rem; }
-
-/* ---------- cierre ---------- */
-
-.cierre { text-align: center; }
-.cierre h2 { max-width: 18ch; margin-inline: auto; }
-.cierre p { color: var(--tenue); max-width: 46ch; margin-inline: auto; }
-.cierre .acciones { justify-content: center; }
 
 /* ============================================================
-   El movimiento. Todo lo de abajo es adorno: si nada de esto
-   corre, la página se ve completa igual.
+   LO QUE SE FUE DE ESTA HOJA, Y POR QUÉ
+
+   EL REVELADO. Vivía acá, hecho con `animation-timeline: view()`, y
+   se llevó consigo `@keyframes surgir`, `derivar` y `alejar`. Se
+   reemplazó por `/revelar.js` y su bloque en `papel.css`, y no por
+   gusto de reescribir:
+
+     · movía 2.5rem —40 px—, que es la distancia de la referencia y no
+       la de este proyecto. `IDENTIDAD.md` mide el movimiento en
+       milímetros: son 12 px, los mismos con que entra la portada.
+     · `animation-timeline` todavía no está en Firefox estable, así que
+       una parte de las visitas no veía nada de esto.
+     · atado al scroll, una pieza se queda a medio revelar si alguien
+       para en el medio. Disparado por umbral y resuelto en el tiempo,
+       entra completo o no entra.
+
+   Y sobre todo: dos sistemas de revelado en una misma página es la
+   forma más segura de que dentro de seis meses nadie sepa cuál manda.
+
+   LOS TRECE SELECTORES MUERTOS. `.hero`, `.hero__contenido`,
+   `.hero__entrada`, `.hero__pie`, `.cierre`, `.cifra__valor`,
+   `.cifra__pie`, `.escena__halo` y compañía son del diseño anterior al
+   mundo de papel. Se midió contra el documento: cero elementos. De las
+   seis reglas de `.cifra` solo sobrevive `tabular-nums`, que es regla
+   del ADN —toda cifra de dinero va tabular— y por eso se queda.
    ============================================================ */
-
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-
-    /* Aparecer al entrar en pantalla. */
-    .revelar {
-      animation: surgir linear both;
-      animation-timeline: view();
-      animation-range: entry 5% cover 32%;
-    }
-    @keyframes surgir {
-      from { opacity: 0; transform: translateY(2.5rem); }
-      to   { opacity: 1; transform: none; }
-    }
-
-    /* El halo del fondo se desplaza a otra velocidad que el contenido.
-       Ahí está la sensación de profundidad. */
-    .escena__halo {
-      animation: derivar linear both;
-      animation-timeline: view();
-      animation-range: cover;
-    }
-    @keyframes derivar {
-      from { transform: translate3d(0, -12%, 0) scale(1.12); }
-      to   { transform: translate3d(0, 12%, 0) scale(1);     }
-    }
-
-    /* La portada se va quedando atrás al bajar, en vez de simplemente
-       desaparecer del borde. */
-    .hero__contenido {
-      animation: alejar linear both;
-      animation-timeline: view();
-      animation-range: exit 0% exit 100%;
-    }
-    @keyframes alejar {
-      from { opacity: 1; transform: none; }
-      to   { opacity: 0; transform: translateY(-3rem) scale(0.97); }
-    }
-
-    /* Las tarjetas entran escalonadas, no todas de golpe. */
-    .tarjetas .tarjeta {
-      animation: surgir linear both;
-      animation-timeline: view();
-      animation-range: entry 10% cover 38%;
-    }
-  }
-}
-
-/* Sin soporte o con movimiento reducido: todo visible y quieto. */
-@media (prefers-reduced-motion: reduce) {
-  .revelar, .escena__halo, .hero__contenido, .tarjetas .tarjeta {
-    animation: none !important; opacity: 1 !important; transform: none !important;
-  }
-}

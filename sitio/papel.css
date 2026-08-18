@@ -1879,19 +1879,6 @@
     .papel .renglon--2 { animation-range: entry 36% cover 48%; }
     .papel .renglon--3 { animation-range: entry 42% cover 54%; }
 
-    /* ---------- los hitos y los hechos ----------
-       Se TRAZAN de arriba abajo, como se lee una cronología y como se
-       imprime una lista. Cada uno arranca un poco después del anterior;
-       el escalonado lo da el propio scroll, no un `animation-delay`, así que
-       nunca se desincroniza de dónde está el lector. */
-    .papel .hito,
-    .papel .hecho,
-    .papel .contraste__cara {
-      animation: trazar linear both;
-      animation-timeline: view();
-      animation-range: entry 8% cover 30%;
-    }
-
     /* 2.5rem sería un salto; 0.75rem es un corrimiento. La regla 3 de este
        mundo: el movimiento se mide en milímetros. Y nunca desde `scale(0)` ni
        desde `opacity` con desplazamiento grande — nada en el mundo real
@@ -1901,18 +1888,31 @@
       to   { opacity: 1; transform: none; }
     }
 
-    /* ---------- la cifra mayor ----------
-       Entra sola y sin desplazamiento: es lo más grande de la página y
-       moverla se sentiría como que se cae. Solo aparece. */
-    .papel .mayor__valor {
-      animation: surgir-quieto linear both;
-      animation-timeline: view();
-      animation-range: entry 10% cover 34%;
-    }
-    @keyframes surgir-quieto {
-      from { opacity: 0; transform: scale(0.985); }
-      to   { opacity: 1; transform: none; }
-    }
+    /* ---------- DÓNDE SE TRAZÓ LA LÍNEA ENTRE LOS DOS SISTEMAS ----------
+
+       Acá vivían también `.hito`, `.hecho`, `.contraste__cara` y
+       `.mayor__valor`. Se fueron a `/revelar.js`, y la línea que decide
+       quién se queda es esta:
+
+         LO QUE SE REVELA se unificó en un solo sistema. Son piezas
+         intercambiables —un hito, un hecho, una carta— que entran igual
+         porque son la misma clase de cosa. Ahí lo que importa es que las
+         doce se lean como una misma mano, y que funcionen en todos lados:
+         `animation-timeline` todavía no está en Firefox estable, así que
+         una parte de las visitas no veía ninguna de estas entradas.
+
+         LO QUE ES INSTRUMENTO se queda acá, atado al scroll a propósito.
+         La vía que se llena, la costura que remata, los carriles que se
+         alinean: en esos el scroll ES la aguja del instrumento. Su avance
+         tiene que corresponder al del lector cuadro por cuadro, y una
+         transición disparada por umbral rompería justamente eso.
+
+       Dicho corto: si el scroll es solo el disparador, va en JavaScript;
+       si el scroll es el dato, se queda en la hoja.
+
+       Y había un defecto medido detrás de esto: diez piezas llevaban las
+       DOS animaciones a la vez —`trazar` desde acá y el revelado desde el
+       atributo—, cada una peleando por la misma `opacity`. */
 
     /* ---------- la resolución: los carriles se ALINEAN ----------
        El remate de la película, y la única animación de la página que dura
@@ -2801,5 +2801,57 @@
   .papel .cabecera--con-tirador .menu .sesion > a:not(.boton) {
     border: 1px solid var(--borde-fuerte);
     color: var(--tinta);
+  }
+}
+
+/* ==========================================================================
+   REVELAR — lo que entra cuando el ojo llega
+
+   La contraparte de `/revelar.js`. Todo cuelga de `.revela` en el <html>,
+   que pone ese archivo antes de que se pinte el primer cuadro: sin él —sin
+   JavaScript, o con el movimiento apagado— ninguna de estas reglas aplica y
+   la página se ve completa y quieta. No existe el estado en que algo queda
+   invisible esperando un script que no llegó.
+
+   EL MOVIMIENTO SON 12 px Y NO 40. `IDENTIDAD.md` lo dice en una línea —el
+   movimiento se mide en milímetros— y son los mismos `0.75rem` con que ya
+   entra la portada. Cuarenta píxeles se leen como una diapositiva; doce se
+   leen como papel que se asienta.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+  .revela [data-revelar] {
+    opacity: 0;
+    transform: translateY(0.75rem);
+    transition:
+      opacity   var(--revelar-dura, 620ms) var(--curva) var(--revelar-espera, 0ms),
+      transform var(--revelar-dura, 620ms) var(--curva) var(--revelar-espera, 0ms),
+      filter    var(--revelar-dura, 620ms) var(--curva) var(--revelar-espera, 0ms);
+    will-change: opacity, transform;
+  }
+
+  /* Las variantes. Ninguna pasa de 0.75rem: lo que cambia es la dirección,
+     no la distancia. Un solo valor de recorrido en todo el sistema es lo que
+     hace que doce piezas distintas se lean como una misma mano. */
+  .revela [data-revelar="bajar"]     { transform: translateY(-0.75rem); }
+  .revela [data-revelar="izquierda"] { transform: translateX(-0.75rem); }
+  .revela [data-revelar="derecha"]   { transform: translateX(0.75rem); }
+
+  /* `escala` arranca en 0.985 y no en 0.9: un objeto que nace del tamaño de
+     un punto no se parece a nada del mundo real. Es el mismo 0.985 con que
+     `filmar.js` hace entrar las piezas de las películas. */
+  .revela [data-revelar="escala"]    { transform: scale(0.985); }
+
+  /* `velo` para lo que tiene que leerse como que se enfoca —una cifra, una
+     pantalla—. El desenfoque es caro: se usa en pocas piezas a propósito. */
+  .revela [data-revelar="velo"] {
+    transform: translateY(0.5rem);
+    filter: blur(5px);
+  }
+
+  .revela [data-revelar].revelado {
+    opacity: 1;
+    transform: none;
+    filter: none;
   }
 }

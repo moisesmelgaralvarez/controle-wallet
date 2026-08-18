@@ -375,6 +375,11 @@ function bloqueCapital(pat) {
       ${pat.faltanCuentas ? `<p class="pulso-app__pie panel__nota ojo">
         No hay ninguna cuenta de banco registrada, así que esta cifra solo cuenta el
         efectivo y las deudas.</p>` : ''}
+      ${pat.efectivoDescuadrado ? `<p class="pulso-app__pie panel__nota ojo">
+        Se gastó ${esc(dinero(pat.efectivoSinRegistrar))} más en efectivo del que consta
+        haberse retirado. Falta anotar un retiro — y mientras falte, el saldo de la cuenta
+        y este capital salen mejores de lo que son:
+        <a href="#/movimientos">revisá los retiros</a>.</p>` : ''}
     </section>`;
 }
 
@@ -448,6 +453,16 @@ function bloqueDiagnostico(salud) {
             <b>${Math.round(Math.min(999, salud.mordidaInteres * 100))}%</b> del disponible:
             de los ${esc(dinero(salud.disponibleDeclarado))} que parecen libres, quedan
             <b>${esc(dinero(salud.disponibleReal))}</b>.
+          </p>
+          <!-- QUÉ NO ESTÁ CONTANDO ESTA CIFRA. El cálculo es la tasa anual
+               entre doce sobre lo que se revuelve: no incluye comisiones de
+               manejo, ni impuestos sobre ellas, ni mora. Todas empujan hacia
+               arriba. Presentarla sin decirlo la convierte en una promesa que
+               el estado de cuenta desmiente, y en un producto que se vende
+               como asesor eso cuesta más que el error. -->
+          <p class="pulso-app__pie panel__nota">
+            Es una estimación con la tasa que registraste, sin comisiones, impuestos
+            ni mora — el cobro real de tu banco es igual o mayor.
           </p>
         </div>` : ''}
 

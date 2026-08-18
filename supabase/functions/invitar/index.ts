@@ -44,20 +44,13 @@
    la app.
    ============================================================ */
 
-const CABECERAS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Content-Type': 'application/json'
-};
-
-const responder = (cuerpo: unknown, estado = 200) =>
-  new Response(JSON.stringify(cuerpo), { status: estado, headers: CABECERAS });
-
-const fallar = (mensaje: string, estado: number) =>
-  responder({ error: mensaje, propio: true }, estado);
+import { respuestas } from '../_compartido/origen.js';
 
 Deno.serve(async (req: Request) => {
+  /* Las cabeceras dependen de QUIÉN pregunta, así que se arman por
+     petición y no una vez al cargar el módulo. Ver `_compartido/origen.js`. */
+  const { CABECERAS, responder, fallar } = respuestas(req);
+
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CABECERAS });
 
   const autorizacion = req.headers.get('Authorization') || '';

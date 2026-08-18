@@ -388,7 +388,20 @@ async function arrancar({ refrescar = false } = {}) {
   cerrarHoja();
   try {
     hogar = await datosDelHogar();
-    fijarMoneda(hogar && hogar.moneda);
+    /* `fijarMoneda` devuelve el código que QUEDÓ puesto, que no siempre
+       es el que se pidió: uno desconocido cae al lempira. Se pinta ese y
+       no el de la base, para que el rótulo no prometa una moneda en la
+       que las cifras no están saliendo. */
+    const moneda = fijarMoneda(hogar && hogar.moneda);
+    const rotuloMoneda = $('#monedaTope');
+    if (rotuloMoneda) {
+      const ficha = A.MONEDAS[moneda];
+      rotuloMoneda.textContent = `${A.simboloMoneda(moneda)} ${moneda}`;
+      rotuloMoneda.title = ficha ? `Todas las cifras van en ${ficha.nombre.toLowerCase()}.` : '';
+      rotuloMoneda.setAttribute('aria-label',
+        ficha ? `Moneda del hogar: ${ficha.nombre}` : `Moneda del hogar: ${moneda}`);
+      rotuloMoneda.hidden = false;
+    }
     const actual = mesDeHoy((hogar && hogar.inicio_mes) || 1);
     periodo = elegido || actual;
 

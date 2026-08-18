@@ -34,7 +34,21 @@
   # connect-src limita a dónde puede hablar la app: solo a sí misma
   # y a Supabase. Si algo intentara mandar datos del hogar a otro
   # servidor, el navegador lo bloquea.
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co; worker-src 'self'; manifest-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+  #
+  # DECÍA `https://*.supabase.co`, Y ESO ES CUALQUIER PROYECTO DE
+  # SUPABASE, no los dos nuestros. Cualquiera puede crear uno gratis
+  # en un minuto, así que el comodín autorizaba a hablar con la base
+  # de un desconocido. Con `script-src 'self'` no hay hoy forma de
+  # aprovecharlo —haría falta primero ejecutar código inyectado, que
+  # es justo lo que esa otra línea impide— pero una defensa que
+  # depende de que la de al lado no falle no es una defensa: es una
+  # apuesta. Van los dos anfitriones exactos.
+  #
+  # Los dos, y no solo producción: `wrangler dev` y las vistas
+  # previas de cada rama hablan con la base de PRUEBAS, y sirven este
+  # mismo archivo. Dejar solo producción rompería el desarrollo, y lo
+  # rompería en silencio.
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://qhbkghxuwzdrlswphusd.supabase.co https://xidzmxtninmtxgqhddvu.supabase.co; worker-src 'self'; manifest-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
 
   # Que nadie meta el sitio en un iframe suyo para engañar con clics
   # falsos. frame-ancestors ya lo cubre; esto es para navegadores

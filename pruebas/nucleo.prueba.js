@@ -1839,3 +1839,40 @@ probar('el presupuesto fijado le gana a la media', () => {
   return { ok: cerca(f.referencia, 3500) && f.deLaMedia === false && f.consumido < 1,
            det: 'lo que la persona decidió manda sobre lo que viene pasando' };
 });
+
+
+/* ============ el efectivo que no cuadra ============ */
+grupo('El efectivo que no cuadra');
+
+/** Retiró 1,000 y gastó 1,500 en efectivo: faltan 500 sin registrar. */
+const efectivoCorto = () => ({
+  version: 6, configurado: true, inicioMes: 1,
+  personas: [{ id: 'p1', nombre: 'Ana', cuentaId: 'c1' }],
+  cuentas: [{ id: 'c1', nombre: 'Cuenta', saldoInicial: 10000, desdeMes: '2026-08' }],
+  plantillaIngresos: [], ingresosMes: {}, gastos: [], tarjetas: [],
+  financiamientos: [], proyectos: [], pagosTarjeta: [],
+  retiros: [{ id: 'r1', fecha: '2026-08-05', periodo: '2026-08', monto: 1000, cuentaId: 'c1' }],
+  movimientos: [{ id: 'm1', fecha: '2026-08-20', periodo: '2026-08', monto: 1500,
+                  medioPago: 'efectivo' }]
+});
+
+probar('Gastar más efectivo del retirado se marca, no se traga', () => {
+  const p = A.patrimonio(efectivoCorto(), '2026-08');
+  return { ok: p.efectivoDescuadrado === true && p.efectivoSinRegistrar === 500,
+           det: `descuadrado ${p.efectivoDescuadrado} · faltan ${p.efectivoSinRegistrar}` };
+});
+
+probar('La bolsa negativa sigue recortada a cero: no ensucia el capital', () => {
+  const p = A.patrimonio(efectivoCorto(), '2026-08');
+  // 10,000 en cuenta − 1,000 retirado = 9,000, y el efectivo no resta.
+  return { ok: p.enMano === 0 && p.neto === 9000,
+           det: `en mano ${p.enMano} · capital ${p.neto}` };
+});
+
+probar('Con el retiro completo no se acusa a nadie', () => {
+  const d = efectivoCorto();
+  d.retiros[0].monto = 2000;                 // ahora sí alcanza
+  const p = A.patrimonio(d, '2026-08');
+  return { ok: p.efectivoDescuadrado === false && p.efectivoSinRegistrar === 0 && p.enMano === 500,
+           det: `en mano ${p.enMano}` };
+});

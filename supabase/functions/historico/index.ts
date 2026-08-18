@@ -29,34 +29,11 @@
       revienta en vez de devolver un número. Ver `_compartido/traer.js`.
    ============================================================ */
 
+import { respuestas } from '../_compartido/origen.js';
+
 import { armar, CONFIGURACION, POR_MES } from '../../../sitio/app/datos/armador.js';
 import * as A from '../../../sitio/app/nucleo/index.js';
 import { traerTodo, lectorPostgrest } from '../_compartido/traer.js';
-
-const CABECERAS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Content-Type': 'application/json'
-};
-
-const responder = (cuerpo: unknown, estado = 200) =>
-  new Response(JSON.stringify(cuerpo), { status: estado, headers: CABECERAS });
-
-/**
- * Un error que ya está escrito para leerse.
- *
- * `propio: true` es la marca que le dice al navegador «este mensaje
- * pasa tal cual, no lo cambies por el genérico de tu tabla». Sin ella,
- * `traducir()` ve un 500 y muestra «Falló el servidor. Intentá de
- * nuevo», que es justo lo contrario de lo que hace falta: cuando el
- * cálculo se niega porque faltaron 412 filas, ESA es la frase que hay
- * que leer. Se pagó una vez con los errores de entrada, que decían
- * «los datos enviados no son válidos» a quien tenía el correo sin
- * confirmar.
- */
-const fallar = (mensaje: string, estado: number) =>
-  responder({ error: mensaje, propio: true }, estado);
 
 /**
  * Cada proyecto evaluado trae dentro la proyección a 60 meses con la
@@ -73,6 +50,10 @@ function sinProyeccion(cartera: Record<string, { filas?: unknown }>) {
 }
 
 Deno.serve(async (req: Request) => {
+  /* Las cabeceras dependen de QUIÉN pregunta, así que se arman por
+     petición y no una vez al cargar el módulo. Ver `_compartido/origen.js`. */
+  const { CABECERAS, responder, fallar } = respuestas(req);
+
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CABECERAS });
 
   const autorizacion = req.headers.get('Authorization') || '';

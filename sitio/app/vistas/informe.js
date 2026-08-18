@@ -154,7 +154,9 @@ export function informe({ contenedor, D, periodo, hogar }) {
           { t: 'Lo recomendado', d: `${A.MESES_COLCHON} meses de gasto`, v: dinero(salud.metaColchon) },
           { t: 'Lo que cuesta la deuda al mes', v: dinero(salud.interesMensual), tono: 'mal' },
           { t: 'Y al año', v: dinero(salud.interesAnual), tono: 'mal' }
-        ]), 'Cuánto aguantaría el hogar sin ingresos. Tres meses es lo que recomienda cualquier manual.')}
+        ]), 'Cuánto aguantaría el hogar sin ingresos. Tres meses es lo que recomienda cualquier manual. ' +
+            'El costo de la deuda es una estimación con la tasa registrada: no incluye comisiones, ' +
+            'impuestos ni mora, así que el cobro real es igual o mayor.')}
 
         ${seccion('Mes a mes', !hist?.filas?.length ? '' : filas(
           hist.filas.slice().reverse().map(f => ({

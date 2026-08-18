@@ -61,6 +61,22 @@ function patrimonio(D, per) {
     enBanco, enLibros, retenidoBanco, enMano, activos,
     enTarjetas, retenidoTarjetas, enFinanciamientos, pasivos,
     retenidoTotal: cent(retenidoBanco + retenidoTarjetas),
+    /* EL MISMO `max` QUE EN LAS TARJETAS TAPABA UNA CONTRADICCIÓN.
+
+       `enMano` recorta el efectivo a cero, y hace bien: una bolsa
+       negativa no significa nada y ensuciaría el capital. Pero un
+       efectivo negativo SÍ significa algo, y algo caro: falta anotar un
+       retiro. Y si ese retiro falta, el saldo de la cuenta está alto por
+       ese mismo monto —porque `saldoCuenta` solo resta los retiros
+       registrados— así que el capital sale MEJOR de lo que es, justo por
+       la cantidad que no se anotó.
+
+       El recorte se queda. Lo que se agrega es decirlo: `efectivo()` ya
+       marcaba el descuadre y nadie lo estaba leyendo, así que ninguna
+       pantalla podía avisarlo. Es la misma disciplina de `pagadoDeMas`:
+       una contradicción se grita, no se tapa. */
+    efectivoDescuadrado: ef.descuadre,
+    efectivoSinRegistrar: ef.descuadre ? cent(-ef.saldo) : 0,
     neto: activos - pasivos,
     tarjetas,
     // Sin cuentas declaradas la cifra no significa nada y hay que decirlo.

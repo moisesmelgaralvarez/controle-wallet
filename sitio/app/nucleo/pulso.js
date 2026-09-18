@@ -33,7 +33,13 @@ function diasHasta(per, dia, objetivo) {
  * gastado FRENTE a qué tan avanzado va el mes". Gastar el 60% del presupuesto
  * es normal el día 20 y es una alarma el día 5.
  */
-function pulso(D, per, hoy) {
+/* `referencia` es contra qué se mide el mes cuando el plan no lo dice todo.
+   El Resumen mide cada rubro contra su presupuesto o, si no tiene, contra lo
+   que ese rubro suele costar; y este pulso medía solo contra el plan. En la
+   misma pantalla salían «L 14,505 de L 17,611» arriba y «161% del
+   presupuesto ido» abajo — dos vara distintas para la misma pregunta. Sin
+   referencia, el plan, como siempre. */
+function pulso(D, per, hoy, referencia) {
   const hoyStr = hoy || hoyLocal();
   const ini = inicioMes(D);
   const rango = rangoPeriodo(per, ini);
@@ -47,7 +53,7 @@ function pulso(D, per, hoy) {
   const dia = enCurso ? Math.min(diasMes, Math.max(0, corridos)) : (hoyPer > per ? diasMes : 0);
   const diasRestantes = Math.max(0, diasMes - dia);
 
-  const presupuesto = gastosMes(D, 0, per).total;
+  const presupuesto = referencia > 0 ? referencia : gastosMes(D, 0, per).total;
   const gastado = sumaMontos((D.movimientos || []).filter(x => perDe(x) === per));
 
   const avanceMes = diasMes > 0 ? dia / diasMes : 0;

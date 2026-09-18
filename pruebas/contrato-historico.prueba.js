@@ -44,7 +44,8 @@ const CLAVES = clavesDeLaRespuesta(fuente);
 /* Lo que cada pantalla lee. Si una vista empieza a usar un campo
    nuevo, se agrega aquí y la prueba obliga a que la función lo mande. */
 const CONSUMEN = {
-  Resumen:   ['patrimonio', 'cuentas', 'salud'],
+  Resumen:   ['patrimonio', 'cuentas', 'salud', 'sugerido', 'saldar'],
+  Presupuesto: ['sugerido'],
   Historia:  ['historia', 'filasUsadas'],
   Proyectos: ['cartera'],
   Cierre:    ['cierre', 'paraCerrar'],

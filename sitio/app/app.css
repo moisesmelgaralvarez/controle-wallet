@@ -182,6 +182,10 @@
 .ciclo-app { display: grid; gap: 0.5rem; font-variant-numeric: tabular-nums; }
 .ciclo-app__f { display: flex; justify-content: space-between; gap: var(--e2); font-size: var(--t-sm); }
 .ciclo-app__f em { font-style: normal; color: var(--tenue); }
+/* La cifra no se parte nunca: a 390 px, con una nota larga a la izquierda,
+   salía «−L» en un renglón y «20,741.20» en el siguiente. Cede la etiqueta,
+   que sí puede ir en dos líneas. */
+.ciclo-app__f > span:last-child { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .ciclo-app__f.total { border-top: 1px solid var(--borde); padding-top: 0.5rem; font-weight: 700; font-size: var(--t-md); }
 .ciclo-app__f.total .mal { color: var(--alerta); }
 .ciclo-app__f.total .bien { color: var(--acento); }
@@ -440,6 +444,8 @@ body[data-asistente="si"] .tope { display: none; }
 /* Un botón que acompaña a un título no puede tener el mismo peso que
    la acción principal de la pantalla. */
 .boton--chico { padding: 0.35rem 0.85rem; font-size: var(--t-xs); }
+/* El ajuste del efectivo va pegado a su cifra pero no encima de ella. */
+.efectivo__ajuste { margin-top: var(--e2); }
 
 /* ---------- listas de configuración ---------- */
 

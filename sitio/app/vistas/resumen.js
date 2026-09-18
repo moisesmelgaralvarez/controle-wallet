@@ -41,7 +41,6 @@ export function resumen({ contenedor, D, periodo }) {
 
   function pintarMes() {
   const r = A.resumenMes(D, periodo);
-  const p = A.pulso(D, periodo);
   const credito = (D.tarjetas || []).filter(t => (t.tipo || 'credito') === 'credito');
   const efe = A.efectivo(D, periodo);
 
@@ -74,6 +73,8 @@ export function resumen({ contenedor, D, periodo }) {
   for (const f of ((sug && sug.filas) || [])) if (f.gastoId) medias[f.gastoId] = f.sugerido;
 
   const rp = A.realPorRubro(D, periodo, medias);
+  // El ritmo se mide con la MISMA vara que la ficha de gastos y las barras.
+  const p = A.pulso(D, periodo, undefined, rp.hayConQueMedir ? rp.referenciaTotal : undefined);
 
   /* DISPONIBLE REAL = LO QUE HAY. NO INGRESO MENOS GASTOS.
 
@@ -99,15 +100,26 @@ export function resumen({ contenedor, D, periodo }) {
   const pat = servidor && servidor.patrimonio;
   const disponibleReal = pat ? Math.round((pat.enBanco + pat.enMano) * 100) / 100 : null;
 
+  /* DE CUÁNDO ES Y QUÉ DEJA FUERA. Una cifra de dinero sin fecha invita a
+     creer que es de hoy, y la del banco es del último estado de cuenta.
+     Y si una cuenta no se suma porque el banco nunca dijo su saldo, se
+     nombra: callarlo haría pensar que la app se la olvidó. */
+  const sinBanco = (pat && pat.cuentasSinBanco) || [];
+  const detalleDisponible = () => {
+    if (sinBanco.length) {
+      return `sin contar ${sinBanco.map(c => c.nombre).join(' ni ')}: el banco no ha dicho su saldo`;
+    }
+    if (pat.bancoCalculado) return 'calculado: ninguna cuenta tiene saldo del banco';
+    const menos = pat.retenidoBanco > 0 ? `, sin ${dinero(pat.retenidoBanco)} ya gastado` : '';
+    return pat.saldoAl ? `según el banco al ${diaCorto(pat.saldoAl)}${menos}`
+         : pat.retenidoBanco > 0 ? `en banco y efectivo${menos}` : 'lo que hay en banco y efectivo, hoy';
+  };
+
   const fichas = [
     { t: 'Disponible real',
       v: disponibleReal === null ? '—' : dinero(disponibleReal),
       c: disponibleReal === null ? '' : disponibleReal >= 0 ? 'bien' : 'mal',
-      d: disponibleReal === null
-           ? 'consultando los saldos…'
-           : (pat.retenidoBanco > 0
-               ? `en banco y efectivo, sin ${dinero(pat.retenidoBanco)} ya gastado`
-               : 'lo que hay en banco y efectivo, hoy') },
+      d: disponibleReal === null ? 'consultando los saldos…' : detalleDisponible() },
     { t: 'Ingreso neto', v: dinero(r.neto),
       d: r.confirmado ? 'confirmado' : r.parcial ? 'confirmado a medias' : 'sin confirmar' },
     { t: 'Gastos del mes', v: dinero(rp.gastado),
@@ -143,7 +155,7 @@ export function resumen({ contenedor, D, periodo }) {
               <div class="pulso-app__via"><div class="pulso-app__va" data-ancho="${barra(p.avanceMes)}"></div></div>
             </div>
             <div class="pulso-app__fila">
-              <em><span>Presupuesto ido</span><span>${esc(pct(p.avanceGasto))}</span></em>
+              <em><span>${rp.soloMedia || rp.algunaMedia ? 'Gastado de lo previsto' : 'Presupuesto ido'}</span><span>${esc(pct(p.avanceGasto))}</span></em>
               <div class="pulso-app__via"><div class="pulso-app__va ${p.adelantado ? 'mal' : ''}" data-ancho="${barra(p.avanceGasto)}"></div></div>
             </div>
           </div>
@@ -152,9 +164,14 @@ export function resumen({ contenedor, D, periodo }) {
               ? `Van más rápido que el calendario. A este ritmo cerrarían en <strong>${esc(dinero(p.proyeccion))}</strong>.`
               : 'Van a buen ritmo para llegar al final del mes.'}
           </p>
-          <p class="pulso-app__pie">
-            Para llegar justos quedan <strong>${esc(dinero(p.porDia))}</strong> al día,
-            con ${esc(p.diasRestantes)} ${p.diasRestantes === 1 ? 'día' : 'días'} por delante.
+          <p class="pulso-app__pie">${p.restante > 0
+            ? `Para llegar justos quedan <strong>${esc(dinero(p.porDia))}</strong> al día,
+               con ${esc(p.diasRestantes)} ${p.diasRestantes === 1 ? 'día' : 'días'} por delante.`
+            /* «Quedan L −458.83 al día» no es una frase: es un número
+               negativo con cara de consejo. Pasado lo previsto, lo que hay
+               que saber es por cuánto. */
+            : `Ya se pasaron por <strong>${esc(dinero(-p.restante))}</strong> de lo previsto
+               para el mes, y quedan ${esc(p.diasRestantes)} ${p.diasRestantes === 1 ? 'día' : 'días'}.`}
           </p>
           ${p.proximoIngreso || p.proximoCorte ? `
             <p class="pulso-app__pie pulso-app__agenda">
@@ -350,6 +367,11 @@ function bloqueCapital(pat) {
       ${pat.faltanSaldosTarjeta ? `<p class="pulso-app__pie panel__nota ojo">
         Falta declarar cuánto deben en alguna tarjeta. Sin ese dato el capital sale
         mejor de lo que es: <a href="#/presupuesto">completalo en Presupuesto</a>.</p>` : ''}
+      ${(pat.cuentasSinBanco || []).map(c => `<p class="pulso-app__pie panel__nota ojo">
+        No se suma <b>${esc(c.nombre)}</b>. La app calcula ${esc(dinero(c.disponible))}, pero
+        ningún estado de cuenta lo confirma, y una cuenta calculada se desfasa en cuanto falta
+        anotar un pago. <a href="#/importar">Importá su estado de cuenta</a> o escribí su
+        saldo en <a href="#/presupuesto">Presupuesto</a>.</p>`).join('')}
       ${pat.faltanCuentas ? `<p class="pulso-app__pie panel__nota ojo">
         No hay ninguna cuenta de banco registrada, así que esta cifra solo cuenta el
         efectivo y las deudas.</p>` : ''}
@@ -367,7 +389,11 @@ function bloqueCuentas(cuentas) {
             <div class="fila-cfg fila-cfg--quieta">
               <span class="fila-cfg__t">
                 <strong>${esc(c.nombre)}</strong>
-                <small>${c.retenido > 0
+                <small>${c.segunBanco
+                  ? `según el banco al ${esc(diaCorto(c.segunBanco.fecha))}` +
+                    (c.retenido > 0 ? ` · ${esc(dinero(c.retenido))} ya gastado sin salir` : '')
+                  : cuentas.conBanco ? 'calculado, sin estado de cuenta · no se suma'
+                  : c.retenido > 0
                   ? `${esc(dinero(c.saldo))} en libros · ${esc(dinero(c.retenido))} ya gastado sin salir`
                   : c.sinConfirmar ? 'sin ingresos confirmados: es el saldo con que arrancó'
                   : 'disponible'}</small>
@@ -377,7 +403,9 @@ function bloqueCuentas(cuentas) {
           </li>`).join('')}
       </ul>
       ${cuentas.filas.length > 1
-        ? `<div class="total-cfg"><span>Disponible en total</span><span>${esc(dinero(cuentas.totalDisponible))}</span></div>`
+        ? cuentas.conBanco && cuentas.conBanco < cuentas.filas.length
+          ? `<div class="total-cfg"><span>Disponible según el banco</span><span>${esc(dinero(cuentas.totalDisponibleBanco))}</span></div>`
+          : `<div class="total-cfg"><span>Disponible en total</span><span>${esc(dinero(cuentas.totalDisponible))}</span></div>`
         : ''}
     </section>`;
 }
@@ -435,5 +463,58 @@ function bloqueDiagnostico(salud) {
 }
 
 /** Todo lo que el servidor agrega, en el orden en que se lee. */
+/* ============================================================
+   CÓMO SE SALDA LA TARJETA
+
+   La deuda contra lo que hay y lo que viene, en el orden en que cae.
+   Cada ingreso vale lo que de verdad dejó las últimas veces que se
+   confirmó —las comisiones del 6 cambian cada mes—, y el panel dice de
+   dónde salió cada cifra. Nada de esto se suma al disponible: lo que
+   todavía no cae es una posibilidad, no dinero.
+   ============================================================ */
+function bloqueSaldar(s) {
+  if (!s || !s.hay) return '';
+  const nombres = s.tarjetas.map(t => t.nombre).join(' y ');
+  const t0 = s.tarjetas.length === 1 ? s.tarjetas[0] : null;
+  const notaDeuda = t0 && t0.segunBanco
+    ? `según el banco al ${diaCorto(t0.segunBanco.fecha)}, más lo cargado después`
+    : '';
+  const cubre = s.ingresos.find(x => x.id === s.cubreCon);
+  const veces = n => `${n} ${n === 1 ? 'vez' : 'veces'}`;
+
+  return `
+    <section class="panel">
+      <div class="panel__tope"><h2>Cómo se salda la tarjeta</h2></div>
+      <div class="ciclo-app">
+        ${linea(`Deben en ${nombres}`, s.deuda, notaDeuda, true)}
+        ${linea('Hay hoy', s.disponible, 'banco y efectivo')}
+        ${s.ingresos.map(x => linea(`Entra el ${diaCorto(x.fecha)} · ${x.nombre}`, x.monto,
+          x.base === 'promedio'
+            ? (x.veces > 1 && x.minimo !== x.maximo
+                ? `promedio de las últimas ${veces(x.veces)}: entre ${dinero(x.minimo)} y ${dinero(x.maximo)}`
+                : x.veces === 1 ? 'lo que dejó la última vez' : `lo mismo las últimas ${veces(x.veces)}`)
+            : 'lo que dice la plantilla: nunca se confirmó')).join('')}
+        <div class="ciclo-app__f total">
+          <em>${s.resultado >= 0 ? 'Sobraría' : 'Faltaría'}</em>
+          <span class="${s.resultado >= 0 ? 'bien' : 'mal'}">${esc(dinero(Math.abs(s.resultado)))}</span>
+        </div>
+      </div>
+      <p class="pulso-app__pie">${s.cubreYa
+        ? 'Lo que hay hoy ya alcanza para saldarla.'
+        : cubre
+          ? `Con lo que hay y lo que entra el <strong>${esc(diaCorto(cubre.fecha))}</strong>
+             (${esc(cubre.nombre)}) queda saldada.`
+          : s.resultado < 0
+            ? `Ni juntando todo lo que viene alcanza: faltarían
+               <strong>${esc(dinero(-s.resultado))}</strong>. Lo que no se pague completo
+               empieza a cobrar intereses.`
+            : 'Juntando lo que viene alcanza.'}</p>
+      <p class="pulso-app__pie panel__nota">Lo que todavía no cae no se suma al disponible:
+        es una posibilidad, no dinero en mano. Y todo lo que vaya a la tarjeta deja de estar
+        para el resto del mes.</p>
+    </section>`;
+}
+
 const bloquesDelServidor = r =>
-  bloqueCapital(r.patrimonio) + bloqueCuentas(r.cuentas) + bloqueDiagnostico(r.salud);
+  bloqueCapital(r.patrimonio) + bloqueSaldar(r.saldar) + bloqueCuentas(r.cuentas) +
+  bloqueDiagnostico(r.salud);

@@ -85,10 +85,16 @@ Deno.serve(async (req: Request) => {
   if (!url || !clave) return fallar('Falta configuración del proyecto.', 500);
 
   try {
-    const { periodo, meses = 12 } = await req.json().catch(() => ({}));
+    const { periodo, meses = 12, hoy: hoyPedido } = await req.json().catch(() => ({}));
     if (!/^\d{4}-\d{2}$/.test(String(periodo || ''))) {
       return fallar('Falta el período, con forma AAAA-MM.', 400);
     }
+    /* «Hoy» es el del teléfono, no el del servidor. El servidor vive en
+       UTC y en Honduras son seis horas menos: a partir de las 6 de la
+       tarde ya sería mañana, y un ingreso que cae hoy saldría como si
+       ya hubiera caído. Si no viene o viene mal, el del servidor. */
+    const hoy = /^\d{4}-\d{2}-\d{2}$/.test(String(hoyPedido || ''))
+      ? String(hoyPedido) : new Date().toISOString().slice(0, 10);
 
     const traer = (tabla: string) =>
       traerTodo(lectorPostgrest({ url, clave, autorizacion, tabla }));
@@ -165,6 +171,11 @@ Deno.serve(async (req: Request) => {
       cuentas: A.saldosCuentas(D, periodo),
       efectivo: A.efectivo(D, periodo),
       tarjetas: A.deudaTarjetas(D, periodo),
+
+      // La deuda de la tarjeta contra lo que hay y lo que viene. Aquí y no
+      // en el navegador porque el promedio de cada ingreso sale de los
+      // meses confirmados, y el navegador solo tiene el suyo.
+      saldar: A.planParaSaldar(D, periodo, hoy),
 
       // El veredicto de cada proyecto se calcula aquí y no en el
       // navegador porque castiga según el colchón y la deuda, y las

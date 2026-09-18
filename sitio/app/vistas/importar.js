@@ -31,7 +31,8 @@
 
 import * as A from '../nucleo/index.js';
 import {
-  $, $$, esc, dinero, diaCorto, cargando, avisar, selector, campo, datosDeForma
+  $, $$, esc, dinero, diaCorto, cargando, avisar, selector, campo, datosDeForma,
+  hoja, CATEGORIAS
 } from '../ui.js';
 import { preparar, aplicar } from '../datos/importar.js';
 import { crear } from '../datos/escribir.js';
@@ -39,6 +40,9 @@ import { FILAS } from '../datos/filas.js';
 
 /** Cuántos renglones se listan sin pedirlo. Con 300 movimientos, la
     pantalla no ayuda: abruma. */
+/* El valor de la opción que abre «Rubro nuevo». No puede chocar con un
+   identificador de verdad: esos son UUID. */
+const NUEVO = '__nuevo__';
 const A_LA_VISTA = 40;
 
 /* ============================================================
@@ -172,6 +176,20 @@ export function importar({ contenedor, D, hogar, recargar }) {
     }
   }
 
+  /* Un rubro nuevo que ya no usa ningún movimiento no se crea. Pasaba al
+     corregir: el motor proponía «Educación» para el colegio, uno lo
+     cambiaba a «Colegiatura», y «Educación» igual se iba a crear, vacío.
+     Y el aprendizaje de un comercio no puede apuntar a un rubro que no se
+     va a crear: la base lo rechazaría por la llave foránea y se caería la
+     importación entera. */
+  function podar() {
+    if (!plan) return;
+    const usados = new Set(plan.movimientos.map(m => m.gastoId).filter(Boolean));
+    plan.rubrosNuevos = plan.rubrosNuevos.filter(g => usados.has(g.id));
+    const existe = new Set([...gastos, ...plan.rubrosNuevos].map(g => g.id));
+    plan.comerciosNuevos = plan.comerciosNuevos.filter(c => existe.has(c.gastoId));
+  }
+
   function rehacerPlan() {
     try {
       plan = preparar({ D, lote, destino });
@@ -215,7 +233,8 @@ export function importar({ contenedor, D, hogar, recargar }) {
 
   function resumen() {
     const filas = Object.entries(lote.resumen || {});
-    if (!filas.length) return '<p class="panel__nota">El archivo no trae movimientos.</p>';
+    // Sin renglones, el aviso de arriba ya lo dijo: repetirlo es ruido.
+    if (!filas.length) return '';
     return `
       <ul class="lista-cfg">
         ${filas.map(([tipo, r]) => `
@@ -237,6 +256,24 @@ export function importar({ contenedor, D, hogar, recargar }) {
           de los dos lados los contaría dos veces.</p>` : ''}`;
   }
 
+  /* Un archivo sin un solo movimiento «cuadraba consigo mismo»: saldo
+     inicial más cero da el saldo final, y la pantalla lo celebraba en
+     verde. Es verdad y no sirve de nada — lo que hay que saber es que vino
+     vacío, y casi siempre es porque se descargó con el rango de fechas
+     equivocado. */
+  function avisoVacio(ancla) {
+    return `
+      <div class="aviso aviso--ojo">
+        <strong>Este archivo no trae ni un movimiento</strong>
+        <p>${lote.desde && lote.hasta
+             ? `Del ${esc(diaCorto(lote.desde))} al ${esc(diaCorto(lote.hasta))} el banco no lista nada.`
+             : 'El banco no lista nada.'}
+           Si en esas fechas sí hubo compras, el archivo se descargó con otro rango:
+           volvé a bajarlo eligiendo las fechas.
+           ${ancla != null && lote.hasta ? 'Lo único que trae es el saldo, y ese sí se puede anotar.' : ''}</p>
+      </div>`;
+  }
+
   /** Un gasto del lote, con el rubro que el motor le puso y opción de cambiarlo. */
   const filaGasto = (m, i) => `
     <li class="cierre-rubro">
@@ -253,6 +290,7 @@ export function importar({ contenedor, D, hogar, recargar }) {
           <option value="">Sin clasificar</option>
           ${[...gastos, ...(plan.rubrosNuevos || [])].map(g =>
             `<option value="${esc(g.id)}"${g.id === m.gastoId ? ' selected' : ''}>${esc(g.concepto)}</option>`).join('')}
+          <option value="${NUEVO}">+ Crear rubro nuevo…</option>
         </select>
       </label>
     </li>`;
@@ -300,10 +338,11 @@ export function importar({ contenedor, D, hogar, recargar }) {
           ${lote && !leyendo ? `
             <section class="panel">
               <div class="panel__tope"><h2>Qué trae</h2></div>
+              ${lote.movs.length ? `
               <p class="panel__nota">
                 ${esc(lote.movs.length)} ${lote.movs.length === 1 ? 'renglón' : 'renglones'},
                 del ${esc(diaCorto(lote.desde))} al ${esc(diaCorto(lote.hasta))}.
-              </p>
+              </p>` : ''}
               ${lote.lectura && lote.lectura.metodo === 'saldos' ? `
                 <div class="aviso aviso--ok">
                   <strong>Leído por el saldo, y comprobado</strong>
@@ -314,7 +353,7 @@ export function importar({ contenedor, D, hogar, recargar }) {
                   ${lote.lectura.sinPrimero ? `<p><b>El primer movimiento quedó fuera:</b>
                      el archivo no dice con qué saldo arrancaba, y su signo no se puede
                      deducir. Anotalo a mano si hace falta.</p>` : ''}
-                </div>` : control(lote.control)}
+                </div>` : !lote.movs.length ? avisoVacio(ancla) : control(lote.control)}
               ${resumen()}
             </section>` : ''}
 
@@ -481,9 +520,14 @@ export function importar({ contenedor, D, hogar, recargar }) {
                   igual, pero vas a tener que escribir el saldo a mano en Presupuesto
                   para que el cierre del mes pueda cuadrar.</p>`}
 
+              ${!lote.movs.length && !(ancla != null && lote.desde && lote.hasta) ? `
+                <p class="panel__nota">No hay nada que importar: ni movimientos ni un saldo
+                  con fecha.</p>` : `
               <button class="boton boton--principal" type="button" data-aplicar>
-                Importar ${esc(plan.movimientos.length + plan.retiros.length + plan.pagos.length)} registros
-              </button>
+                ${lote.movs.length
+                  ? `Importar ${esc(plan.movimientos.length + plan.retiros.length + plan.pagos.length)} registros`
+                  : 'Anotar solo el saldo'}
+              </button>`}
               <p class="panel__nota">Entra todo o no entra nada: si algo falla a mitad
                 de camino, tus datos quedan exactamente como estaban.</p>
             </section>` : ''}
@@ -567,6 +611,10 @@ export function importar({ contenedor, D, hogar, recargar }) {
     $$('[data-rubro]', contenedor).forEach(s => s.addEventListener('change', () => {
       const m = plan.movimientos[Number(s.dataset.rubro)];
       if (!m) return;
+      if (s.value === NUEVO) {
+        s.value = m.gastoId || '';
+        return crearRubro(m);
+      }
       m.gastoId = s.value || null;
       const clave = A.claveComercio(m.concepto || '');
       if (clave && s.value) {
@@ -574,9 +622,54 @@ export function importar({ contenedor, D, hogar, recargar }) {
         if (ya) ya.gastoId = s.value;
         else plan.comerciosNuevos.push({ clave, gastoId: s.value });
       }
+      podar();
       recordar();
+      pintar();
       avisar(`«${m.concepto}» queda en ${nombreRubro(s.value)}.`);
     }));
+
+    /* EL RUBRO QUE NO ESTÁ EN LA LISTA SE CREA AQUÍ MISMO.
+
+       «Debería haber un rubro de préstamo, o que permita crear un rubro
+       cuando no esté.» Antes había que salir a Presupuesto, crear el rubro
+       y volver — y al volver el archivo revisado ya no estaba. Ahora se
+       crea sin salir, entra al plan como cualquier rubro nuevo del
+       archivo, y viaja a la base en la MISMA transacción que los
+       movimientos: si la importación no pasa, el rubro tampoco. */
+    function crearRubro(m) {
+      hoja('Rubro nuevo', `
+        ${campo('concepto', 'Cómo se llama', 'required maxlength="80" placeholder="Préstamo, colegiatura, mascota…"')}
+        ${selector('categoria', 'Categoría', CATEGORIAS.map(c => ({ valor: c, texto: c })), 'Otros')}
+        <p class="hoja__nota">Entra con presupuesto en cero. El monto lo ponés después
+          en Presupuesto, o dejás que lo sugiera tu media.</p>
+      `, {
+        textoGuardar: 'Crear y usar',
+        alGuardar: async (d, fallo) => {
+          const nombre = String(d.concepto || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+          if (!nombre) return fallo('Escribí cómo se llama.'), false;
+          // Si ya existe con ese nombre se usa ese: dos «Préstamo» son el
+          // defecto de los rubros duplicados que hubo que limpiar a mano.
+          const igual = x => String(x.concepto || '').trim().toLowerCase() === nombre.toLowerCase();
+          let g = gastos.find(igual) || plan.rubrosNuevos.find(igual);
+          if (!g) {
+            g = { id: crypto.randomUUID(), concepto: nombre, categoria: d.categoria || 'Otros',
+                  monto: 0, crecimiento: 0, medioPago: 'tarjeta' };
+            plan.rubrosNuevos.push(g);
+          }
+          m.gastoId = g.id;
+          const clave = A.claveComercio(m.concepto || '');
+          if (clave) {
+            const ya = plan.comerciosNuevos.find(c => c.clave === clave);
+            if (ya) ya.gastoId = g.id;
+            else plan.comerciosNuevos.push({ clave, gastoId: g.id });
+          }
+          podar();
+          recordar();
+          pintar();
+          avisar(`«${m.concepto}» queda en ${g.concepto}.`);
+        }
+      });
+    }
 
     const b = $('[data-aplicar]', contenedor);
     if (b) b.addEventListener('click', async () => {

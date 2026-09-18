@@ -280,7 +280,13 @@ body[data-asistente="si"] .app { grid-template-columns: 1fr; }
 
 body[data-hoja="abierta"] { overflow: hidden; }
 
-.hoja { position: fixed; inset: 0; z-index: 20; display: grid; }
+/* POR ENCIMA DE LA BARRA DEL TELÉFONO. La barra de pestañas pasó a
+   `position: fixed; z-index: 30` en el #72, y la hoja se quedó en 20: en
+   teléfono la hoja sube desde abajo, así que su botón de guardar —que va
+   al fondo— quedaba TAPADO por la barra en cada formulario de la app. Se
+   encontró filmando «Rubro nuevo» a 390 px: el clic lo recibía «Presupuesto».
+   45: sobre la barra (30) y la guía del riel (40); bajo el menú «Más» (60). */
+.hoja { position: fixed; inset: 0; z-index: 45; display: grid; }
 .hoja__fondo { position: absolute; inset: 0; background: rgba(0,0,0,.5); }
 
 .hoja__caja {
@@ -330,7 +336,9 @@ body[data-hoja="abierta"] { overflow: hidden; }
 
 .flotante {
   position: fixed; left: 50%; bottom: 5rem; transform: translateX(-50%) translateY(1rem);
-  z-index: 30; padding: 0.7rem 1.2rem; border-radius: 999px;
+  /* Sobre la hoja: un aviso que sale mientras hay un formulario abierto
+     no puede quedar escondido detrás de él. */
+  z-index: 50; padding: 0.7rem 1.2rem; border-radius: 999px;
   background: var(--tinta); color: var(--fondo);
   font-size: var(--t-sm); font-weight: 550;
   opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s;

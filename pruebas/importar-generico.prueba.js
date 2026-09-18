@@ -228,3 +228,44 @@ test('«FRESSCO» es comida: un starmart de gasolinera', async () => {
   const r = I.reglaDe('FRESSCO VIZCAYA       CHOLUTECA 21:26');
   assert.strictEqual(r && r.rubro, 'Comida fuera');
 });
+
+test('El pago de un préstamo tiene su rubro', () => {
+  // Lo pidió el dueño: «debería haber un rubro de préstamo».
+  const r = A.reglaDe('PAGO DE PRESTAMO 0042-118');
+  assert.equal(r && r.rubro, 'Préstamos');
+});
+
+/* EL SALDO QUE NO SE ENCUENTRA ES NULO, NO CERO. Sin las palabras «Saldo
+   inicial» y «Saldo final», los dos quedaban en L 0.00: la pantalla decía
+   «el archivo NO cuadra», y ese cero se anotaba como el saldo que declaró
+   el banco. */
+test('sin saldo rotulado, se saca de la columna de saldo', () => {
+  const lote = A.adaptadorCsv(CON_COMA);
+  // 8,749.25 después de gastar 1,250.75 → arrancó en 10,000.
+  assert.equal(lote.saldoIni, 10000);
+  assert.equal(lote.saldoFin, 30409.25);
+});
+
+test('y da igual si el banco lista del más nuevo al más viejo', () => {
+  const [enc, ...resto] = CON_COMA.split('\n').slice(2);
+  const alReves = ['Banco Cualquiera', 'Cuenta No: 987654321', enc, ...resto.reverse()].join('\n');
+  const lote = A.adaptadorCsv(alReves);
+  assert.equal(lote.saldoIni, 10000);
+  assert.equal(lote.saldoFin, 30409.25);
+});
+
+test('sin saldo rotulado ni columna de saldo, no se inventa: queda sin saber', () => {
+  const sinSaldo = `Cuenta No: 987654321
+Fecha,Descripción,Débito,Crédito
+05/08/2026,SUPERMERCADO LA COLONIA,1250.75,
+09/08/2026,FARMACIA KIELSA,340.00,`;
+  const lote = A.adaptadorCsv(sinSaldo);
+  assert.equal(lote.saldoIni, null);
+  assert.equal(lote.saldoFin, null, 'un cero aquí se anotaría como el saldo del banco');
+});
+
+test('una columna de saldo que no se sostiene no se usa', () => {
+  const roto = CON_COMA.replace('30409.25', '99999.99');
+  const lote = A.adaptadorCsv(roto);
+  assert.equal(lote.saldoFin, null);
+});

@@ -163,3 +163,39 @@ test('preparar propone la tarjeta nueva sin tocar el hogar vivo', async () => {
   assert.equal(JSON.stringify({ t: D.tarjetas, c: D.cuentas }), antes,
     'revisar un archivo no puede cambiar las tarjetas ni los saldos en memoria');
 });
+
+/* El sueldo del 6 y el pago de la tarjeta del 6, por la misma cifra. Se
+   emparejaban por fecha y monto y la importación borraba el pago real. */
+test('Un depósito no es el duplicado de un pago anotado a mano', async () => {
+  const { preparar } = await import('../sitio/app/datos/importar.js');
+  const D = hogar();
+  D.pagosTarjeta = [{ id: 'pago-real', fecha: '2026-09-06', periodo: '2026-09', monto: 18000,
+                      tarjetaId: 't-cred', cuentaId: 'c-jud' }];
+  const plan = preparar({ D, destino: { clase: 'cuenta', id: 'c-jud' }, lote: loteCuenta([
+    { fecha: '2026-09-06', concepto: 'PAGO DE PLANILLA', monto: 18000, tipo: 'ingreso' }
+  ]) });
+  assert.deepEqual(plan.duplicados, [], 'el pago de verdad se habría borrado');
+});
+
+test('Un pago leído en el estado de la tarjeta no borra el que se anotó a mano', async () => {
+  const { preparar } = await import('../sitio/app/datos/importar.js');
+  const D = hogar();
+  D.pagosTarjeta = [{ id: 'pago-real', fecha: '2026-09-06', periodo: '2026-09', monto: 5000,
+                      tarjetaId: 't-cred', cuentaId: 'c-jud' }];
+  const plan = preparar({ D, destino: { clase: 'tarjeta', id: 't-cred' }, lote: {
+    archivo: 'walmart.pdf', tipo: 'tarjeta', desde: '2026-09-01', hasta: '2026-09-15',
+    movs: [{ fecha: '2026-09-06', concepto: 'SU PAGO RECIBIDO', monto: -5000, tipo: 'pagoTarjeta' }] } });
+  // Desde la tarjeta el pago no se registra: quitar el tecleado dejaría el mes sin él.
+  assert.deepEqual(plan.duplicados, []);
+});
+
+test('Y el duplicado de verdad se sigue encontrando', async () => {
+  const { preparar } = await import('../sitio/app/datos/importar.js');
+  const D = hogar();
+  D.tarjetas.push({ id: 't-deb', nombre: 'Débito Judith', tipo: 'debito', cuentaId: 'c-jud' });
+  D.movimientos = [{ id: 'a-mano', fecha: '2026-09-03', periodo: '2026-09', monto: 340,
+                     medioPago: 'tarjeta', tarjetaId: 't-deb' }];   // a mano: sin `fuente`
+  const plan = preparar({ D, destino: { clase: 'cuenta', id: 'c-jud' },
+                          lote: loteCuenta([compra('2026-09-03', 'FARMACIA KIELSA', 340)]) });
+  assert.deepEqual(plan.duplicados.map(d => d.id), ['a-mano']);
+});

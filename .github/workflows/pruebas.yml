@@ -36,6 +36,16 @@ jobs:
       - name: Correr las pruebas
         run: npm run pruebas
 
+      # Las mismas pruebas, fingiendo que hoy es dentro de 40 y de 200
+      # días. Una prueba que escribe el mes a mano pasa hoy y se cae sola
+      # cuando cambia el mes — pasó el 1 de septiembre de 2026 y nadie lo
+      # vio en dos semanas. Así se ve el día que se escribe, no el día
+      # que explota.
+      - name: Las pruebas no dependen de la fecha
+        run: |
+          HOY_FALSO=+40  node --import ./herramientas/reloj-falso.mjs --test "pruebas/**/*.prueba.js"
+          HOY_FALSO=+200 node --import ./herramientas/reloj-falso.mjs --test "pruebas/**/*.prueba.js"
+
   # ------------------------------------------------------------
   # Que un hogar no pueda ver el de otro no se comprueba leyendo
   # las políticas: se comprueba intentando violarlas. Esta suite

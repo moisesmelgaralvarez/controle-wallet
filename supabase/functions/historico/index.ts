@@ -31,7 +31,7 @@
 
 import { respuestas } from '../_compartido/origen.js';
 
-import { armar, CONFIGURACION, POR_MES } from '../../../sitio/app/datos/armador.js';
+import { armar, CONFIGURACION, POR_MES, COLUMNAS } from '../../../sitio/app/datos/armador.js';
 import * as A from '../../../sitio/app/nucleo/index.js';
 import { traerTodo, lectorPostgrest } from '../_compartido/traer.js';
 
@@ -77,8 +77,14 @@ Deno.serve(async (req: Request) => {
     const hoy = /^\d{4}-\d{2}-\d{2}$/.test(String(hoyPedido || ''))
       ? String(hoyPedido) : new Date().toISOString().slice(0, 10);
 
+    /* Se piden SOLO las columnas que el armador lee. `select=*` traía
+       además `actualizado_en` y `actualizado_por` en cada fila: unos
+       190 KB de los 617 que baja un hogar de tres años, para algo que
+       nadie mira. La lista vive en el armador, que es quien las lee, y
+       hay una prueba que comprueba que las dos no se separen. */
     const traer = (tabla: string) =>
-      traerTodo(lectorPostgrest({ url, clave, autorizacion, tabla }));
+      traerTodo(lectorPostgrest({ url, clave, autorizacion, tabla,
+        filtros: COLUMNAS[tabla] ? { select: COLUMNAS[tabla] } : {} }));
 
     // El hogar sale de RLS: quien pregunta solo ve el suyo.
     const hogares = await traer('hogares');

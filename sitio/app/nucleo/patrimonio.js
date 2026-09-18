@@ -32,9 +32,20 @@ function patrimonio(D, per) {
   // es una compra ya hecha esperando que el comercio la cobre: ese dinero ya no
   // es de ustedes, solo no ha salido todavía. Sumarlo al capital sería contar
   // como propio algo que ya se gastó.
-  const enBanco = cuentas.totalDisponible;
-  const enLibros = cuentas.total;
-  const retenidoBanco = cuentas.totalRetenido;
+  /* LO QUE SE PUEDE AFIRMAR. En cuanto una sola cuenta tiene el saldo que
+     declaró el banco, las que no lo tienen dejan de sumarse: su cifra es
+     una deducción, y mezclarla con hechos da un total que no es ni una cosa
+     ni la otra. No desaparecen — van en `cuentasSinBanco`, con lo que
+     calcula la app, para que la pantalla diga cuáles faltan y cómo
+     arreglarlo.
+
+     Si NINGUNA tiene ancla —el hogar que anota todo a mano y nunca importa—
+     se usa lo calculado, porque es lo único que hay, y `bancoCalculado` lo
+     dice. */
+  const hayBanco = cuentas.conBanco > 0;
+  const enBanco = hayBanco ? cuentas.totalDisponibleBanco : cuentas.totalDisponible;
+  const enLibros = hayBanco ? cuentas.totalBanco : cuentas.total;
+  const retenidoBanco = hayBanco ? cuentas.totalRetenidoBanco : cuentas.totalRetenido;
   const enMano = Math.max(0, ef.saldo);
 
   const tarjetas = deudaTarjetas(D, per);
@@ -55,6 +66,9 @@ function patrimonio(D, per) {
     // Sin cuentas declaradas la cifra no significa nada y hay que decirlo.
     hayDatos: cuentas.hayDatos || ef.hayDatos || pasivos > 0,
     faltanCuentas: !cuentas.hayDatos,
+    cuentasSinBanco: hayBanco ? cuentas.sinBanco : [],
+    bancoCalculado: cuentas.hayDatos && !hayBanco,
+    saldoAl: cuentas.saldoAl,
     faltanSaldosTarjeta: tarjetas.some(t => !t.declarada)
   };
 }

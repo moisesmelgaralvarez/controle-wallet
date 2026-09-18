@@ -355,13 +355,29 @@ function saldoCuenta(D, cuenta, hasta) {
 
 function saldosCuentas(D, hasta) {
   const filas = (D.cuentas || []).map(c => saldoCuenta(D, c, hasta));
+  /* Las que tienen el saldo que declaró el banco, y las que no. Una cuenta
+     sin ancla es pura aritmética: saldo de apertura más ingresos
+     confirmados menos lo que se anotó. Basta con que falte un pago o una
+     transferencia para que diga L 25,837 en una cuenta que está en cero —
+     pasó así, en la cuenta de planilla del dueño. */
+  const conBanco = filas.filter(f => f.segunBanco);
+  const suma = (l, k) => l.reduce((s, f) => s + f[k], 0);
   return {
     filas,
-    total: filas.reduce((s, f) => s + f.saldo, 0),                 // en libros
-    totalDisponible: filas.reduce((s, f) => s + f.disponible, 0),  // lo usable
-    totalRetenido: filas.reduce((s, f) => s + f.retenido, 0),
+    total: suma(filas, 'saldo'),                 // en libros
+    totalDisponible: suma(filas, 'disponible'),  // lo usable
+    totalRetenido: suma(filas, 'retenido'),
     hayDatos: filas.length > 0,
-    enRojo: filas.filter(f => f.disponible < 0)
+    enRojo: filas.filter(f => f.disponible < 0),
+    conBanco: conBanco.length,
+    totalBanco: suma(conBanco, 'saldo'),
+    totalDisponibleBanco: suma(conBanco, 'disponible'),
+    totalRetenidoBanco: suma(conBanco, 'retenido'),
+    sinBanco: filas.filter(f => !f.segunBanco)
+      .map(f => ({ id: f.id, nombre: f.nombre, disponible: cent(f.disponible) })),
+    // La declaración MÁS VIEJA de las que se suman: el disponible no está
+    // más al día que su cuenta más atrasada.
+    saldoAl: conBanco.length ? conBanco.map(f => f.segunBanco.fecha).sort()[0] : null
   };
 }
 

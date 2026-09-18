@@ -91,6 +91,11 @@ export function preparar({ D, lote, destino }) {
   const rubrosNuevos = copia.gastos.filter(
     g => !(D.gastos || []).some(x => x.id === g.id));
 
+  // La tarjeta de débito que el motor crea cuando la cuenta no tenía
+  // ninguna. Va en la misma llamada que los movimientos que cuelgan de ella.
+  const tarjetasNuevas = (copia.tarjetas || []).filter(
+    t => !(D.tarjetas || []).some(x => x.id === t.id));
+
   const comerciosNuevos = Object.entries(copia.comercios)
     .filter(([clave, id]) => (D.comercios || {})[clave] !== id)
     .map(([clave, gastoId]) => ({ clave, gastoId }));
@@ -109,6 +114,7 @@ export function preparar({ D, lote, destino }) {
        dos gastos reales, y marcar las dos borraría una de verdad. */
     duplicados: duplicadosManuales(D, lote, destino),
     rubrosNuevos,
+    tarjetasNuevas,
     comerciosNuevos,
     movimientos: nuevasDe(copia.movimientos, D.movimientos || [], lote.archivo),
     retiros: nuevasDe(copia.retiros, D.retiros || [], lote.archivo),
@@ -185,6 +191,11 @@ export const filaRubro = (g, orden) => ({
   orden
 });
 
+/* Solo el identificador —el que ya traen los movimientos— y el nombre.
+   El tipo y la cuenta los pone la base: de una importación solo puede
+   nacer la tarjeta de débito de la cuenta que se está importando. */
+export const filaTarjetaDebito = t => ({ id: t.id, nombre: t.nombre });
+
 const filaMovimiento = m => ({
   fecha: m.fecha, periodo: m.periodo, monto: m.monto, concepto: m.concepto || '',
   /* `'otros'` NO es un rubro: es lo que el motor devuelve cuando no
@@ -260,6 +271,7 @@ export async function aplicar({ plan, lote, destino, hogarId, aprenderNumero, qu
 
   const hecho = await api.llamar('importar_lote', {
     p_rubros: plan.rubrosNuevos.map((g, i) => filaRubro(g, 900 + i)),
+    p_tarjetas: (plan.tarjetasNuevas || []).map(filaTarjetaDebito),
     p_comercios: plan.comerciosNuevos.map(c => ({ clave: c.clave, gasto_id: c.gastoId })),
     p_destino_clase: destino.clase,
     p_destino_id: destino.id,

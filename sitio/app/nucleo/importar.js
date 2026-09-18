@@ -1305,12 +1305,21 @@ function aplicarLote(D, lote, destino, ayuda) {
   borrados.forEach(id => { D._borrados[id] = now(); });
 
   D.comercios = D.comercios || {};
+  /* Quién hizo el gasto, por el nombre que el banco imprime en cada
+     plástico. Con nombre y apellido se exigen DOS coincidencias, para que
+     compartir un apellido no convierta a otra persona en el titular. Pero
+     muchos hogares anotan a la gente solo por el nombre de pila —«Judith»—,
+     y ahí exigir dos era exigir lo imposible: todas las compras de su
+     plástico caían en la primera persona del hogar. Con una sola palabra se
+     pide la palabra ENTERA, para que «Ana» no se quede con lo de «Diana». */
   const persona = nombre => {
     if (!nombre) return null;
     const t = SIN_TILDES(nombre).replace(/\//g, ' ');
+    const palabras = new Set(t.split(/[^a-zñ]+/).filter(Boolean));
     const p = (D.personas || []).find(x => {
       const partes = SIN_TILDES(x.nombre).split(/\s+/).filter(w => w.length > 2);
-      return partes.length >= 2 && partes.filter(w => t.includes(w)).length >= 2;
+      if (partes.length >= 2) return partes.filter(w => t.includes(w)).length >= 2;
+      return partes.length === 1 && palabras.has(partes[0]);
     });
     return p ? p.id : null;
   };
@@ -1350,10 +1359,40 @@ function aplicarLote(D, lote, destino, ayuda) {
     }
   }
 
-  const cuenta = { gastos: 0, retiros: 0, pagos: 0, omitidos: 0, sinCategoria: 0 };
+  /* UNA COMPRA LEÍDA DEL ESTADO DE CUENTA DE UNA CUENTA SALIÓ DE ESA CUENTA.
+     Se paga con su tarjeta de débito, y el modelo la cuelga de ahí. Pero
+     casi nadie registra la de débito —no se piensa en ella como «una
+     tarjeta»—, y entonces la compra quedaba como «tarjeta» sin tarjeta: no
+     bajaba la cuenta ni subía ninguna deuda. Dinero gastado que ningún
+     saldo reflejaba, y en la lista se mezclaba con la de crédito.
+
+     Si no existe, se crea con el nombre de la cuenta. No guarda ni un
+     dígito del plástico: es solo el lazo entre la compra y la cuenta de
+     la que salió el dinero. */
+  let debito = destino.clase === 'cuenta' ? (ayuda.debitoDe(destino.id) || null) : null;
+  const tarjetasNuevas = [];
+  if (destino.clase === 'cuenta' && !debito && destinoObj &&
+      lote.movs.some(m => m.tipo === 'gasto' || m.tipo === 'comision')) {
+    const t = { id: uid(), nombre: `Débito ${destinoObj.nombre}`.slice(0, 60),
+                tipo: 'debito', cuentaId: destino.id, _upd: now() };
+    D.tarjetas = D.tarjetas || [];
+    D.tarjetas.push(t);
+    tarjetasNuevas.push(t.id);
+    debito = t.id;
+  }
+
+  /* Del estado de cuenta de una cuenta, el que no trae nombre en el
+     renglón es el dueño de esa cuenta — no «la primera persona del hogar»,
+     que era a quien se le cargaba todo, incluido lo de la cuenta de otro. */
+  const duenio = destino.clase === 'cuenta'
+    ? ((D.personas || []).find(p => p.cuentaId === destino.id) || {}).id || null
+    : null;
+
+  const cuenta = { gastos: 0, retiros: 0, pagos: 0, omitidos: 0, sinCategoria: 0,
+                   tarjetasNuevas };
 
   lote.movs.forEach(m => {
-    const pid = persona(m.titular) || (D.personas[0] || {}).id || null;
+    const pid = persona(m.titular) || duenio || ((D.personas || [])[0] || {}).id || null;
 
     if (m.tipo === 'gasto' || m.tipo === 'comision') {
       const cat = rubroPara(m.concepto, D, ayuda);
@@ -1361,7 +1400,7 @@ function aplicarLote(D, lote, destino, ayuda) {
       D.movimientos.push(Object.assign(base(m), {
         gastoId: cat, monto: Math.abs(m.monto), personaId: pid,
         medioPago: 'tarjeta',
-        tarjetaId: destino.clase === 'tarjeta' ? destino.id : (ayuda.debitoDe(destino.id) || null),
+        tarjetaId: destino.clase === 'tarjeta' ? destino.id : debito,
         concepto: m.concepto.slice(0, 80)
       }));
       cuenta.gastos++;

@@ -414,6 +414,19 @@ export function importar({ contenedor, D, hogar, recargar }) {
                   <b>${esc(plan.rubrosNuevos.map(g => g.concepto).join(', '))}</b>.
                   Entran con presupuesto en cero; el monto lo ponés vos en Presupuesto.</p>` : ''}
 
+              ${(plan.tarjetasNuevas || []).length ? `
+                <p class="panel__nota">Las compras de este archivo salieron de
+                  <b>${esc(destino.nombre)}</b> con su tarjeta de débito, que no estaba
+                  anotada. Se agrega <b>${esc(plan.tarjetasNuevas[0].nombre)}</b> para que
+                  cada compra baje de esa cuenta y no se confunda con la de crédito.
+                  No guarda ningún número del plástico.</p>` : ''}
+
+              ${destino.clase === 'cuenta' && Number(lote.retenido) > 0 ? `
+                <p class="panel__nota">El banco tiene <b>${esc(dinero(lote.retenido))}</b>
+                  retenidos: compras hechas que el comercio todavía no cobra. Siguen dentro
+                  del saldo, pero ese dinero ya se gastó, así que se descuenta de lo
+                  disponible.</p>` : ''}
+
               ${plan.cuenta && plan.cuenta.sinCategoria ? `
                 <p class="panel__nota ojo">${esc(plan.cuenta.sinCategoria)}
                   ${plan.cuenta.sinCategoria === 1 ? 'renglón queda' : 'renglones quedan'}

@@ -1,0 +1,33 @@
+# ============================================================
+# El latido — mantiene despiertas las dos bases de Supabase.
+#
+# POR QUÉ EXISTE. El plan gratuito de Supabase pausa una base que pasa
+# siete días sin uso. Una base pausada no avisa: el sitio abre, pero
+# nadie puede entrar ni ver sus datos. Pasó en septiembre de 2026 con
+# producción Y pruebas a la vez, y solo se destraba a mano desde el panel.
+#
+# POR QUÉ ES UN WORKER APARTE y no una función del sitio: el sitio es un
+# Worker de solo archivos, sin script. Meterle un script para esto habría
+# cambiado cómo se sirve CADA página —cabeceras, 404, caché— para ganar
+# un cron. Aparte, no puede romper nada del sitio.
+#
+# No tiene dirección pública: ni ruta ni workers.dev. Solo el reloj de
+# Cloudflare lo despierta.
+#
+# Cuando se pase a Supabase Pro, las bases dejan de pausarse y esto
+# sobra: se borra con `npx wrangler delete --config latido/wrangler.toml`.
+#
+# Publicar:  npx wrangler deploy --config latido/wrangler.toml
+# ============================================================
+
+name = "controle-latido"
+main = "latido.js"
+compatibility_date = "2026-08-08"
+workers_dev = false
+preview_urls = false
+
+# Todos los días a las 8:00 de Honduras (14:00 UTC). Una vez al día basta
+# de sobra contra una pausa de siete: deja seis días de margen si un
+# latido falla.
+[triggers]
+crons = ["0 14 * * *"]

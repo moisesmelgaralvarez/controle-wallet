@@ -1093,23 +1093,30 @@ probar('Sin un solo movimiento sigue sin haber nada que proponer', () => {
 /* ============ el plan sin montos ============ */
 grupo('Cuando el plan está sin montos');
 
-/** Rubros creados por la importación (todos en 0) y gasto real encima. */
+/** Rubros creados por la importación (todos en 0) y gasto real encima.
+ *
+ * Los meses se sacan de HOY y no se escriben a mano. El sugerido solo mira
+ * meses cerrados, y «cerrado» se decide contra el reloj: con '2026-08'
+ * fijo, esta prueba pasó en agosto y se cayó sola el 1 de septiembre,
+ * cuando agosto pasó a contar como cerrado y bajó la mediana. */
+const MES_EN_CURSO = A.periodoDe(A.hoyLocal(), 1);
+const MES_ANTERIOR = A.sumaMeses(MES_EN_CURSO, -1);
 const sinMontos = () => {
   const d = hogar();
   d.gastos = [{ id: 'g1', concepto: 'Supermercado', monto: 0, categoria: 'Alimentación', crecimiento: 0, medioPago: 'tarjeta' },
               { id: 'g2', concepto: 'Comida fuera', monto: 0, categoria: 'Alimentación', crecimiento: 0, medioPago: 'tarjeta' }];
   d.financiamientos = [];
-  d.cuentas = [{ id: 'c1', nombre: 'Banco', saldoInicial: 662.74, desdeMes: '2026-07' }];
+  d.cuentas = [{ id: 'c1', nombre: 'Banco', saldoInicial: 662.74, desdeMes: MES_ANTERIOR }];
   d.movimientos = [
-    { id: 'm1', periodo: '2026-07', fecha: '2026-07-10', monto: 30000, gastoId: 'g1' },
-    { id: 'm2', periodo: '2026-07', fecha: '2026-07-20', monto: 24997.75, gastoId: 'g2' },
-    { id: 'm3', periodo: '2026-08', fecha: '2026-08-03', monto: 2001.37, gastoId: 'g1' }
+    { id: 'm1', periodo: MES_ANTERIOR, fecha: `${MES_ANTERIOR}-10`, monto: 30000, gastoId: 'g1' },
+    { id: 'm2', periodo: MES_ANTERIOR, fecha: `${MES_ANTERIOR}-20`, monto: 24997.75, gastoId: 'g2' },
+    { id: 'm3', periodo: MES_EN_CURSO, fecha: `${MES_EN_CURSO}-01`, monto: 2001.37, gastoId: 'g1' }
   ];
   return d;
 };
 
 probar('Se detecta que el plan está sin llenar', () => {
-  const p = A.planIncompleto(sinMontos(), '2026-08');
+  const p = A.planIncompleto(sinMontos(), MES_EN_CURSO);
   return { ok: p.hay === true && p.sinMonto === 2 && p.plan === 0,
            det: `${p.sinMonto} rubros sin monto y ${p.gastado} gastados` };
 });
@@ -1117,21 +1124,21 @@ probar('Se detecta que el plan está sin llenar', () => {
 probar('Con el plan lleno deja de avisar', () => {
   const d = sinMontos();
   d.gastos[0].monto = 8000;
-  return { ok: A.planIncompleto(d, '2026-08').hay === false,
+  return { ok: A.planIncompleto(d, MES_EN_CURSO).hay === false,
            det: 'el aviso solo sale mientras no haya ni un monto' };
 });
 
 probar('El colchón no desaparece por no haber plan', () => {
   // Este era el fallo grave: gastoMensual salía 0, mesesColchon quedaba null y
   // TODO el diagnóstico se esfumaba, dejando solo un "van bien" con el banco vacío.
-  const s = A.saludFinanciera(sinMontos(), '2026-08');
+  const s = A.saludFinanciera(sinMontos(), MES_EN_CURSO);
   return { ok: s.mesesColchon !== null && s.baseReal === true && s.gastoMensual > 50000,
            det: `colchón ${s.mesesColchon === null ? 'null' : s.mesesColchon.toFixed(3)} meses ` +
                 `sobre ${Math.round(s.gastoMensual)} de gasto real` };
 });
 
 probar('Y avisa de que el colchón no alcanza ni una semana', () => {
-  const s = A.saludFinanciera(sinMontos(), '2026-08');
+  const s = A.saludFinanciera(sinMontos(), MES_EN_CURSO);
   return { ok: s.pasos.some(x => x.clave === 'colchon'),
            det: 'pasos: ' + s.pasos.map(x => x.clave).join(', ') };
 });

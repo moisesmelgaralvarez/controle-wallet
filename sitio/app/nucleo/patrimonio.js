@@ -8,7 +8,7 @@
    Extraído de asesor.js (831-1015) sin tocar una línea.
    ============================================================ */
 
-import { perDe, sumaMontos, fmt, nf0 } from './base.js';
+import { perDe, sumaMontos, fmt, nf0, delHogar } from './base.js';
 import { deudaFinanciada } from './financiamientos.js';
 import { cent, deudaTarjetas, efectivo, saldosCuentas, gastosMes } from './saldos.js';
 import { presupuestoSugerido } from './sugerido.js';
@@ -105,7 +105,7 @@ const MESES_COLCHON = 3;   // el mínimo que recomienda cualquier manual serio
  */
 function planIncompleto(D, per) {
   const gas = gastosMes(D, 0, per);
-  const gastado = sumaMontos((D.movimientos || []).filter(x => perDe(x) === per));
+  const gastado = sumaMontos((D.movimientos || []).filter(x => perDe(x) === per && delHogar(x)));
   return {
     hay: (D.gastos || []).length > 0 && gas.total <= 0 && gastado > 0,
     rubros: gas.detalle.length,

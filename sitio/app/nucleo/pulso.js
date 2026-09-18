@@ -9,7 +9,7 @@
    Extraído de asesor.js (1138-1280) sin tocar una línea.
    ============================================================ */
 
-import { num, perDe, sumaMontos } from './base.js';
+import { num, perDe, sumaMontos, delHogar } from './base.js';
 import { diaValido, diasDelMes, diasPeriodo, hoyLocal, inicioMes, periodoDe, rangoPeriodo, sumaMeses } from './fechas.js';
 import { ingresoMes } from './ingresos.js';
 import { gastosMes } from './saldos.js';
@@ -54,7 +54,7 @@ function pulso(D, per, hoy, referencia) {
   const diasRestantes = Math.max(0, diasMes - dia);
 
   const presupuesto = referencia > 0 ? referencia : gastosMes(D, 0, per).total;
-  const gastado = sumaMontos((D.movimientos || []).filter(x => perDe(x) === per));
+  const gastado = sumaMontos((D.movimientos || []).filter(x => perDe(x) === per && delHogar(x)));
 
   const avanceMes = diasMes > 0 ? dia / diasMes : 0;
   const avanceGasto = presupuesto > 0 ? gastado / presupuesto : 0;
@@ -102,7 +102,7 @@ function porCategoria(D, per) {
 
   const acumulado = {};
   let total = 0;
-  (D.movimientos || []).filter(x => perDe(x) === per).forEach(x => {
+  (D.movimientos || []).filter(x => perDe(x) === per && delHogar(x)).forEach(x => {
     // Un movimiento sin rubro —o cuyo rubro se borró— cae en "Otros".
     const cat = deGasto[x.gastoId] || 'Otros';
     const monto = num(x.monto);
@@ -131,7 +131,7 @@ function historia(D, hasta, meses = 12) {
   for (let k = meses - 1; k >= 0; k--) {
     const per = sumaMeses(hasta, -k);
     const ing = ingresoMes(D, per);
-    const movs = (D.movimientos || []).filter(x => perDe(x) === per);
+    const movs = (D.movimientos || []).filter(x => perDe(x) === per && delHogar(x));
     if (!ing.confirmado && !ing.parcial && !movs.length) continue;
 
     const gastado = sumaMontos(movs);

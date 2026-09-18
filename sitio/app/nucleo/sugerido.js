@@ -8,7 +8,7 @@
    Extraído de asesor.js (1016-1137) sin tocar una línea.
    ============================================================ */
 
-import { num, perDe } from './base.js';
+import { num, perDe, delHogar } from './base.js';
 import { diasPeriodo, hoyLocal, inicioMes, periodoDe, rangoPeriodo } from './fechas.js';
 /* ---------- presupuesto sugerido por el histórico ---------- */
 
@@ -41,6 +41,9 @@ function presupuestoSugerido(D, hasta, meses = 12) {
   // Totales por periodo y por rubro. El futuro nunca cuenta.
   const porMes = {};
   (D.movimientos || []).forEach(m => {
+    // Un favor pagado con la tarjeta no es costumbre de la casa: no entra a
+    // la media, o una compra por encargo inflaría el plan de todo un año.
+    if (!delHogar(m)) return;
     const per = perDe(m);
     if (!per || per > hoy) return;
     if (hasta && per > hasta) return;

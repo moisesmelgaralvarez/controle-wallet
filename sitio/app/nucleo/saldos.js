@@ -16,7 +16,7 @@
    Extraído de asesor.js (187-312, 343-412, 415-830) sin tocar una línea.
    ============================================================ */
 
-import { num, perDe, sumaMontos, fmt } from './base.js';
+import { num, perDe, sumaMontos, fmt, delHogar } from './base.js';
 import { diaValido, diasDelMes, iso, sumaMeses, inicioMes, rangoPeriodo } from './fechas.js';
 import { ingresoMes, netoLinea } from './ingresos.js';
 import { saldoFinanciamiento } from './financiamientos.js';
@@ -88,7 +88,7 @@ function gastosMes(D, k, per) {
 function cierreDeMes(D, per) {
   const gas = gastosMes(D, 0, per);
   const real = {};
-  (D.movimientos || []).filter(m => perDe(m) === per)
+  (D.movimientos || []).filter(m => perDe(m) === per && delHogar(m))
     .forEach(m => { const k = m.gastoId || 'otros'; real[k] = (real[k] || 0) + num(m.monto); });
 
   const guardado = (D.presupuestoMes || {})[per] || {};
@@ -773,9 +773,12 @@ function realPorRubro(D, per, referencias) {
     presupuestado: g.monto, gastado: 0, movimientos: 0
   }]));
 
-  let sinClasificar = 0, nSinClasificar = 0;
+  let sinClasificar = 0, nSinClasificar = 0, encargo = 0, nEncargo = 0;
   for (const m of (D.movimientos || [])) {
     if (perDe(m) !== per) continue;
+    // Lo comprado por encargo se cuenta aparte: salió de la tarjeta, pero
+    // no es gasto de la casa y no se mide contra ningún rubro.
+    if (!delHogar(m)) { encargo += num(m.monto); nEncargo++; continue; }
     const f = m.gastoId && porRubro.get(m.gastoId);
     if (!f) { sinClasificar += num(m.monto); nSinClasificar++; continue; }
     f.gastado += num(m.monto);
@@ -821,6 +824,10 @@ function realPorRubro(D, per, referencias) {
     filas,
     sinClasificar: cent(sinClasificar),
     movimientosSinClasificar: nSinClasificar,
+    // Fuera de `gastado`: la pantalla lo dice aparte, para que no parezca
+    // que la app se lo comió.
+    encargo: cent(encargo),
+    movimientosEncargo: nEncargo,
     presupuestado,
     gastado,
     diferencia: cent(presupuestado - gastado),

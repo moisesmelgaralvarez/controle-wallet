@@ -128,7 +128,7 @@ export function movimientos({ contenedor, D, periodo, hogar, recargar }) {
                   <span class="mov-fila__dia">${esc(diaCorto(m.fecha))}</span>
                   <span class="mov-fila__txt">
                     <strong>${esc(m.concepto || nombreGasto(m.gastoId))}</strong>
-                    <small>${esc(nombreGasto(m.gastoId))}${m.personaId ? ' · ' + esc(nombrePersona(m.personaId)) : ''}${origenes.length > 1 ? ' · ' + esc(nombreOrigen(origenDe(m))) : ''}</small>
+                    <small>${esc(nombreGasto(m.gastoId))}${m.personaId ? ' · ' + esc(nombrePersona(m.personaId)) : ''}${origenes.length > 1 ? ' · ' + esc(nombreOrigen(origenDe(m))) : ''}${m.encargo ? ' · por encargo' : ''}</small>
                   </span>
                   <span class="mov-fila__monto">${esc(dinero(m.monto))}</span>
                 </button>
@@ -234,6 +234,13 @@ export function movimientos({ contenedor, D, periodo, hogar, recargar }) {
       ${credito.length ? selector('tarjetaId', 'Con cuál tarjeta',
         [{ valor: '', texto: '— ninguna —' }, ...opcionesTarjeta()], m ? m.tarjetaId : (credito[0]?.id || '')) : ''}
       ${selector('personaId', 'Quién lo hizo', opcionesPersona(), m ? m.personaId : '')}
+      <label class="campo campo--pegado">
+        <span>Por encargo: me lo van a devolver</span>
+        <input type="checkbox" name="encargo"${m && m.encargo ? ' checked' : ''}>
+        <small class="campo__ayuda">Una compra que hiciste por otra persona y que te
+          va a pagar. Sigue contando en la tarjeta, pero no como gasto de la casa ni en
+          tu media.</small>
+      </label>
     `, {
       textoGuardar: m ? 'Guardar cambios' : 'Registrar',
       alBorrar: m ? async () => {
@@ -256,7 +263,8 @@ export function movimientos({ contenedor, D, periodo, hogar, recargar }) {
           concepto: d.concepto || null, gasto_id: d.gastoId,
           persona_id: d.personaId || null,
           medio_pago: d.medioPago,
-          tarjeta_id: d.medioPago === 'tarjeta' ? (d.tarjetaId || null) : null
+          tarjeta_id: d.medioPago === 'tarjeta' ? (d.tarjetaId || null) : null,
+          encargo: Boolean(d.encargo)
         });
         avisar(m ? 'Movimiento actualizado.' : 'Gasto registrado.');
         recargar();

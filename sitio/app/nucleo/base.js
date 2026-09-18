@@ -136,7 +136,17 @@ function fmt0(n, codigo) {
   return `${monedaDe(c).simbolo} ${formateador(c, 0).format(Math.round(num(n)))}`;
 }
 
-export {
+/**
+ * Si un movimiento es gasto DEL HOGAR. Una compra «por encargo» —las
+ * camisas que se le compraron a un hermano, que después mandó el dinero—
+ * salió de la tarjeta y cuenta en la deuda, el ciclo y los saldos, pero no
+ * es consumo de la casa: no va contra el presupuesto, ni en «en qué se
+ * fue», ni en la media con que se sugiere el plan del mes que viene. Si
+ * entrara, un favor de L 8,000 inflaría la media de Ropa por un año.
+ */
+const delHogar = m => !(m && m.encargo);
+
+export { delHogar,
   HORIZONTE, COLCHON_MIN, num, dosDig, sumaMontos, perDe, nf, nf0, fmt, fmt0,
   MONEDAS, fijarMoneda, monedaActual, simboloMoneda, decimalesMoneda
 };

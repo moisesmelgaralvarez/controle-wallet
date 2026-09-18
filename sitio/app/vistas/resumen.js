@@ -230,6 +230,17 @@ export function resumen({ contenedor, D, periodo }) {
               </div>
             </div>` : ''}
 
+          ${rp.encargo > 0 ? `
+            <div class="rubro-real">
+              <div class="rubro-real__f">
+                <em>Por encargo · ${esc(String(rp.movimientosEncargo))} compra${rp.movimientosEncargo === 1 ? '' : 's'}</em>
+                <span class="cifra">${esc(dinero(rp.encargo))}</span>
+              </div>
+              <div class="rubro-real__f rubro-real__pie">
+                <em>Salió de la tarjeta y te la van a devolver: no suma al gasto de la casa.</em>
+              </div>
+            </div>` : ''}
+
           <div class="rubro-real rubro-real--total">
             <div class="rubro-real__f">
               <em>Total gastado</em>

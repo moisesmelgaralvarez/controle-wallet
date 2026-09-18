@@ -264,6 +264,10 @@ export function armar(filas) {
     personaId: m.persona_id || null,
     medioPago: m.medio_pago || 'tarjeta',
     tarjetaId: m.tarjeta_id || null,
+    // Comprado para otro, que lo devuelve: sale de la tarjeta pero no es
+    // gasto de la casa. `=== true` y no `Boolean()`: si la columna no
+    // viniera en la consulta, que no se marque nada por accidente.
+    encargo: m.encargo === true,
     ...procedencia(m)
   }));
 
@@ -417,7 +421,7 @@ export const COLUMNAS = {
   ingresos_mes:       'periodo,plantilla_id,persona_id,bruto,deducciones,confirmado,copiado_de',
   comercios:          'clave,gasto_id',
   movimientos:        'id,fecha,periodo,monto,concepto,gasto_id,persona_id,medio_pago,tarjeta_id,' +
-                      'origen,fuente,lote',
+                      'encargo,origen,fuente,lote',
   retiros:            'id,fecha,periodo,monto,cuenta_id,persona_id,nota,origen,fuente,lote',
   pagos_tarjeta:      'id,fecha,periodo,monto,tarjeta_id,cuenta_id,nota,origen,fuente,lote',
   presupuesto_mes:    'periodo,montos,notas,ajustes,apertura,efectivo_contado,cerrado,cerrado_el'

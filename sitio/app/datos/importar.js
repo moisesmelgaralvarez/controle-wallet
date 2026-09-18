@@ -42,8 +42,19 @@ import { invalidarConfiguracion } from './hogar.js';
 import { olvidarHistorico } from './historico.js';
 
 /** Copia con los arreglos aparte: el motor va a mutarlos. */
+/* Las cuentas y las tarjetas se copian OBJETO POR OBJETO, no solo la
+   lista. El motor les escribe el saldo del banco y lo retenido, y ahora
+   también agrega la tarjeta de débito que falta. Con `...D` a secas las
+   dos colecciones eran las del hogar vivo: revisar un archivo sin aplicarlo
+   ya cambiaba el saldo en memoria, y la tarjeta nueva caía en `D` en vez
+   de en la copia — así que `tarjetasNuevas` salía vacía, la tarjeta no
+   viajaba a la base, y los movimientos apuntaban a una que no existía. La
+   importación entera se habría caído por la llave foránea. Lo encontró la
+   prueba de la pantalla, no la del núcleo: el núcleo hacía bien su parte. */
 const copiar = D => ({
   ...D,
+  cuentas: (D.cuentas || []).map(c => ({ ...c })),
+  tarjetas: (D.tarjetas || []).map(t => ({ ...t })),
   gastos: [...(D.gastos || [])],
   movimientos: [...(D.movimientos || [])],
   retiros: [...(D.retiros || [])],

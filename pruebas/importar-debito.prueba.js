@@ -146,3 +146,20 @@ test('La tarjeta nueva viaja a la base solo con id y nombre', async () => {
   // podría crear una tarjeta de crédito sin corte o colgarla de otra cuenta.
   assert.deepEqual(fila, { id: 'x', nombre: 'Débito Planilla' });
 });
+
+/* LA PANTALLA NO LLAMA AL NÚCLEO: llama a `preparar`, que trabaja sobre una
+   copia del hogar. Las pruebas de arriba pasaban con el núcleo solo y la
+   tarjeta nueva igual se perdía en la copia. Esta es la forma real. */
+test('preparar propone la tarjeta nueva sin tocar el hogar vivo', async () => {
+  const { preparar } = await import('../sitio/app/datos/importar.js');
+  const D = hogar();
+  const antes = JSON.stringify({ t: D.tarjetas, c: D.cuentas });
+  const plan = preparar({ D, lote: loteCuenta([compra('2026-09-03', 'FARMACIA KIELSA', 340)],
+                                              { saldoFin: 4660, retenido: 120 }),
+                          destino: { clase: 'cuenta', id: 'c-jud' } });
+  assert.equal(plan.tarjetasNuevas.length, 1, 'la tarjeta tiene que viajar a la base');
+  assert.equal(plan.movimientos[0].tarjetaId, plan.tarjetasNuevas[0].id,
+    'y el movimiento tiene que apuntar a la que viaja, no a una que no existe');
+  assert.equal(JSON.stringify({ t: D.tarjetas, c: D.cuentas }), antes,
+    'revisar un archivo no puede cambiar las tarjetas ni los saldos en memoria');
+});

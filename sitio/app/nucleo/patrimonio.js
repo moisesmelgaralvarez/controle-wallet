@@ -8,7 +8,7 @@
    Extraído de asesor.js (831-1015) sin tocar una línea.
    ============================================================ */
 
-import { perDe, sumaMontos, fmt, nf0 } from './base.js';
+import { perDe, sumaMontos, fmt, nf0, delHogar } from './base.js';
 import { deudaFinanciada } from './financiamientos.js';
 import { cent, deudaTarjetas, efectivo, saldosCuentas, gastosMes } from './saldos.js';
 import { presupuestoSugerido } from './sugerido.js';
@@ -32,9 +32,20 @@ function patrimonio(D, per) {
   // es una compra ya hecha esperando que el comercio la cobre: ese dinero ya no
   // es de ustedes, solo no ha salido todavía. Sumarlo al capital sería contar
   // como propio algo que ya se gastó.
-  const enBanco = cuentas.totalDisponible;
-  const enLibros = cuentas.total;
-  const retenidoBanco = cuentas.totalRetenido;
+  /* LO QUE SE PUEDE AFIRMAR. En cuanto una sola cuenta tiene el saldo que
+     declaró el banco, las que no lo tienen dejan de sumarse: su cifra es
+     una deducción, y mezclarla con hechos da un total que no es ni una cosa
+     ni la otra. No desaparecen — van en `cuentasSinBanco`, con lo que
+     calcula la app, para que la pantalla diga cuáles faltan y cómo
+     arreglarlo.
+
+     Si NINGUNA tiene ancla —el hogar que anota todo a mano y nunca importa—
+     se usa lo calculado, porque es lo único que hay, y `bancoCalculado` lo
+     dice. */
+  const hayBanco = cuentas.conBanco > 0;
+  const enBanco = hayBanco ? cuentas.totalDisponibleBanco : cuentas.totalDisponible;
+  const enLibros = hayBanco ? cuentas.totalBanco : cuentas.total;
+  const retenidoBanco = hayBanco ? cuentas.totalRetenidoBanco : cuentas.totalRetenido;
   const enMano = Math.max(0, ef.saldo);
 
   const tarjetas = deudaTarjetas(D, per);
@@ -50,11 +61,30 @@ function patrimonio(D, per) {
     enBanco, enLibros, retenidoBanco, enMano, activos,
     enTarjetas, retenidoTarjetas, enFinanciamientos, pasivos,
     retenidoTotal: cent(retenidoBanco + retenidoTarjetas),
+    /* EL MISMO `max` QUE EN LAS TARJETAS TAPABA UNA CONTRADICCIÓN.
+
+       `enMano` recorta el efectivo a cero, y hace bien: una bolsa
+       negativa no significa nada y ensuciaría el capital. Pero un
+       efectivo negativo SÍ significa algo, y algo caro: falta anotar un
+       retiro. Y si ese retiro falta, el saldo de la cuenta está alto por
+       ese mismo monto —porque `saldoCuenta` solo resta los retiros
+       registrados— así que el capital sale MEJOR de lo que es, justo por
+       la cantidad que no se anotó.
+
+       El recorte se queda. Lo que se agrega es decirlo: `efectivo()` ya
+       marcaba el descuadre y nadie lo estaba leyendo, así que ninguna
+       pantalla podía avisarlo. Es la misma disciplina de `pagadoDeMas`:
+       una contradicción se grita, no se tapa. */
+    efectivoDescuadrado: ef.descuadre,
+    efectivoSinRegistrar: ef.descuadre ? cent(-ef.saldo) : 0,
     neto: activos - pasivos,
     tarjetas,
     // Sin cuentas declaradas la cifra no significa nada y hay que decirlo.
     hayDatos: cuentas.hayDatos || ef.hayDatos || pasivos > 0,
     faltanCuentas: !cuentas.hayDatos,
+    cuentasSinBanco: hayBanco ? cuentas.sinBanco : [],
+    bancoCalculado: cuentas.hayDatos && !hayBanco,
+    saldoAl: cuentas.saldoAl,
     faltanSaldosTarjeta: tarjetas.some(t => !t.declarada)
   };
 }
@@ -75,7 +105,7 @@ const MESES_COLCHON = 3;   // el mínimo que recomienda cualquier manual serio
  */
 function planIncompleto(D, per) {
   const gas = gastosMes(D, 0, per);
-  const gastado = sumaMontos((D.movimientos || []).filter(x => perDe(x) === per));
+  const gastado = sumaMontos((D.movimientos || []).filter(x => perDe(x) === per && delHogar(x)));
   return {
     hay: (D.gastos || []).length > 0 && gas.total <= 0 && gastado > 0,
     rubros: gas.detalle.length,

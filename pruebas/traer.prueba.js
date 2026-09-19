@@ -129,3 +129,63 @@ test('el tope de páginas evita un bucle infinito si el servidor se porta mal', 
   await assert.rejects(() => traerTodo(leer, { tam: 10, tope: 5 }),
     /No se calcula con historia incompleta/);
 });
+
+/* ------------------------------------------------------------
+   Y sin ir en fila india
+   ------------------------------------------------------------ */
+
+/** Como `servidor`, pero anota cuántas peticiones hubo a la vez. */
+function servidorLento(n, { techo = 1000, demora = 5 } = {}) {
+  const filas = Array.from({ length: n }, (_, i) => ({ id: i }));
+  let vivas = 0;
+  const leer = async (desde, hasta) => {
+    vivas++;
+    leer.pico = Math.max(leer.pico, vivas);
+    await new Promise(r => setTimeout(r, demora));
+    vivas--;
+    leer.viajes++;
+    const cuantas = Math.min(hasta - desde + 1, techo);
+    return { filas: filas.slice(desde, desde + cuantas), total: n };
+  };
+  leer.pico = 0;
+  leer.viajes = 0;
+  return leer;
+}
+
+test('las páginas que faltan se piden a la vez, no una detrás de otra', async () => {
+  /* El total exacto viene en la PRIMERA respuesta. A partir de ahí,
+     preguntar de a una solo suma latencia: cuatro viajes en fila india
+     contra uno más tres en paralelo. */
+  const leer = servidorLento(3412);
+  const filas = await traerTodo(leer, { tam: 1000 });
+  assert.equal(filas.length, 3412);
+  assert.equal(leer.viajes, 4);
+  assert.ok(leer.pico >= 3,
+    `las páginas siguieron yendo de a una: como mucho hubo ${leer.pico} a la vez`);
+});
+
+test('en paralelo, las filas siguen quedando en orden', async () => {
+  // `Promise.all` devuelve en el orden en que se pidió, no en el que
+  // contestó — pero eso hay que fijarlo, no suponerlo.
+  const leer = servidorLento(2500);
+  const filas = await traerTodo(leer, { tam: 1000 });
+  assert.deepEqual(filas.map(f => f.id), Array.from({ length: 2500 }, (_, i) => i));
+});
+
+test('con una sola página no se abre un viaje de más', async () => {
+  const leer = servidorLento(300);
+  await traerTodo(leer, { tam: 1000 });
+  assert.equal(leer.viajes, 1);
+});
+
+test('las páginas se piden con orden fijo, o dos consultas pueden repetir y saltarse filas', async () => {
+  const { lectorPostgrest } = await import('../supabase/functions/_compartido/traer.js');
+  const urls = [];
+  const original = globalThis.fetch;
+  globalThis.fetch = async u => { urls.push(String(u)); return new Response('[]', { status: 200, headers: { 'content-range': '0-0/0' } }); };
+  try {
+    await lectorPostgrest({ url: 'https://x.supabase.co', clave: 'k', autorizacion: 'Bearer t',
+                            tabla: 'movimientos', filtros: { select: 'id,monto' } })(0, 999);
+  } finally { globalThis.fetch = original; }
+  assert.match(urls[0], /[?&]order=id(&|$)/);
+});

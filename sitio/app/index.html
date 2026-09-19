@@ -125,6 +125,16 @@
         </button>
       </div>
       <div class="tope__der">
+        <!-- LA MONEDA DEL HOGAR, A LA VISTA.
+             Se elige en el primer paso del asistente y después no se
+             volvía a ver en ninguna pantalla: había que entrar a
+             Presupuesto a buscarla. Con el «$» compartido por el dólar
+             y cuatro pesos distintos de la región, saber en cuál se
+             está leyendo deja de ser contexto y pasa a ser el dato.
+             Nace escondido y `app.js` lo enciende al cargar el hogar:
+             así nunca hay un rótulo vacío. -->
+        <span class="moneda-tope" id="monedaTope" hidden></span>
+
         <span class="estado" id="estado2" data-estado="cargando">
           <span class="estado__punto" aria-hidden="true"></span>
           <span id="estadoTexto2">Cargando…</span>

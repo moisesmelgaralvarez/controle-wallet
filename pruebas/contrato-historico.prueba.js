@@ -44,7 +44,8 @@ const CLAVES = clavesDeLaRespuesta(fuente);
 /* Lo que cada pantalla lee. Si una vista empieza a usar un campo
    nuevo, se agrega aquí y la prueba obliga a que la función lo mande. */
 const CONSUMEN = {
-  Resumen:   ['patrimonio', 'cuentas', 'salud'],
+  Resumen:   ['patrimonio', 'cuentas', 'salud', 'sugerido', 'saldar'],
+  Presupuesto: ['sugerido'],
   Historia:  ['historia', 'filasUsadas'],
   Proyectos: ['cartera'],
   Cierre:    ['cierre', 'paraCerrar'],
@@ -66,10 +67,23 @@ for (const [vista, campos] of Object.entries(CONSUMEN)) {
 }
 
 test('los errores de la función van marcados para pasar tal cual', () => {
-  // `propio: true` es lo que impide que un 500 se convierta en «falló
-  // el servidor» y se trague el motivo real. Ver `datos/mensajes.js`.
-  assert.match(fuente, /propio:\s*true/,
+  /* `propio: true` es lo que impide que un 500 se convierta en «falló el
+     servidor» y se trague el motivo real. Ver `datos/mensajes.js`.
+
+     LA MARCA SE MUDÓ, Y ESTA PRUEBA LO ENCONTRÓ. Vivía dentro de
+     `historico/index.ts`, junto a un `fallar()` copiado en las tres
+     funciones. Al unificar las cabeceras —para que dejaran de contestarle
+     a cualquier origen— los dos ayudantes bajaron a `_compartido/origen.js`
+     y aquí quedó buscando en el archivo equivocado. Se busca donde ahora
+     vive, y se comprueba ADEMÁS que la función siga usándolo: mirar solo
+     el módulo compartido dejaría pasar una función que se hiciera el suyo. */
+  const compartido = readFileSync(
+    new URL('../supabase/functions/_compartido/origen.js', import.meta.url), 'utf8');
+
+  assert.match(compartido, /propio:\s*true/,
     'los errores perdieron la marca `propio` y volverían a salir como genéricos');
+  assert.match(fuente, /respuestas\(req\)/,
+    'la función dejó de tomar sus respuestas de `_compartido/origen.js`');
   assert.doesNotMatch(fuente, /return responder\(\{ error:/,
     'quedó un error sin pasar por `fallar()`, así que sale sin la marca');
 });

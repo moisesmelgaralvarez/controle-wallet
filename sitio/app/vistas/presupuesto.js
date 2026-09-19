@@ -667,9 +667,16 @@ export function presupuesto({ contenedor, D, periodo, hogar, recargar }) {
         // una cifra.
         `type="month" value="${esc(t ? (t.desdeMes || '') : mesLocal())}"`,
         'Lo anterior a este mes no se cuenta en la deuda: se da por incluido en el saldo de arriba. Dejalo vacío si no querés esa raya.')}
-      ${campo('tasaAnual', 'Interés anual (%)',
+      ${/* DECÍA «Interés anual» A SECAS, Y ESO NO ES UN DATO: SON DOS.
+            Una tasa nominal del 55% y una efectiva del 55% no cuestan lo
+            mismo —4.58% al mes contra 3.72%, un 23% de diferencia— y de esta
+            cifra cuelga la frase «abonar ahí rinde más que cualquier
+            proyecto». Pedirla sin decir cuál se pide es dejar que cada quien
+            teclee la que tenga a mano y que la app calcule con la otra.
+            La nominal es la que traen los estados de cuenta de la región. */''}
+      ${campo('tasaAnual', 'Interés nominal anual (%)',
         `type="number" inputmode="decimal" step="0.1" min="0" max="200" value="${esc(t && t.tasaAnual ? t.tasaAnual : '')}" placeholder="Ej. 55"`,
-        'Lo que cobra el banco por revolver saldo. Con esto se puede decir cuánto cuesta al mes no saldarla.')}
+        'La que aparece en tu estado de cuenta como tasa anual, sin capitalizar. Con esto se calcula cuánto cuesta al mes no saldarla — sin contar comisiones, impuestos ni mora, que van aparte.')}
       ${campoMonto('retenido', 'Consumos autorizados sin aplicar',
         t && t.retenido ? t.retenido.monto : '',
         'Compras ya hechas que el comercio no ha cobrado, así que todavía no salen en el estado de cuenta. Se deben igual: suman a la deuda, no al capital.')}

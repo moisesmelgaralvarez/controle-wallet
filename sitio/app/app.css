@@ -129,6 +129,15 @@
 .tope__mes { font-size: var(--t-sm); color: var(--tenue); }
 .tope__der { margin-left: auto; display: flex; align-items: center; gap: var(--e1); }
 
+/* La moneda del hogar. Discreta —no es una decisión que se tome cada
+   día— pero presente, porque el símbolo solo no la identifica. */
+.moneda-tope {
+  font-size: var(--t-xs); color: var(--tenue);
+  border: 1px solid var(--borde); border-radius: 999px;
+  padding: 0.15rem 0.55rem; white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Estado de la conexión. Como todo viene del servidor, el usuario
    tiene que poder saber siempre si está viendo datos frescos. */
 .estado { display: inline-flex; align-items: center; gap: 0.45rem; font-size: var(--t-xs); color: var(--tenue); }
@@ -137,6 +146,7 @@
 .estado[data-estado="cargando"] .estado__punto { background: var(--acento); opacity: 0.45; }
 .estado[data-estado="error"]    .estado__punto { background: var(--alerta); }
 .estado[data-estado="sin-red"]  .estado__punto { background: var(--alerta); }
+.estado[data-estado="caido"]    .estado__punto { background: var(--alerta); }
 
 .contenido { padding: clamp(1rem, 3vw, 2.5rem); display: grid; gap: var(--e3); align-content: start; }
 
@@ -182,6 +192,10 @@
 .ciclo-app { display: grid; gap: 0.5rem; font-variant-numeric: tabular-nums; }
 .ciclo-app__f { display: flex; justify-content: space-between; gap: var(--e2); font-size: var(--t-sm); }
 .ciclo-app__f em { font-style: normal; color: var(--tenue); }
+/* La cifra no se parte nunca: a 390 px, con una nota larga a la izquierda,
+   salía «−L» en un renglón y «20,741.20» en el siguiente. Cede la etiqueta,
+   que sí puede ir en dos líneas. */
+.ciclo-app__f > span:last-child { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .ciclo-app__f.total { border-top: 1px solid var(--borde); padding-top: 0.5rem; font-weight: 700; font-size: var(--t-md); }
 .ciclo-app__f.total .mal { color: var(--alerta); }
 .ciclo-app__f.total .bien { color: var(--acento); }
@@ -276,7 +290,13 @@ body[data-asistente="si"] .app { grid-template-columns: 1fr; }
 
 body[data-hoja="abierta"] { overflow: hidden; }
 
-.hoja { position: fixed; inset: 0; z-index: 20; display: grid; }
+/* POR ENCIMA DE LA BARRA DEL TELÉFONO. La barra de pestañas pasó a
+   `position: fixed; z-index: 30` en el #72, y la hoja se quedó en 20: en
+   teléfono la hoja sube desde abajo, así que su botón de guardar —que va
+   al fondo— quedaba TAPADO por la barra en cada formulario de la app. Se
+   encontró filmando «Rubro nuevo» a 390 px: el clic lo recibía «Presupuesto».
+   45: sobre la barra (30) y la guía del riel (40); bajo el menú «Más» (60). */
+.hoja { position: fixed; inset: 0; z-index: 45; display: grid; }
 .hoja__fondo { position: absolute; inset: 0; background: rgba(0,0,0,.5); }
 
 .hoja__caja {
@@ -326,7 +346,9 @@ body[data-hoja="abierta"] { overflow: hidden; }
 
 .flotante {
   position: fixed; left: 50%; bottom: 5rem; transform: translateX(-50%) translateY(1rem);
-  z-index: 30; padding: 0.7rem 1.2rem; border-radius: 999px;
+  /* Sobre la hoja: un aviso que sale mientras hay un formulario abierto
+     no puede quedar escondido detrás de él. */
+  z-index: 50; padding: 0.7rem 1.2rem; border-radius: 999px;
   background: var(--tinta); color: var(--fondo);
   font-size: var(--t-sm); font-weight: 550;
   opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s;
@@ -440,6 +462,8 @@ body[data-asistente="si"] .tope { display: none; }
 /* Un botón que acompaña a un título no puede tener el mismo peso que
    la acción principal de la pantalla. */
 .boton--chico { padding: 0.35rem 0.85rem; font-size: var(--t-xs); }
+/* El ajuste del efectivo va pegado a su cifra pero no encima de ella. */
+.efectivo__ajuste { margin-top: var(--e2); }
 
 /* ---------- listas de configuración ---------- */
 

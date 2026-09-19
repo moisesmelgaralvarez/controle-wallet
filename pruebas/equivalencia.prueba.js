@@ -82,7 +82,12 @@ const NUEVOS_A_PROPOSITO = {
                 'preguntó «¿dónde está lo que llevo gastado respecto al presupuesto ' +
                 'por categoría?» y la respuesta fue que en ninguna pantalla. ' +
                 '`gastosMes` recorre los rubros con el monto PLANEADO y no mira un ' +
-                'solo movimiento: sirve para proyectar, no para saber cómo va el mes.'
+                'solo movimiento: sirve para proyectar, no para saber cómo va el mes.',
+
+  planParaSaldar: 'pone la deuda de la tarjeta contra lo que hay y lo que viene: ' +
+                  'cada ingreso por lo que de verdad dejó las últimas veces. El dueño ' +
+                  'lo pidió para «ver cómo saldar lo que debemos» sin que lo que ' +
+                  'todavía no cae se mezcle con el disponible.'
 };
 
 test('la API nueva no inventa nada que la vieja no tuviera', () => {
@@ -138,7 +143,8 @@ test('el núcleo no arrastró dependencias del navegador', () => {
   const dir = new URL('../sitio/app/nucleo/', import.meta.url);
   const archivos = ['base.js', 'fechas.js', 'ingresos.js', 'financiamientos.js',
                     'saldos.js', 'sugerido.js', 'proyeccion.js', 'pulso.js',
-                    'patrimonio.js', 'prioridad.js', 'carta.js', 'importar.js', 'index.js'];
+                    'patrimonio.js', 'prioridad.js', 'carta.js', 'importar.js', 'saldar.js',
+                    'index.js'];
   const culpables = [];
   for (const a of archivos) {
     const txt = readFileSync(new URL(a, dir), 'utf8');

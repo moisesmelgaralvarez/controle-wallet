@@ -1,8 +1,9 @@
 # Traspaso — continuar Controle Wallet
 
-> Pegá este documento completo al abrir un chat nuevo. Describe el estado real
-> del proyecto al 12 de agosto de 2026, verificado contra el repositorio y contra
-> los servicios en línea — no de memoria.
+> No hace falta pegarlo: en una sesión nueva basta con decir «leé TRASPASO.md
+> y seguí con el §8». Describe el estado real del proyecto al **18 de
+> septiembre de 2026**, verificado contra el repositorio y contra los
+> servicios — no de memoria. Ver §10 para seguir sin gastar contexto.
 
 ---
 
@@ -49,8 +50,15 @@ de ella. Si preguntan, la respuesta corta está en `EL-SERVICIO.md`.
 
 ## 3. Qué ya está hecho
 
-`main` va en **v0.25.0**, y **producción está al día con `main`**. Todo pasa por
-Pull Request; `main` está protegido. Dos verificaciones en CI.
+`main` va en **v0.28.3**, y producción estaba al día con `main` el 18 de agosto.
+Todo pasa por Pull Request; `main` está protegido. Dos verificaciones en CI
+(núcleo, que ahora también corre con el reloj adelantado 40 y 200 días; y
+aislamiento contra la base de pruebas).
+
+**Al 18 de septiembre hay una pila de seis PR lista, sin unir** (#90 → #95,
+cada una encima de la anterior). No se unió porque las dos bases de Supabase
+amanecieron **pausadas** (plan gratuito, siete días sin uso) y la verificación
+de aislamiento no puede correr. Ver §8 para el orden de publicación.
 
 **Etapas 0 a 4 — cerradas.** Fundación con vuelta atrás ensayada (4 s el código,
 22 s el esquema). Núcleo de 1,728 líneas partido en 13 módulos ES. Esquema de 20
@@ -225,6 +233,35 @@ hasta que coincidan.
 **En `pruebas/integracion.js` y `aislamiento.js`, `URL` está sombreado** por la
 dirección del proyecto. Usá `globalThis.URL`.
 
+**Supabase pausa una base gratuita a los siete días sin uso, y no avisa.** La
+app abre pero nadie puede entrar. Pasó el 18 de septiembre con las DOS bases. Se
+destraba solo desde el panel (*Restore project*). `latido/` es un Worker aparte,
+sin dirección pública, que hace una consulta diaria a cada base; se publica con
+`npx wrangler deploy --config latido/wrangler.toml`. Sobra con Supabase Pro.
+
+**Una prueba que escribe el mes a mano se cae sola cuando cambia el mes.** El
+sugerido decide qué mes está cerrado contra el reloj. Los meses de una prueba
+salen de `hoyLocal()`. El CI corre la suite con `herramientas/reloj-falso.mjs`
+a +40 y +200 días para verlo el día que se escribe.
+
+**Lo que se verifica tiene que ser lo que el usuario toca.** Tres defectos
+pasaron todas las pruebas del núcleo y los encontró la pantalla real con un CSV
+(`herramientas/escenario/`): `preparar` copiaba el hogar sin copiar cuentas ni
+tarjetas —la tarjeta de débito nueva se perdía y la importación se habría
+caído—; el sueldo del día 6 se emparejaba con el pago de la tarjeta del mismo
+monto y **se borraba el pago**; y la hoja de los formularios quedaba debajo de
+la barra del teléfono.
+
+**Una copia con `...D` comparte los objetos de adentro.** Si el motor escribe en
+`cuenta.saldoBanco`, escribe en el hogar vivo. Revisar un archivo sin aplicarlo
+no puede cambiar nada.
+
+**Un número que no se encontró es `null`, no `0`.** `numero(undefined)` da 0: el
+CSV sin «Saldo final» rotulado anotaba L 0.00 como el saldo que declaró el banco.
+
+**El duplicado se busca entre cosas de la misma clase**, y solo entre lo que el
+archivo SÍ va a registrar. Un depósito no es el duplicado de un pago.
+
 ---
 
 ## 7. Cómo trabajar
@@ -251,22 +288,70 @@ gh pr create
 
 ## 8. Lo que falta
 
-**Nada de producto, salvo una cosa que es decisión del dueño:**
+### Lo inmediato — en este orden
 
-- **Facturas por foto.** Necesita un modelo de IA de un tercero. Cuesta por uso,
-  manda la imagen fuera, y obligaría a ampliar la política de privacidad.
-  Recomendación dada: **esperar a que un cliente lo pida** — importar el estado de
-  cuenta ya evita teclear.
+1. **El dueño restaura las dos bases** desde el panel de Supabase
+   (*Restore project*): producción primero.
+2. Con pruebas despierta: `npm run pruebas:aislamiento` y
+   `npm run pruebas:integracion` (credenciales en §3), y comprobar
+   `importar_lote` con `p_tarjetas` y la marca `encargo` sobre la base real.
+3. **Unir la pila en orden**: #90, #91, #92, #93, #94, #95. Cada una va encima
+   de la anterior; al unir una, GitHub reapunta la siguiente a `main`.
+4. **Publicar** en el orden de siempre —migración → funciones → Worker—:
+   - Migraciones `20260918120000_debito_y_retenido_de_cuenta` y
+     `20260918130000_por_encargo` (pruebas primero, después producción).
+   - Edge Functions `historico`, `cuenta` e `invitar` (#93 toca las tres).
+   - Worker del sitio, y **el latido**:
+     `npx wrangler deploy --config latido/wrangler.toml`.
+5. **Datos de producción**: correr `herramientas/reparaciones/debito-sin-tarjeta-informe.sql`
+   y, si trae filas, la reparación (queda sin `COMMIT` a propósito; la
+   confirma una persona). Cuelga de su tarjeta de débito las compras de cuenta
+   que quedaron «sin tarjeta» y las pone a nombre del dueño de la cuenta.
+6. Pedirle al dueño que **reimporte el último estado de cuenta de cada cuenta**:
+   es lo único que trae lo retenido (antes se leía y se tiraba) y el saldo del
+   banco de la cuenta de planilla de Moisés, que hoy no se suma al disponible
+   porque nunca tuvo uno.
 
-**Pendientes del dueño, no técnicos:**
+### Lo que se hizo el 18 de septiembre (la pila #90–#95)
 
-- **Supabase Pro (~$25/mes) — LO ÚNICO URGENTE.** Producción **no tiene respaldo
-  automático**. Ya hay datos reales y se puede invitar gente. Un error grave en la
-  base es hoy irrecuperable.
+| PR | Qué |
+|---|---|
+| #90 | El latido diario; la prueba del núcleo que se cayó sola el 1 de septiembre |
+| #91 | Compras de cuenta con su tarjeta de débito (se crea sola); lo retenido de la cuenta se guarda; «Disponible real» deja fuera la cuenta sin saldo del banco y dice de qué fecha es; **Cómo se salda la tarjeta**; el pulso mide con la misma vara que la ficha; ajuste de efectivo; filtro de Movimientos por de dónde salió el dinero |
+| #92 | Crear rubro sin salir de Importar; rubro Préstamos; el CSV no inventa saldos en cero; archivo vacío honesto; **la importación ya no borra un pago que coincide con un depósito**; la hoja sobre la barra del teléfono |
+| #93 | CSP con los dos anfitriones exactos; funciones que solo contestan a los nuestros; tasa nominal; el interés como estimación (trabajo de agosto que había quedado sin publicar) |
+| #94 | El histórico baja solo las columnas que se leen, en paralelo y **con orden fijo** |
+| #95 | Compras **por encargo**; la reparación de datos de #91 |
+
+### Pendientes del dueño, no técnicos
+
+- **Supabase Pro (~$25/mes).** Ahora son dos razones: producción **no tiene
+  respaldo**, y el plan gratuito **pausa la base** a los siete días sin uso (el
+  latido lo evita, pero es un parche).
 - **Revisión legal** de términos y privacidad por alguien licenciado en Honduras.
 - **Los precios**, cuando los defina.
+- **#53** («Tu mes no empieza el 1») quedó abierto desde el 16 de agosto y ya no
+  se puede unir: toca `noche.css`, que no existe desde el rediseño «Papel y
+  tinta». Su idea —el sitio habla solo de tarjeta y el producto sirve también a
+  quien cobra por quincena o comisión— sigue siendo buena. Recomendación:
+  cerrarlo y, si el dueño quiere esa tesis, llevarla al diseño actual en un PR
+  nuevo.
 
-**Fase 2, no adelantar:** cobro de suscripciones, apps de tienda, multi-moneda.
+### Producto
+
+- **Facturas por foto.** Necesita un modelo de IA de un tercero: cuesta por uso,
+  manda la imagen fuera y obliga a ampliar la política de privacidad.
+  Recomendación: esperar a que un cliente lo pida.
+- **Fase 2, no adelantar:** cobro de suscripciones, apps de tienda,
+  multi-moneda, inglés.
+
+### Limpieza
+
+- La carpeta principal del repositorio quedó en la rama
+  `perf/historico-sin-peso-muerto`, con cambios sin confirmar de la sesión de
+  agosto. **Todo eso ya está en #93 y #94**; cuando se unan, esa rama y esos
+  cambios sobran. `AGENTS.md` y `.agents/` son de otra herramienta y no se
+  tocaron.
 
 ---
 
@@ -274,16 +359,37 @@ gh pr create
 
 1. Leé `EL-SERVICIO.md` (para hablar con el dueño), `CAMBIOS.md`,
    `VUELTA-ATRAS.md` y `SECRETOS.md`.
-2. Corré `npm run pruebas` — deben salir **336 en verde**.
+2. Corré `npm run pruebas` — deben salir **todas en verde** (450 al 18 de
+   septiembre).
 3. Comprobá que producción esté al día:
    `curl -s https://controlewallet.com/app/ | grep -o 'data-ruta="[a-z]*"' | sort -u`
    — deben salir **9 secciones**.
 4. Mirá `sitio/app/vistas/cierre.js` como referencia del estilo de una vista con
    servidor, y `datos/importar.js` para el patrón de «preparar y después
    aplicar».
+5. Para mirar y medir una pantalla sin base ni sesión: `herramientas/escenario/`
+   (ver su `LEEME.md`).
 
 **Cómo verificar contra pruebas:** `npx wrangler dev` en el puerto 8787 —
 localhost siempre habla con pruebas, nunca con producción. La cuenta de pruebas
 del dueño es `moises-melgar@outlook.com` y **la contraseña la escribe él**: no se
 pide ni se escribe. Antes de tocar datos, sacá una foto de las tablas y compará
 al terminar.
+
+---
+
+## 10. Cómo seguir en otra sesión sin gastar contexto
+
+La ventana de contexto se llena con lo que se LEE, no con lo que se escribe. Lo
+que funciona:
+
+1. **Una sesión por pieza de trabajo.** Terminada una pieza —PR abierto o unido—
+   se abre un chat nuevo para la siguiente. Una sesión de ocho horas con diez
+   temas se come la ventana en lecturas que ya no sirven.
+2. **No pegar documentos.** `CLAUDE.md` se carga solo en cada sesión y es corto
+   a propósito. Para el resto basta pedir: «leé TRASPASO.md y seguí con el §8».
+3. **Pedir lo que hace falta, no «revisá todo».** «Arreglá X en Resumen» lee dos
+   archivos; «revisá la app» lee cincuenta.
+4. **`/compact` antes de cambiar de tema** dentro de una misma sesión larga.
+5. **Al cerrar una sesión, actualizar este §8.** Es lo que le ahorra a la
+   siguiente reconstruir el estado leyendo el historial de git.

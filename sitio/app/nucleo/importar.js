@@ -729,12 +729,43 @@ function adaptadorCsv(texto) {
   const cuenta = (plano.match(/cuenta\s*(?:no\.?|n[úu]mero)?\s*[:#]?\s*(\d{5,})/i) || [])[1]
               || (plano.match(/\b(\d{10,})\b/) || [])[1] || '';
   const titular = (filas.find(f => f.some(c => /titular/i.test(c))) || [])[0] || '';
-  const saldoIni = numero((plano.match(/Saldo inicial:?\s*([\d.,-]+)/i) || [])[1]);
-  const saldoFin = numero((filas.map(f => f.join(' ')).join('\n')
-                    .match(/Saldo final:?\s*([\d.,-]+)/i) || [])[1]);
+  /* EL SALDO QUE NO SE ENCUENTRA ES NULO, NO CERO.
 
-  return { banco: 'CSV', tipo: 'cuenta', cuenta, titular, saldoIni, saldoFin,
-           movs: movsDeTabla(filas, cab) };
+     `numero(undefined)` da 0, y un banco que no escribe «Saldo inicial» y
+     «Saldo final» con esas palabras quedaba con los dos en L 0.00. La
+     pantalla gritaba «el archivo NO cuadra» sin razón, y peor: ese cero se
+     anotaba como el saldo que declaró el banco, y el disponible de la
+     cuenta caía a nada. Si no está rotulado, se saca de la columna de saldo
+     —que casi todo banco trae—, y si tampoco, se deja sin saber. */
+  const rotulado = (re, txt) => { const m = txt.match(re); return m ? numero(m[1]) : null; };
+  const movs = movsDeTabla(filas, cab);
+  const col = saldosDeLaColumna(movs);
+  const saldoIni = rotulado(/Saldo inicial:?\s*([\d.,-]+)/i, plano) ?? col.ini;
+  const saldoFin = rotulado(/Saldo final:?\s*([\d.,-]+)/i, filas.map(f => f.join(' ')).join('\n')) ?? col.fin;
+
+  return { banco: 'CSV', tipo: 'cuenta', cuenta, titular, saldoIni, saldoFin, movs };
+}
+
+/**
+ * El saldo al abrir y al cerrar, sacado de la columna que cada renglón
+ * arrastra. Solo si la columna se sostiene sola: cada saldo tiene que ser el
+ * anterior más el movimiento. Si un renglón no cuadra —dos del mismo día en
+ * orden raro, una columna que no era de saldo—, no se inventa nada.
+ *
+ * El banco puede listar del más nuevo al más viejo: se prueba en los dos
+ * sentidos y vale el que cuadra.
+ */
+function saldosDeLaColumna(movs) {
+  const nada = { ini: null, fin: null };
+  if (!movs.length || movs.some(m => m.balance == null)) return nada;
+  const cuadra = l => l.every((m, i) => i === 0 ||
+    Math.abs(l[i - 1].balance + m.monto - m.balance) < 0.011);
+  for (const l of [movs, [...movs].reverse()]) {
+    if (!cuadra(l)) continue;
+    const r = x => Math.round(x * 100) / 100;
+    return { ini: r(l[0].balance - l[0].monto), fin: r(l[l.length - 1].balance) };
+  }
+  return nada;
 }
 
 /**
@@ -1211,7 +1242,12 @@ const REGLAS = [
   [/unicines|cinema|aqua tours|eventos|hotel|tours|villa de jerez/, 'Entretenimiento', 'Otros'],
   [/municipalidad|alcaldia|impuesto|tasa|dei|sar\b/, 'Impuestos y trámites', 'Servicios'],
   [/\buth\b|universidad|colegio|matricula|escolar|educa/, 'Educación', 'Otros'],
-  [/copy max|libreria|papeleria|acosa|steren|tecnologia|computacion|informatica/, 'Tecnología y papelería', 'Otros']
+  [/copy max|libreria|papeleria|acosa|steren|tecnologia|computacion|informatica/, 'Tecnología y papelería', 'Otros'],
+
+  // --- deudas ---
+  // El pago de un préstamo que sale de la cuenta es un costo fijo del mes, y
+  // sin rubro propio caía en «Sin clasificar» — lo pidió el dueño.
+  [/prestamo/, 'Préstamos', 'Otros']
 ];
 
 // Según el tamaño de letra, un PDF puede entregar "SUPER TDAS PAIZ" o
@@ -1305,12 +1341,21 @@ function aplicarLote(D, lote, destino, ayuda) {
   borrados.forEach(id => { D._borrados[id] = now(); });
 
   D.comercios = D.comercios || {};
+  /* Quién hizo el gasto, por el nombre que el banco imprime en cada
+     plástico. Con nombre y apellido se exigen DOS coincidencias, para que
+     compartir un apellido no convierta a otra persona en el titular. Pero
+     muchos hogares anotan a la gente solo por el nombre de pila —«Judith»—,
+     y ahí exigir dos era exigir lo imposible: todas las compras de su
+     plástico caían en la primera persona del hogar. Con una sola palabra se
+     pide la palabra ENTERA, para que «Ana» no se quede con lo de «Diana». */
   const persona = nombre => {
     if (!nombre) return null;
     const t = SIN_TILDES(nombre).replace(/\//g, ' ');
+    const palabras = new Set(t.split(/[^a-zñ]+/).filter(Boolean));
     const p = (D.personas || []).find(x => {
       const partes = SIN_TILDES(x.nombre).split(/\s+/).filter(w => w.length > 2);
-      return partes.length >= 2 && partes.filter(w => t.includes(w)).length >= 2;
+      if (partes.length >= 2) return partes.filter(w => t.includes(w)).length >= 2;
+      return partes.length === 1 && palabras.has(partes[0]);
     });
     return p ? p.id : null;
   };
@@ -1350,10 +1395,40 @@ function aplicarLote(D, lote, destino, ayuda) {
     }
   }
 
-  const cuenta = { gastos: 0, retiros: 0, pagos: 0, omitidos: 0, sinCategoria: 0 };
+  /* UNA COMPRA LEÍDA DEL ESTADO DE CUENTA DE UNA CUENTA SALIÓ DE ESA CUENTA.
+     Se paga con su tarjeta de débito, y el modelo la cuelga de ahí. Pero
+     casi nadie registra la de débito —no se piensa en ella como «una
+     tarjeta»—, y entonces la compra quedaba como «tarjeta» sin tarjeta: no
+     bajaba la cuenta ni subía ninguna deuda. Dinero gastado que ningún
+     saldo reflejaba, y en la lista se mezclaba con la de crédito.
+
+     Si no existe, se crea con el nombre de la cuenta. No guarda ni un
+     dígito del plástico: es solo el lazo entre la compra y la cuenta de
+     la que salió el dinero. */
+  let debito = destino.clase === 'cuenta' ? (ayuda.debitoDe(destino.id) || null) : null;
+  const tarjetasNuevas = [];
+  if (destino.clase === 'cuenta' && !debito && destinoObj &&
+      lote.movs.some(m => m.tipo === 'gasto' || m.tipo === 'comision')) {
+    const t = { id: uid(), nombre: `Débito ${destinoObj.nombre}`.slice(0, 60),
+                tipo: 'debito', cuentaId: destino.id, _upd: now() };
+    D.tarjetas = D.tarjetas || [];
+    D.tarjetas.push(t);
+    tarjetasNuevas.push(t.id);
+    debito = t.id;
+  }
+
+  /* Del estado de cuenta de una cuenta, el que no trae nombre en el
+     renglón es el dueño de esa cuenta — no «la primera persona del hogar»,
+     que era a quien se le cargaba todo, incluido lo de la cuenta de otro. */
+  const duenio = destino.clase === 'cuenta'
+    ? ((D.personas || []).find(p => p.cuentaId === destino.id) || {}).id || null
+    : null;
+
+  const cuenta = { gastos: 0, retiros: 0, pagos: 0, omitidos: 0, sinCategoria: 0,
+                   tarjetasNuevas };
 
   lote.movs.forEach(m => {
-    const pid = persona(m.titular) || (D.personas[0] || {}).id || null;
+    const pid = persona(m.titular) || duenio || ((D.personas || [])[0] || {}).id || null;
 
     if (m.tipo === 'gasto' || m.tipo === 'comision') {
       const cat = rubroPara(m.concepto, D, ayuda);
@@ -1361,7 +1436,7 @@ function aplicarLote(D, lote, destino, ayuda) {
       D.movimientos.push(Object.assign(base(m), {
         gastoId: cat, monto: Math.abs(m.monto), personaId: pid,
         medioPago: 'tarjeta',
-        tarjetaId: destino.clase === 'tarjeta' ? destino.id : (ayuda.debitoDe(destino.id) || null),
+        tarjetaId: destino.clase === 'tarjeta' ? destino.id : debito,
         concepto: m.concepto.slice(0, 80)
       }));
       cuenta.gastos++;

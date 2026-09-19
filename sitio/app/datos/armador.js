@@ -264,6 +264,10 @@ export function armar(filas) {
     personaId: m.persona_id || null,
     medioPago: m.medio_pago || 'tarjeta',
     tarjetaId: m.tarjeta_id || null,
+    // Comprado para otro, que lo devuelve: sale de la tarjeta pero no es
+    // gasto de la casa. `=== true` y no `Boolean()`: si la columna no
+    // viniera en la consulta, que no se marque nada por accidente.
+    encargo: m.encargo === true,
     ...procedencia(m)
   }));
 
@@ -370,3 +374,55 @@ export const CONFIGURACION = [
 ];
 
 export const POR_MES = ['movimientos', 'retiros', 'pagos_tarjeta', 'presupuesto_mes'];
+
+/* ============================================================
+   QUÉ COLUMNAS HACE FALTA PEDIR DE CADA TABLA.
+
+   `select=*` trae también `actualizado_en` y `actualizado_por` —una
+   marca de tiempo y un UUID— en CADA fila. Son datos de auditoría que
+   este archivo no lee ni una vez, y en un hogar de tres años con 3,240
+   movimientos pesan alrededor de 190 KB de los 617 KB que el servidor
+   baja en cada carga del Resumen. Casi un tercio del viaje es para algo
+   que nadie mira.
+
+   POR QUÉ LA LISTA VIVE ACÁ Y NO EN QUIEN CONSULTA
+
+   Porque el que decide qué columnas hacen falta es este archivo: es el
+   único que las lee. Escribirlas en la Edge Function las separaría del
+   mapeo que las consume, y el día que alguien agregue un campo aquí
+   —el mapeo lo tendría, la consulta no— llegaría `undefined`, se
+   volvería 0 al pasar por `num()`, y el saldo saldría mal SIN UN SOLO
+   ERROR. Es exactamente la trampa que este archivo existe para evitar y
+   que ya costó caro dos veces.
+
+   Y por eso hay una prueba —`pruebas/columnas.prueba.js`— que lee este
+   mismo archivo, saca cada propiedad en `snake_case` que se consulta, y
+   exige que esté en esta lista. Una lista que se mantiene a mano se
+   desincroniza; una que se comprueba contra su consumidor, no.
+
+   `creado_en` y `orden` no se leen en un mapeo pero SÍ en `porOrden`, y
+   sin ellos la lista de gastos y la cascada de proyectos cambiarían de
+   orden. Van.
+   ============================================================ */
+export const COLUMNAS = {
+  personas:           'id,nombre,cuenta_id',
+  cuentas:            'id,nombre,numero,saldo_inicial,desde_mes,' +
+                      'retenido_monto,retenido_fecha,saldo_banco_monto,saldo_banco_fecha',
+  tarjetas:           'id,nombre,numero,tipo,dia_corte,dia_pago,paga_con,cuenta_id,' +
+                      'saldo_inicial,desde_mes,paga_total,tasa_anual,' +
+                      'retenido_monto,retenido_fecha,saldo_banco_monto,saldo_banco_fecha',
+  gastos:             'id,concepto,monto,categoria,medio_pago,tarjeta_id,crecimiento,orden,creado_en',
+  financiamientos:    'id,nombre,cuota_mensual,cuotas_totales,cuotas_pagadas,tarjeta_id',
+  proyectos:          'id,nombre,costo_min,costo_max,aporte_mensual,fecha_objetivo,nota,' +
+                      'tipo,urgencia,consecuencia,orden,creado_en',
+  aportes:            'id,proyecto_id,persona_id,monto,fecha,nota',
+  plantilla_ingresos: 'id,nombre,dia',
+  plantilla_lineas:   'plantilla_id,persona_id,bruto,deducciones',
+  ingresos_mes:       'periodo,plantilla_id,persona_id,bruto,deducciones,confirmado,copiado_de',
+  comercios:          'clave,gasto_id',
+  movimientos:        'id,fecha,periodo,monto,concepto,gasto_id,persona_id,medio_pago,tarjeta_id,' +
+                      'encargo,origen,fuente,lote',
+  retiros:            'id,fecha,periodo,monto,cuenta_id,persona_id,nota,origen,fuente,lote',
+  pagos_tarjeta:      'id,fecha,periodo,monto,tarjeta_id,cuenta_id,nota,origen,fuente,lote',
+  presupuesto_mes:    'periodo,montos,notas,ajustes,apertura,efectivo_contado,cerrado,cerrado_el'
+};

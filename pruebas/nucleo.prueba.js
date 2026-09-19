@@ -1093,23 +1093,30 @@ probar('Sin un solo movimiento sigue sin haber nada que proponer', () => {
 /* ============ el plan sin montos ============ */
 grupo('Cuando el plan está sin montos');
 
-/** Rubros creados por la importación (todos en 0) y gasto real encima. */
+/** Rubros creados por la importación (todos en 0) y gasto real encima.
+ *
+ * Los meses se sacan de HOY y no se escriben a mano. El sugerido solo mira
+ * meses cerrados, y «cerrado» se decide contra el reloj: con '2026-08'
+ * fijo, esta prueba pasó en agosto y se cayó sola el 1 de septiembre,
+ * cuando agosto pasó a contar como cerrado y bajó la mediana. */
+const MES_EN_CURSO = A.periodoDe(A.hoyLocal(), 1);
+const MES_ANTERIOR = A.sumaMeses(MES_EN_CURSO, -1);
 const sinMontos = () => {
   const d = hogar();
   d.gastos = [{ id: 'g1', concepto: 'Supermercado', monto: 0, categoria: 'Alimentación', crecimiento: 0, medioPago: 'tarjeta' },
               { id: 'g2', concepto: 'Comida fuera', monto: 0, categoria: 'Alimentación', crecimiento: 0, medioPago: 'tarjeta' }];
   d.financiamientos = [];
-  d.cuentas = [{ id: 'c1', nombre: 'Banco', saldoInicial: 662.74, desdeMes: '2026-07' }];
+  d.cuentas = [{ id: 'c1', nombre: 'Banco', saldoInicial: 662.74, desdeMes: MES_ANTERIOR }];
   d.movimientos = [
-    { id: 'm1', periodo: '2026-07', fecha: '2026-07-10', monto: 30000, gastoId: 'g1' },
-    { id: 'm2', periodo: '2026-07', fecha: '2026-07-20', monto: 24997.75, gastoId: 'g2' },
-    { id: 'm3', periodo: '2026-08', fecha: '2026-08-03', monto: 2001.37, gastoId: 'g1' }
+    { id: 'm1', periodo: MES_ANTERIOR, fecha: `${MES_ANTERIOR}-10`, monto: 30000, gastoId: 'g1' },
+    { id: 'm2', periodo: MES_ANTERIOR, fecha: `${MES_ANTERIOR}-20`, monto: 24997.75, gastoId: 'g2' },
+    { id: 'm3', periodo: MES_EN_CURSO, fecha: `${MES_EN_CURSO}-01`, monto: 2001.37, gastoId: 'g1' }
   ];
   return d;
 };
 
 probar('Se detecta que el plan está sin llenar', () => {
-  const p = A.planIncompleto(sinMontos(), '2026-08');
+  const p = A.planIncompleto(sinMontos(), MES_EN_CURSO);
   return { ok: p.hay === true && p.sinMonto === 2 && p.plan === 0,
            det: `${p.sinMonto} rubros sin monto y ${p.gastado} gastados` };
 });
@@ -1117,21 +1124,21 @@ probar('Se detecta que el plan está sin llenar', () => {
 probar('Con el plan lleno deja de avisar', () => {
   const d = sinMontos();
   d.gastos[0].monto = 8000;
-  return { ok: A.planIncompleto(d, '2026-08').hay === false,
+  return { ok: A.planIncompleto(d, MES_EN_CURSO).hay === false,
            det: 'el aviso solo sale mientras no haya ni un monto' };
 });
 
 probar('El colchón no desaparece por no haber plan', () => {
   // Este era el fallo grave: gastoMensual salía 0, mesesColchon quedaba null y
   // TODO el diagnóstico se esfumaba, dejando solo un "van bien" con el banco vacío.
-  const s = A.saludFinanciera(sinMontos(), '2026-08');
+  const s = A.saludFinanciera(sinMontos(), MES_EN_CURSO);
   return { ok: s.mesesColchon !== null && s.baseReal === true && s.gastoMensual > 50000,
            det: `colchón ${s.mesesColchon === null ? 'null' : s.mesesColchon.toFixed(3)} meses ` +
                 `sobre ${Math.round(s.gastoMensual)} de gasto real` };
 });
 
 probar('Y avisa de que el colchón no alcanza ni una semana', () => {
-  const s = A.saludFinanciera(sinMontos(), '2026-08');
+  const s = A.saludFinanciera(sinMontos(), MES_EN_CURSO);
   return { ok: s.pasos.some(x => x.clave === 'colchon'),
            det: 'pasos: ' + s.pasos.map(x => x.clave).join(', ') };
 });
@@ -1831,4 +1838,41 @@ probar('el presupuesto fijado le gana a la media', () => {
   const f = r.filas[0];
   return { ok: cerca(f.referencia, 3500) && f.deLaMedia === false && f.consumido < 1,
            det: 'lo que la persona decidió manda sobre lo que viene pasando' };
+});
+
+
+/* ============ el efectivo que no cuadra ============ */
+grupo('El efectivo que no cuadra');
+
+/** Retiró 1,000 y gastó 1,500 en efectivo: faltan 500 sin registrar. */
+const efectivoCorto = () => ({
+  version: 6, configurado: true, inicioMes: 1,
+  personas: [{ id: 'p1', nombre: 'Ana', cuentaId: 'c1' }],
+  cuentas: [{ id: 'c1', nombre: 'Cuenta', saldoInicial: 10000, desdeMes: '2026-08' }],
+  plantillaIngresos: [], ingresosMes: {}, gastos: [], tarjetas: [],
+  financiamientos: [], proyectos: [], pagosTarjeta: [],
+  retiros: [{ id: 'r1', fecha: '2026-08-05', periodo: '2026-08', monto: 1000, cuentaId: 'c1' }],
+  movimientos: [{ id: 'm1', fecha: '2026-08-20', periodo: '2026-08', monto: 1500,
+                  medioPago: 'efectivo' }]
+});
+
+probar('Gastar más efectivo del retirado se marca, no se traga', () => {
+  const p = A.patrimonio(efectivoCorto(), '2026-08');
+  return { ok: p.efectivoDescuadrado === true && p.efectivoSinRegistrar === 500,
+           det: `descuadrado ${p.efectivoDescuadrado} · faltan ${p.efectivoSinRegistrar}` };
+});
+
+probar('La bolsa negativa sigue recortada a cero: no ensucia el capital', () => {
+  const p = A.patrimonio(efectivoCorto(), '2026-08');
+  // 10,000 en cuenta − 1,000 retirado = 9,000, y el efectivo no resta.
+  return { ok: p.enMano === 0 && p.neto === 9000,
+           det: `en mano ${p.enMano} · capital ${p.neto}` };
+});
+
+probar('Con el retiro completo no se acusa a nadie', () => {
+  const d = efectivoCorto();
+  d.retiros[0].monto = 2000;                 // ahora sí alcanza
+  const p = A.patrimonio(d, '2026-08');
+  return { ok: p.efectivoDescuadrado === false && p.efectivoSinRegistrar === 0 && p.enMano === 500,
+           det: `en mano ${p.enMano}` };
 });

@@ -92,6 +92,8 @@ export {
 
 export { cartaAsesor } from './carta.js';
 
+export { planParaSaldar } from './saldar.js';
+
 /** Qué falta para que la app pueda calcular algo con sentido. */
 export function faltantes(D) {
   const f = [];

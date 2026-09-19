@@ -23,6 +23,7 @@
    ============================================================ */
 
 import { invocar } from './api.js';
+import { hoyLocal } from '../nucleo/fechas.js';
 
 const porPeriodo = new Map();
 
@@ -43,7 +44,9 @@ export function historico(periodo, { refrescar = false } = {}) {
   if (refrescar) porPeriodo.delete(periodo);
   if (porPeriodo.has(periodo)) return porPeriodo.get(periodo);
 
-  const viaje = invocar('historico', { periodo })
+  // `hoy` viaja porque el servidor vive en UTC: a las 6 de la tarde de
+  // Honduras, para él ya es mañana.
+  const viaje = invocar('historico', { periodo, hoy: hoyLocal() })
     .catch(e => { porPeriodo.delete(periodo); throw e; });
 
   porPeriodo.set(periodo, viaje);

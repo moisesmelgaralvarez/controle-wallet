@@ -16,7 +16,7 @@
    Extraído de asesor.js (187-312, 343-412, 415-830) sin tocar una línea.
    ============================================================ */
 
-import { num, perDe, sumaMontos, fmt } from './base.js';
+import { num, perDe, sumaMontos, fmt, delHogar } from './base.js';
 import { diaValido, diasDelMes, iso, sumaMeses, inicioMes, rangoPeriodo } from './fechas.js';
 import { ingresoMes, netoLinea } from './ingresos.js';
 import { saldoFinanciamiento } from './financiamientos.js';
@@ -88,7 +88,7 @@ function gastosMes(D, k, per) {
 function cierreDeMes(D, per) {
   const gas = gastosMes(D, 0, per);
   const real = {};
-  (D.movimientos || []).filter(m => perDe(m) === per)
+  (D.movimientos || []).filter(m => perDe(m) === per && delHogar(m))
     .forEach(m => { const k = m.gastoId || 'otros'; real[k] = (real[k] || 0) + num(m.monto); });
 
   const guardado = (D.presupuestoMes || {})[per] || {};
@@ -355,13 +355,29 @@ function saldoCuenta(D, cuenta, hasta) {
 
 function saldosCuentas(D, hasta) {
   const filas = (D.cuentas || []).map(c => saldoCuenta(D, c, hasta));
+  /* Las que tienen el saldo que declaró el banco, y las que no. Una cuenta
+     sin ancla es pura aritmética: saldo de apertura más ingresos
+     confirmados menos lo que se anotó. Basta con que falte un pago o una
+     transferencia para que diga L 25,837 en una cuenta que está en cero —
+     pasó así, en la cuenta de planilla del dueño. */
+  const conBanco = filas.filter(f => f.segunBanco);
+  const suma = (l, k) => l.reduce((s, f) => s + f[k], 0);
   return {
     filas,
-    total: filas.reduce((s, f) => s + f.saldo, 0),                 // en libros
-    totalDisponible: filas.reduce((s, f) => s + f.disponible, 0),  // lo usable
-    totalRetenido: filas.reduce((s, f) => s + f.retenido, 0),
+    total: suma(filas, 'saldo'),                 // en libros
+    totalDisponible: suma(filas, 'disponible'),  // lo usable
+    totalRetenido: suma(filas, 'retenido'),
     hayDatos: filas.length > 0,
-    enRojo: filas.filter(f => f.disponible < 0)
+    enRojo: filas.filter(f => f.disponible < 0),
+    conBanco: conBanco.length,
+    totalBanco: suma(conBanco, 'saldo'),
+    totalDisponibleBanco: suma(conBanco, 'disponible'),
+    totalRetenidoBanco: suma(conBanco, 'retenido'),
+    sinBanco: filas.filter(f => !f.segunBanco)
+      .map(f => ({ id: f.id, nombre: f.nombre, disponible: cent(f.disponible) })),
+    // La declaración MÁS VIEJA de las que se suman: el disponible no está
+    // más al día que su cuenta más atrasada.
+    saldoAl: conBanco.length ? conBanco.map(f => f.segunBanco.fecha).sort()[0] : null
   };
 }
 
@@ -757,9 +773,12 @@ function realPorRubro(D, per, referencias) {
     presupuestado: g.monto, gastado: 0, movimientos: 0
   }]));
 
-  let sinClasificar = 0, nSinClasificar = 0;
+  let sinClasificar = 0, nSinClasificar = 0, encargo = 0, nEncargo = 0;
   for (const m of (D.movimientos || [])) {
     if (perDe(m) !== per) continue;
+    // Lo comprado por encargo se cuenta aparte: salió de la tarjeta, pero
+    // no es gasto de la casa y no se mide contra ningún rubro.
+    if (!delHogar(m)) { encargo += num(m.monto); nEncargo++; continue; }
     const f = m.gastoId && porRubro.get(m.gastoId);
     if (!f) { sinClasificar += num(m.monto); nSinClasificar++; continue; }
     f.gastado += num(m.monto);
@@ -805,6 +824,10 @@ function realPorRubro(D, per, referencias) {
     filas,
     sinClasificar: cent(sinClasificar),
     movimientosSinClasificar: nSinClasificar,
+    // Fuera de `gastado`: la pantalla lo dice aparte, para que no parezca
+    // que la app se lo comió.
+    encargo: cent(encargo),
+    movimientosEncargo: nEncargo,
     presupuestado,
     gastado,
     diferencia: cent(presupuestado - gastado),

@@ -37,3 +37,9 @@ const enProduccion = typeof location !== 'undefined' &&
 
 export const CONFIG = enProduccion ? PRODUCCION : PRUEBAS;
 export const AMBIENTE = enProduccion ? 'produccion' : 'pruebas';
+
+/* Las dos, para quien no tiene dominio que mirar: el latido diario que
+   las mantiene despiertas (`latido/`). Supabase pausa una base gratuita
+   tras siete días sin uso, y una base pausada no avisa: la app abre y
+   simplemente no deja entrar. Ya pasó una vez, en septiembre de 2026. */
+export const BASES = { produccion: PRODUCCION, pruebas: PRUEBAS };

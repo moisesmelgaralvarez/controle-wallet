@@ -29,34 +29,11 @@
       revienta en vez de devolver un número. Ver `_compartido/traer.js`.
    ============================================================ */
 
-import { armar, CONFIGURACION, POR_MES } from '../../../sitio/app/datos/armador.js';
+import { respuestas } from '../_compartido/origen.js';
+
+import { armar, CONFIGURACION, POR_MES, COLUMNAS } from '../../../sitio/app/datos/armador.js';
 import * as A from '../../../sitio/app/nucleo/index.js';
 import { traerTodo, lectorPostgrest } from '../_compartido/traer.js';
-
-const CABECERAS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Content-Type': 'application/json'
-};
-
-const responder = (cuerpo: unknown, estado = 200) =>
-  new Response(JSON.stringify(cuerpo), { status: estado, headers: CABECERAS });
-
-/**
- * Un error que ya está escrito para leerse.
- *
- * `propio: true` es la marca que le dice al navegador «este mensaje
- * pasa tal cual, no lo cambies por el genérico de tu tabla». Sin ella,
- * `traducir()` ve un 500 y muestra «Falló el servidor. Intentá de
- * nuevo», que es justo lo contrario de lo que hace falta: cuando el
- * cálculo se niega porque faltaron 412 filas, ESA es la frase que hay
- * que leer. Se pagó una vez con los errores de entrada, que decían
- * «los datos enviados no son válidos» a quien tenía el correo sin
- * confirmar.
- */
-const fallar = (mensaje: string, estado: number) =>
-  responder({ error: mensaje, propio: true }, estado);
 
 /**
  * Cada proyecto evaluado trae dentro la proyección a 60 meses con la
@@ -73,6 +50,10 @@ function sinProyeccion(cartera: Record<string, { filas?: unknown }>) {
 }
 
 Deno.serve(async (req: Request) => {
+  /* Las cabeceras dependen de QUIÉN pregunta, así que se arman por
+     petición y no una vez al cargar el módulo. Ver `_compartido/origen.js`. */
+  const { CABECERAS, responder, fallar } = respuestas(req);
+
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CABECERAS });
 
   const autorizacion = req.headers.get('Authorization') || '';
@@ -85,13 +66,25 @@ Deno.serve(async (req: Request) => {
   if (!url || !clave) return fallar('Falta configuración del proyecto.', 500);
 
   try {
-    const { periodo, meses = 12 } = await req.json().catch(() => ({}));
+    const { periodo, meses = 12, hoy: hoyPedido } = await req.json().catch(() => ({}));
     if (!/^\d{4}-\d{2}$/.test(String(periodo || ''))) {
       return fallar('Falta el período, con forma AAAA-MM.', 400);
     }
+    /* «Hoy» es el del teléfono, no el del servidor. El servidor vive en
+       UTC y en Honduras son seis horas menos: a partir de las 6 de la
+       tarde ya sería mañana, y un ingreso que cae hoy saldría como si
+       ya hubiera caído. Si no viene o viene mal, el del servidor. */
+    const hoy = /^\d{4}-\d{2}-\d{2}$/.test(String(hoyPedido || ''))
+      ? String(hoyPedido) : new Date().toISOString().slice(0, 10);
 
+    /* Se piden SOLO las columnas que el armador lee. `select=*` traía
+       además `actualizado_en` y `actualizado_por` en cada fila: unos
+       190 KB de los 617 que baja un hogar de tres años, para algo que
+       nadie mira. La lista vive en el armador, que es quien las lee, y
+       hay una prueba que comprueba que las dos no se separen. */
     const traer = (tabla: string) =>
-      traerTodo(lectorPostgrest({ url, clave, autorizacion, tabla }));
+      traerTodo(lectorPostgrest({ url, clave, autorizacion, tabla,
+        filtros: COLUMNAS[tabla] ? { select: COLUMNAS[tabla] } : {} }));
 
     // El hogar sale de RLS: quien pregunta solo ve el suyo.
     const hogares = await traer('hogares');
@@ -165,6 +158,11 @@ Deno.serve(async (req: Request) => {
       cuentas: A.saldosCuentas(D, periodo),
       efectivo: A.efectivo(D, periodo),
       tarjetas: A.deudaTarjetas(D, periodo),
+
+      // La deuda de la tarjeta contra lo que hay y lo que viene. Aquí y no
+      // en el navegador porque el promedio de cada ingreso sale de los
+      // meses confirmados, y el navegador solo tiene el suyo.
+      saldar: A.planParaSaldar(D, periodo, hoy),
 
       // El veredicto de cada proyecto se calcula aquí y no en el
       // navegador porque castiga según el colchón y la deuda, y las

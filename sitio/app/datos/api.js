@@ -124,12 +124,50 @@ export function capturarSesionDeURL() {
  * pantalla pueda distinguir «sin conexión» de «no tenés permiso».
  */
 export class ErrorDatos extends Error {
-  constructor(mensaje, { estado = 0, causa = null, sinConexion = false } = {}) {
+  constructor(mensaje, { estado = 0, causa = null, sinConexion = false, servidor = false } = {}) {
     super(mensaje);
     this.name = 'ErrorDatos';
     this.estado = estado;
     this.causa = causa;
     this.sinConexion = sinConexion;
+    // `servidor`: el teléfono tiene internet, pero del otro lado no hay
+    // nadie. No es lo mismo que decir «sin conexión», que manda a revisar
+    // el wifi a quien no tiene nada que revisar.
+    this.servidor = servidor;
+  }
+}
+
+/* ---------- llegar al servidor, o decir que no se pudo ----------
+
+   Ninguna petición tenía límite de tiempo. El 18 de septiembre de 2026 la
+   base estaba pausada y su dirección dejó de existir: en la computadora el
+   inicio de sesión decía «No se pudo entrar» —el error de red no se
+   atrapaba y se perdía la razón— y en el iPhone la pantalla se quedó
+   «Trayendo tu hogar del servidor…» sin fin, porque la petición nunca
+   terminaba ni para bien ni para mal. El dueño lo vio así durante horas
+   sin saber que no era su teléfono.
+
+   Toda petición pasa ahora por aquí: tiene un tope, y un fallo de red se
+   convierte en una frase que dice qué pasó. */
+
+const TOPE_MS = 20000;
+const SIN_SERVIDOR = 'El servidor de Controle Wallet no responde. Tus datos están ' +
+  'guardados y no se perdió nada: probá de nuevo en unos minutos.';
+const SIN_RED = 'Este dispositivo no tiene internet. Los datos viven en el servidor: ' +
+  'en cuanto vuelva la conexión, aparecen.';
+
+export async function llegar(url, opciones = {}, tope = TOPE_MS) {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    throw new ErrorDatos(SIN_RED, { sinConexion: true });
+  }
+  const control = new AbortController();
+  const reloj = setTimeout(() => control.abort(), tope);
+  try {
+    return await fetch(url, { ...opciones, signal: control.signal });
+  } catch (e) {
+    throw new ErrorDatos(SIN_SERVIDOR, { causa: e, sinConexion: true, servidor: true });
+  } finally {
+    clearTimeout(reloj);
   }
 }
 
@@ -152,7 +190,7 @@ async function cuerpoDe(r) {
 async function refrescar() {
   if (!sesion || !sesion.refresh_token) return false;
   try {
-    const r = await fetch(`${CONFIG.url}/auth/v1/token?grant_type=refresh_token`, {
+    const r = await llegar(`${CONFIG.url}/auth/v1/token?grant_type=refresh_token`, {
       method: 'POST',
       headers: { apikey: CONFIG.clave, 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: sesion.refresh_token })
@@ -164,16 +202,8 @@ async function refrescar() {
 }
 
 async function pedir(ruta, opciones = {}, reintento = false) {
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-    throw new ErrorDatos('Sin conexión. Los datos viven en el servidor.', { sinConexion: true });
-  }
-
-  let r;
-  try {
-    r = await fetch(CONFIG.url + ruta, { ...opciones, headers: cabeceras(opciones.headers) });
-  } catch (e) {
-    throw new ErrorDatos('No se pudo hablar con el servidor.', { causa: e, sinConexion: true });
-  }
+  const { tope, ...resto } = opciones;
+  const r = await llegar(CONFIG.url + ruta, { ...resto, headers: cabeceras(resto.headers) }, tope);
 
   // Un token vencido se renueva una vez y se reintenta. Si vuelve a
   // fallar, la sesión se cayó de verdad y hay que volver a entrar.
@@ -271,7 +301,7 @@ export async function leerVarias(tablas, filtros = {}) {
 /* ---------- sesión ---------- */
 
 async function auth(ruta, cuerpo) {
-  const r = await fetch(`${CONFIG.url}/auth/v1${ruta}`, {
+  const r = await llegar(`${CONFIG.url}/auth/v1${ruta}`, {
     method: 'POST',
     headers: { apikey: CONFIG.clave, 'Content-Type': 'application/json' },
     body: JSON.stringify(cuerpo)
@@ -320,7 +350,7 @@ export async function recuperar(correo) {
  * ningún correo ni pide la contraseña anterior — que no existe.
  */
 export async function ponerClave(clave) {
-  const r = await fetch(`${CONFIG.url}/auth/v1/user`, {
+  const r = await llegar(`${CONFIG.url}/auth/v1/user`, {
     method: 'PUT',
     headers: cabeceras({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ password: clave })
@@ -343,8 +373,10 @@ export async function salirDeTodos() {
 }
 
 /** Llama a una Edge Function, que es donde viven los secretos. */
+/* Con más tope que una lectura: el histórico corre el núcleo sobre toda
+   la vida del hogar y, con la función fría, tarda más en arrancar. */
 export const invocar = (nombre, cuerpo) =>
-  pedir(`/functions/v1/${nombre}`, { method: 'POST', body: JSON.stringify(cuerpo || {}) });
+  pedir(`/functions/v1/${nombre}`, { method: 'POST', body: JSON.stringify(cuerpo || {}), tope: 45000 });
 
 /**
  * Llama a una función de la base.

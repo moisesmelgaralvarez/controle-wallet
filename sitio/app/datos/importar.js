@@ -42,8 +42,19 @@ import { invalidarConfiguracion } from './hogar.js';
 import { olvidarHistorico } from './historico.js';
 
 /** Copia con los arreglos aparte: el motor va a mutarlos. */
+/* Las cuentas y las tarjetas se copian OBJETO POR OBJETO, no solo la
+   lista. El motor les escribe el saldo del banco y lo retenido, y ahora
+   también agrega la tarjeta de débito que falta. Con `...D` a secas las
+   dos colecciones eran las del hogar vivo: revisar un archivo sin aplicarlo
+   ya cambiaba el saldo en memoria, y la tarjeta nueva caía en `D` en vez
+   de en la copia — así que `tarjetasNuevas` salía vacía, la tarjeta no
+   viajaba a la base, y los movimientos apuntaban a una que no existía. La
+   importación entera se habría caído por la llave foránea. Lo encontró la
+   prueba de la pantalla, no la del núcleo: el núcleo hacía bien su parte. */
 const copiar = D => ({
   ...D,
+  cuentas: (D.cuentas || []).map(c => ({ ...c })),
+  tarjetas: (D.tarjetas || []).map(t => ({ ...t })),
   gastos: [...(D.gastos || [])],
   movimientos: [...(D.movimientos || [])],
   retiros: [...(D.retiros || [])],
@@ -91,6 +102,11 @@ export function preparar({ D, lote, destino }) {
   const rubrosNuevos = copia.gastos.filter(
     g => !(D.gastos || []).some(x => x.id === g.id));
 
+  // La tarjeta de débito que el motor crea cuando la cuenta no tenía
+  // ninguna. Va en la misma llamada que los movimientos que cuelgan de ella.
+  const tarjetasNuevas = (copia.tarjetas || []).filter(
+    t => !(D.tarjetas || []).some(x => x.id === t.id));
+
   const comerciosNuevos = Object.entries(copia.comercios)
     .filter(([clave, id]) => (D.comercios || {})[clave] !== id)
     .map(([clave, gastoId]) => ({ clave, gastoId }));
@@ -109,6 +125,7 @@ export function preparar({ D, lote, destino }) {
        dos gastos reales, y marcar las dos borraría una de verdad. */
     duplicados: duplicadosManuales(D, lote, destino),
     rubrosNuevos,
+    tarjetasNuevas,
     comerciosNuevos,
     movimientos: nuevasDe(copia.movimientos, D.movimientos || [], lote.archivo),
     retiros: nuevasDe(copia.retiros, D.retiros || [], lote.archivo),
@@ -127,8 +144,17 @@ function manualesEnRango(D, lote, destino) {
   const ref = destino.clase + ':' + destino.id;
   const dentro = x => x.fecha >= lote.desde && x.fecha <= lote.hasta &&
                       (x.origen || 'manual') !== 'import';
+  /* Un gasto tecleado a mano NO tiene `fuente`: eso lo pone la
+     importación. Del lado de una cuenta, lo que lo liga a ella es la
+     tarjeta de débito con que se pagó. Sin esto, una compra anotada a mano
+     con el débito de Judith nunca aparecía como duplicada al importar su
+     estado de cuenta, y quedaba dos veces. */
+  const debitos = new Set((D.tarjetas || [])
+    .filter(t => t.tipo === 'debito' && t.cuentaId === destino.id).map(t => t.id));
   const suyo = {
-    movimientos: m => destino.clase === 'tarjeta' ? m.tarjetaId === destino.id : m.fuente === ref,
+    movimientos: m => destino.clase === 'tarjeta'
+      ? m.tarjetaId === destino.id
+      : (m.fuente === ref || debitos.has(m.tarjetaId)),
     retiros: r => r.cuentaId === destino.id,
     pagos: x => x.tarjetaId === destino.id || x.cuentaId === destino.id
   };
@@ -145,12 +171,34 @@ function manualesEnRango(D, lote, destino) {
   ];
 }
 
+/* En qué tabla queda cada renglón del archivo que SÍ se registra. Lo que
+   no está aquí —ingresos, traslados propios, cuotas, reversos— se lee
+   para que el archivo cuadre, pero no entra: no puede ser el duplicado de
+   nada, porque no hay nada que duplicar. */
+const TABLA_DEL_RENGLON = { gasto: 'movimientos', comision: 'movimientos',
+                            retiro: 'retiros', pagoTarjeta: 'pagos' };
+
+/* EL DUPLICADO SE BUSCA ENTRE COSAS DE LA MISMA CLASE.
+
+   Se emparejaba solo por fecha y monto, sin mirar qué era cada cosa. El 6
+   entra el sueldo —L 18,000— y ese mismo día se paga la tarjeta por
+   L 18,000: el depósito del archivo «era» el pago anotado a mano, la
+   casilla de quitar venía marcada, y la importación BORRABA el pago de
+   verdad. Lo encontró la prueba de la pantalla con un CSV de ejemplo, y no
+   es un caso raro: en este hogar el sueldo se va entero a la tarjeta.
+
+   Tampoco se empareja lo que este archivo no va a registrar: un pago que
+   aparece en el estado de la TARJETA no se anota desde ahí —se anota desde
+   la cuenta—, así que marcar el tecleado como duplicado lo borraría sin
+   poner nada en su lugar. */
 function duplicadosManuales(D, lote, destino) {
   const libres = manualesEnRango(D, lote, destino).map(x => ({ ...x, usado: false }));
   const dup = [];
   for (const m of lote.movs) {
+    const tabla = TABLA_DEL_RENGLON[m.tipo];
+    if (!tabla || (tabla === 'pagos' && destino.clase !== 'cuenta')) continue;
     const monto = Math.round(Math.abs(m.monto) * 100) / 100;
-    const par = libres.find(a => !a.usado && a.fecha === m.fecha &&
+    const par = libres.find(a => !a.usado && a.tabla === tabla && a.fecha === m.fecha &&
                                  Math.abs(Math.round(a.monto * 100) / 100 - monto) < 0.011);
     if (par) { par.usado = true; dup.push({ ...par, delBanco: m.concepto || '' }); }
   }
@@ -184,6 +232,11 @@ export const filaRubro = (g, orden) => ({
   crecimiento: g.crecimiento || 0,
   orden
 });
+
+/* Solo el identificador —el que ya traen los movimientos— y el nombre.
+   El tipo y la cuenta los pone la base: de una importación solo puede
+   nacer la tarjeta de débito de la cuenta que se está importando. */
+export const filaTarjetaDebito = t => ({ id: t.id, nombre: t.nombre });
 
 const filaMovimiento = m => ({
   fecha: m.fecha, periodo: m.periodo, monto: m.monto, concepto: m.concepto || '',
@@ -260,6 +313,7 @@ export async function aplicar({ plan, lote, destino, hogarId, aprenderNumero, qu
 
   const hecho = await api.llamar('importar_lote', {
     p_rubros: plan.rubrosNuevos.map((g, i) => filaRubro(g, 900 + i)),
+    p_tarjetas: (plan.tarjetasNuevas || []).map(filaTarjetaDebito),
     p_comercios: plan.comerciosNuevos.map(c => ({ clave: c.clave, gasto_id: c.gastoId })),
     p_destino_clase: destino.clase,
     p_destino_id: destino.id,

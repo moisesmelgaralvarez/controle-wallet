@@ -650,6 +650,97 @@ test('reabrir devuelve el mes a editable y le quita la fecha de cierre', async (
 
 
 /* ============================================================
+   Septiembre de 2026: la compra de una cuenta, lo retenido y el encargo
+
+   Tres cosas que el núcleo ya hacía bien y que solo la base puede
+   confirmar: que la tarjeta de débito nace en la MISMA transacción que
+   los movimientos que cuelgan de ella, que lo retenido de una cuenta se
+   guarda —antes se tiraba—, y que la marca «por encargo» sobrevive a
+   reimportar el mismo rango.
+   ============================================================ */
+
+let cuentaDebito, idDebito;
+
+test('la tarjeta de débito nace con los movimientos, y el tipo y la cuenta los pone la base', async () => {
+  cuentaDebito = await meter('cuentas', {
+    hogar_id: hogar.id, nombre: 'Planilla del débito', saldo_inicial: 0, desde_mes: '2028-03'
+  });
+  idDebito = globalThis.crypto.randomUUID();
+  const r = await importar({
+    p_destino_clase: 'cuenta', p_destino_id: cuentaDebito.id,
+    p_desde: '2028-03-01', p_hasta: '2028-03-15', p_lote: 'noviembre.csv',
+    // El navegador manda el tipo equivocado y otra cuenta a propósito: la
+    // base tiene que ignorar los dos.
+    p_tarjetas: [{ id: idDebito, nombre: 'Débito Planilla', tipo: 'credito', cuenta_id: cuentaImport.id }],
+    p_movimientos: [
+      { fecha: '2028-03-03', periodo: '2028-03', monto: 340, concepto: 'FARMACIA KIELSA',
+        medio_pago: 'tarjeta', tarjeta_id: idDebito },
+      { fecha: '2028-03-08', periodo: '2028-03', monto: 2400, concepto: 'CAMISAS SPORTLINE',
+        medio_pago: 'tarjeta', tarjeta_id: idDebito }
+    ],
+    p_saldo_banco: 4660, p_retenido: 150
+  });
+  assert.ok(r.ok, JSON.stringify(r.cuerpo));
+  assert.equal(r.cuerpo.tarjetas, 1);
+  assert.equal(r.cuerpo.movimientos, 2);
+
+  const t = (await json(await admin(`/rest/v1/tarjetas?id=eq.${idDebito}&select=tipo,cuenta_id,hogar_id,nombre`)))[0];
+  assert.ok(t, 'la tarjeta no se creó');
+  assert.equal(t.tipo, 'debito', 'el tipo lo decide la base, no el navegador');
+  assert.equal(t.cuenta_id, cuentaDebito.id, 'la cuenta es la del archivo, no la que mande el navegador');
+  assert.equal(t.hogar_id, hogar.id);
+});
+
+test('lo retenido de una CUENTA se guarda, que antes se leía y se tiraba', async () => {
+  const c = (await json(await admin(`/rest/v1/cuentas?id=eq.${cuentaDebito.id}&select=retenido_monto,retenido_fecha`)))[0];
+  assert.equal(Number(c.retenido_monto), 150);
+  assert.equal(c.retenido_fecha, '2028-03-15');
+});
+
+test('la marca «por encargo» sobrevive a reimportar el mismo rango', async () => {
+  const [camisas] = await json(await admin(
+    `/rest/v1/movimientos?hogar_id=eq.${hogar.id}&concepto=eq.CAMISAS SPORTLINE&select=id`));
+  const marcar = await api(`/movimientos?id=eq.${camisas.id}`, {
+    method: 'PATCH', body: JSON.stringify({ encargo: true }) });
+  assert.ok(marcar.ok, JSON.stringify(await json(marcar)));
+
+  // La semana siguiente el banco trae lo mismo más una compra nueva, y
+  // escribe el concepto distinto: el emparejamiento no puede depender de él.
+  const r = await importar({
+    p_destino_clase: 'cuenta', p_destino_id: cuentaDebito.id,
+    p_desde: '2028-03-01', p_hasta: '2028-03-20', p_lote: 'noviembre-v2.csv',
+    p_movimientos: [
+      { fecha: '2028-03-03', periodo: '2028-03', monto: 340, concepto: 'KIELSA FARMACIA',
+        medio_pago: 'tarjeta', tarjeta_id: idDebito },
+      { fecha: '2028-03-08', periodo: '2028-03', monto: 2400, concepto: 'SPORTLINE HN',
+        medio_pago: 'tarjeta', tarjeta_id: idDebito },
+      { fecha: '2028-03-18', periodo: '2028-03', monto: 90, concepto: 'PULPERIA',
+        medio_pago: 'tarjeta', tarjeta_id: idDebito }
+    ]
+  });
+  assert.ok(r.ok, JSON.stringify(r.cuerpo));
+  assert.equal(r.cuerpo.movimientos_borrados, 2);
+  assert.equal(r.cuerpo.encargos_conservados, 1);
+
+  const filas = await json(await admin(
+    `/rest/v1/movimientos?hogar_id=eq.${hogar.id}&fuente=eq.cuenta:${cuentaDebito.id}&select=monto,encargo&order=fecha`));
+  assert.deepEqual(filas.map(f => [Number(f.monto), f.encargo]),
+    [[340, false], [2400, true], [90, false]]);
+});
+
+test('desde el estado de una TARJETA no se puede crear ninguna', async () => {
+  const otra = globalThis.crypto.randomUUID();
+  const r = await importar({
+    p_destino_clase: 'tarjeta', p_destino_id: doc.tarjetas[0].id,
+    p_desde: '2028-04-01', p_hasta: '2028-04-05', p_lote: 'tarjeta.pdf',
+    p_tarjetas: [{ id: otra, nombre: 'Colada' }]
+  });
+  assert.ok(r.ok, JSON.stringify(r.cuerpo));
+  const t = await json(await admin(`/rest/v1/tarjetas?id=eq.${otra}&select=id`));
+  assert.deepEqual(t, []);
+});
+
+/* ============================================================
    Migrar el hogar de la app anterior
 
    La prueba que decide si la migración sirve NO es que las filas

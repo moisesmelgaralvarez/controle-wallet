@@ -27,7 +27,12 @@ import { fechaPorOmision } from '../datos/periodos.js';
 /** Sin tildes y en minúsculas, para comparar como la gente escribe. */
 const plano = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
-let filtro = { texto: '', medio: '', personaId: '' };
+/* El filtro es por DE DÓNDE SALIÓ el dinero, no por «tarjeta o efectivo».
+   Con dos chips, lo de la cuenta de Judith —pagado con su débito— se
+   mezclaba con la tarjeta de crédito bajo «Tarjeta», y no había forma de
+   ver lo que se movió en una cuenta. `origen` es el id de la tarjeta, o
+   'efectivo', o 'sin' para lo que quedó como tarjeta sin decir cuál. */
+let filtro = { texto: '', origen: '', personaId: '' };
 
 export function movimientos({ contenedor, D, periodo, hogar, recargar }) {
   const cerrado = A.mesCerrado(D, periodo);
@@ -49,8 +54,22 @@ export function movimientos({ contenedor, D, periodo, hogar, recargar }) {
 
   const delMes = (D.movimientos || []).filter(m => A.perDe(m) === periodo);
 
+  const origenDe = m => (m.medioPago || 'tarjeta') === 'efectivo' ? 'efectivo' : (m.tarjetaId || 'sin');
+  const tarjetaDe = id => porId(D.tarjetas, id);
+  const nombreOrigen = o => o === 'efectivo' ? 'Efectivo'
+    : o === 'sin' ? 'Tarjeta sin decir cuál'
+    : tarjetaDe(o)?.nombre || 'Tarjeta borrada';
+  // Primero las de crédito, después las de débito, al final el efectivo y
+  // lo que no dice de dónde salió. Solo los que tienen algo este mes: un
+  // chip que no filtra nada es ruido.
+  const puesto = o => o === 'efectivo' ? 2 : o === 'sin' ? 3
+    : (tarjetaDe(o)?.tipo === 'debito' ? 1 : 0);
+  const origenes = [...new Set(delMes.map(origenDe))]
+    .sort((a, b) => puesto(a) - puesto(b) || nombreOrigen(a).localeCompare(nombreOrigen(b)));
+  if (filtro.origen && !origenes.includes(filtro.origen)) filtro.origen = '';
+
   const visibles = delMes.filter(m => {
-    if (filtro.medio && (m.medioPago || 'tarjeta') !== filtro.medio) return false;
+    if (filtro.origen && origenDe(m) !== filtro.origen) return false;
     if (filtro.personaId && m.personaId !== filtro.personaId) return false;
     if (!filtro.texto) return true;
     const t = plano(filtro.texto);
@@ -82,12 +101,19 @@ export function movimientos({ contenedor, D, periodo, hogar, recargar }) {
         <div class="buscador">
           <input type="search" id="buscar" placeholder="Buscar por detalle, rubro, categoría o persona"
                  value="${esc(filtro.texto)}" aria-label="Buscar movimientos">
-          <div class="chips">
-            ${[['', 'Todos'], ['tarjeta', 'Tarjeta'], ['efectivo', 'Efectivo']].map(([v, t]) => `
-              <button class="chip" type="button" data-medio="${esc(v)}" aria-pressed="${filtro.medio === v}">${esc(t)}</button>`).join('')}
+          <!-- Dos grupos y no uno: de dónde salió y quién lo gastó son
+               preguntas distintas, y en una sola fila «Judith» y «Débito
+               Planilla Judith» parecían la misma cosa. -->
+          ${origenes.length > 1 ? `
+          <div class="chips" role="group" aria-label="De dónde salió">
+            ${[['', 'Todo'], ...origenes.map(o => [o, nombreOrigen(o)])].map(([v, t]) => `
+              <button class="chip" type="button" data-origen="${esc(v)}" aria-pressed="${filtro.origen === v}">${esc(t)}</button>`).join('')}
+          </div>` : ''}
+          ${(D.personas || []).length > 1 ? `
+          <div class="chips" role="group" aria-label="Quién lo gastó">
             ${(D.personas || []).map(p => `
               <button class="chip" type="button" data-persona="${esc(p.id)}" aria-pressed="${filtro.personaId === p.id}">${esc(p.nombre)}</button>`).join('')}
-          </div>
+          </div>` : ''}
         </div>
 
         ${visibles.length ? `
@@ -102,7 +128,7 @@ export function movimientos({ contenedor, D, periodo, hogar, recargar }) {
                   <span class="mov-fila__dia">${esc(diaCorto(m.fecha))}</span>
                   <span class="mov-fila__txt">
                     <strong>${esc(m.concepto || nombreGasto(m.gastoId))}</strong>
-                    <small>${esc(nombreGasto(m.gastoId))}${m.personaId ? ' · ' + esc(nombrePersona(m.personaId)) : ''}${(m.medioPago || 'tarjeta') === 'efectivo' ? ' · efectivo' : ''}</small>
+                    <small>${esc(nombreGasto(m.gastoId))}${m.personaId ? ' · ' + esc(nombrePersona(m.personaId)) : ''}${origenes.length > 1 ? ' · ' + esc(nombreOrigen(origenDe(m))) : ''}${m.encargo ? ' · por encargo' : ''}</small>
                   </span>
                   <span class="mov-fila__monto">${esc(dinero(m.monto))}</span>
                 </button>
@@ -135,7 +161,9 @@ export function movimientos({ contenedor, D, periodo, hogar, recargar }) {
             <div class="ciclo-app__f"><em>Retirado</em><span>${esc(dinero(efe.totalRetirado))}</span></div>
             <div class="ciclo-app__f"><em>Gastado en efectivo</em><span>${esc(dinero(efe.totalGastado))}</span></div>
             ${efe.descuadre ? '<div class="ciclo-app__f"><em class="ciclo-app__nota">Se gastó más efectivo del retirado: falta anotar un retiro, o un gasto quedó marcado como efectivo sin serlo.</em></div>' : ''}
-          </div>` : ''}
+          </div>
+          <button class="boton boton--borde boton--chico efectivo__ajuste" type="button" data-ajustar-efectivo
+                  ${cerrado ? 'disabled' : ''}>¿No cuadra? Decir cuánto hay</button>` : ''}
       </section>
     </div>`;
 
@@ -156,9 +184,9 @@ export function movimientos({ contenedor, D, periodo, hogar, recargar }) {
     }, 180);
   });
 
-  $$('[data-medio]', contenedor).forEach(b => b.addEventListener('click', () => {
+  $$('[data-origen]', contenedor).forEach(b => b.addEventListener('click', () => {
     // Tocar de nuevo un filtro encendido lo apaga.
-    filtro.medio = filtro.medio === b.dataset.medio ? '' : b.dataset.medio;
+    filtro.origen = filtro.origen === b.dataset.origen ? '' : b.dataset.origen;
     movimientos({ contenedor, D, periodo, hogar, recargar });
   }));
 
@@ -173,6 +201,9 @@ export function movimientos({ contenedor, D, periodo, hogar, recargar }) {
     if (tipo === 'retiro') formRetiro(null);
     if (tipo === 'pago')   formPago(null);
   }));
+
+  const aju = $('[data-ajustar-efectivo]', contenedor);
+  if (aju) aju.addEventListener('click', () => formAjusteEfectivo());
 
   const imp = $('[data-importar]', contenedor);
   if (imp) imp.addEventListener('click', () => { location.hash = '#/importar'; });
@@ -203,6 +234,13 @@ export function movimientos({ contenedor, D, periodo, hogar, recargar }) {
       ${credito.length ? selector('tarjetaId', 'Con cuál tarjeta',
         [{ valor: '', texto: '— ninguna —' }, ...opcionesTarjeta()], m ? m.tarjetaId : (credito[0]?.id || '')) : ''}
       ${selector('personaId', 'Quién lo hizo', opcionesPersona(), m ? m.personaId : '')}
+      <label class="campo campo--pegado">
+        <span>Por encargo: me lo van a devolver</span>
+        <input type="checkbox" name="encargo"${m && m.encargo ? ' checked' : ''}>
+        <small class="campo__ayuda">Una compra que hiciste por otra persona y que te
+          va a pagar. Sigue contando en la tarjeta, pero no como gasto de la casa ni en
+          tu media.</small>
+      </label>
     `, {
       textoGuardar: m ? 'Guardar cambios' : 'Registrar',
       alBorrar: m ? async () => {
@@ -225,9 +263,63 @@ export function movimientos({ contenedor, D, periodo, hogar, recargar }) {
           concepto: d.concepto || null, gasto_id: d.gastoId,
           persona_id: d.personaId || null,
           medio_pago: d.medioPago,
-          tarjeta_id: d.medioPago === 'tarjeta' ? (d.tarjetaId || null) : null
+          tarjeta_id: d.medioPago === 'tarjeta' ? (d.tarjetaId || null) : null,
+          encargo: Boolean(d.encargo)
         });
         avisar(m ? 'Movimiento actualizado.' : 'Gasto registrado.');
+        recargar();
+      }
+    });
+  }
+
+  /* EL EFECTIVO SE CUENTA, NO SE DEDUCE.
+
+     La app sabe lo que se retiró y lo que se anotó como gastado en
+     efectivo. Lo que se gasta en la calle sin anotarlo —una pulpería, un
+     taxi— no lo sabe, y el efectivo «en mano» se queda para siempre con
+     plata que ya no existe. Pasó con L 2,200 retirados en agosto: el dueño
+     dijo «eso ya no está, se agotó», y la app los seguía sumando.
+
+     Pedir la cifra de la cartera es más fácil que reconstruir en qué se
+     fue. La diferencia se anota tal cual: si falta, como gasto en efectivo
+     —se gastó, aunque no se sepa en qué—; si sobra, como un retiro que no
+     se anotó. Así el ajuste es un movimiento más, visible y borrable, y
+     no una cifra corregida por debajo. */
+  function formAjusteEfectivo() {
+    const calculado = Math.round(efe.saldo * 100) / 100;
+    hoja('Cuánto efectivo tienen hoy', `
+      <p class="hoja__nota">
+        La app calcula <b>${esc(dinero(calculado))}</b>: lo retirado menos lo que se
+        anotó como gastado en efectivo. Si en la cartera hay otra cifra, escribila y
+        la diferencia queda anotada como un movimiento más.
+      </p>
+      ${campoMonto('real', 'Lo que hay hoy en la cartera', '')}
+      ${selector('gastoId', 'Si falta, en qué se fue',
+        [{ valor: '', texto: '— no sé: sin clasificar —' }, ...opcionesGasto()], '')}
+    `, {
+      textoGuardar: 'Ajustar',
+      alGuardar: async (d, fallo) => {
+        if (d.real === null || !(d.real >= 0)) {
+          return fallo('Escribí cuánto hay, aunque sea cero.'), false;
+        }
+        const diferencia = Math.round((calculado - d.real) * 100) / 100;
+        if (Math.abs(diferencia) < 0.005) return avisar('Ya cuadraba: no hubo que anotar nada.');
+        const fecha = fechaNueva();
+        const per = A.periodoDe(fecha, A.inicioMes(D));
+        if (diferencia > 0) {
+          await guardar('movimientos', null, {
+            hogar_id: hogar.id, fecha, periodo: per, monto: diferencia,
+            concepto: 'Efectivo gastado sin anotar', gasto_id: d.gastoId || null,
+            persona_id: null, medio_pago: 'efectivo', tarjeta_id: null
+          });
+          avisar(`Anotado: ${dinero(diferencia)} de efectivo que se gastó sin registrar.`);
+        } else {
+          await guardar('retiros', null, {
+            hogar_id: hogar.id, fecha, periodo: per, monto: -diferencia,
+            cuenta_id: null, persona_id: null, nota: 'Efectivo que no se anotó al sacarlo'
+          });
+          avisar(`Anotado: ${dinero(-diferencia)} de efectivo que no se había registrado.`);
+        }
         recargar();
       }
     });

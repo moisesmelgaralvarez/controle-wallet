@@ -96,6 +96,10 @@ const TEXTOS = {
   ok:        'Datos al día',
   error:     'No se pudo cargar',
   'sin-red': 'Sin conexión',
+  // No es lo mismo que «sin conexión»: el teléfono tiene internet y del
+  // otro lado no contesta nadie. Decirle «sin conexión» manda a revisar el
+  // wifi a quien no tiene nada que revisar.
+  caido:     'Servidor sin responder',
 };
 
 const PORQUES = {
@@ -103,6 +107,7 @@ const PORQUES = {
   ok:        'Lo que ves es lo que hay en el servidor ahora mismo, incluido lo que haya registrado la otra persona del hogar.',
   error:     'No se pudo traer lo último. Lo que ves puede estar viejo.',
   'sin-red': 'Sin internet no se puede registrar nada. Lo que ves es de la última vez que sí hubo.',
+  caido:     'El servidor no contesta. Tus datos siguen guardados allá; hasta que vuelva no se puede registrar nada.',
 };
 
 function marcar(estado) {
@@ -194,10 +199,11 @@ $('#mesHoy').addEventListener('click', () => { location.hash = enlace(ruta, null
 
 function pintarError(err) {
   const sinRed = err instanceof ErrorDatos && err.sinConexion;
-  marcar(sinRed ? 'sin-red' : 'error');
+  const caido = err instanceof ErrorDatos && err.servidor;
+  marcar(caido ? 'caido' : sinRed ? 'sin-red' : 'error');
   vista.innerHTML = `
     <div class="error-caja">
-      <p><strong>${esc(sinRed ? 'Sin conexión' : 'No se pudo cargar')}</strong></p>
+      <p><strong>${esc(caido ? 'El servidor no responde' : sinRed ? 'Sin conexión' : 'No se pudo cargar')}</strong></p>
       <p>${esc(err.message || 'Algo salió mal.')}</p>
     </div>
     <button class="boton boton--borde" type="button" id="reintentar">Reintentar</button>`;

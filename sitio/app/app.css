@@ -146,6 +146,7 @@
 .estado[data-estado="cargando"] .estado__punto { background: var(--acento); opacity: 0.45; }
 .estado[data-estado="error"]    .estado__punto { background: var(--alerta); }
 .estado[data-estado="sin-red"]  .estado__punto { background: var(--alerta); }
+.estado[data-estado="caido"]    .estado__punto { background: var(--alerta); }
 
 .contenido { padding: clamp(1rem, 3vw, 2.5rem); display: grid; gap: var(--e3); align-content: start; }
 

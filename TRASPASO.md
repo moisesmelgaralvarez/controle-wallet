@@ -288,29 +288,38 @@ gh pr create
 
 ## 8. Lo que falta
 
-### Lo inmediato — en este orden
+### Lo inmediato
 
-1. **El dueño restaura las dos bases** desde el panel de Supabase
-   (*Restore project*): producción primero.
-2. Con pruebas despierta: `npm run pruebas:aislamiento` y
-   `npm run pruebas:integracion` (credenciales en §3), y comprobar
-   `importar_lote` con `p_tarjetas` y la marca `encargo` sobre la base real.
-3. **Unir la pila en orden**: #90, #91, #92, #93, #94, #95. Cada una va encima
-   de la anterior; al unir una, GitHub reapunta la siguiente a `main`.
-4. **Publicar** en el orden de siempre —migración → funciones → Worker—:
-   - Migraciones `20260918120000_debito_y_retenido_de_cuenta` y
-     `20260918130000_por_encargo` (pruebas primero, después producción).
-   - Edge Functions `historico`, `cuenta` e `invitar` (#93 toca las tres).
-   - Worker del sitio, y **el latido**:
-     `npx wrangler deploy --config latido/wrangler.toml`.
-5. **Datos de producción**: correr `herramientas/reparaciones/debito-sin-tarjeta-informe.sql`
-   y, si trae filas, la reparación (queda sin `COMMIT` a propósito; la
-   confirma una persona). Cuelga de su tarjeta de débito las compras de cuenta
-   que quedaron «sin tarjeta» y las pone a nombre del dueño de la cuenta.
-6. Pedirle al dueño que **reimporte el último estado de cuenta de cada cuenta**:
-   es lo único que trae lo retenido (antes se leía y se tiraba) y el saldo del
-   banco de la cuenta de planilla de Moisés, que hoy no se suma al disponible
-   porque nunca tuvo uno.
+**Publicado el 19 de septiembre**: la pila #90–#97 está unida a `main` (merge
+`e2535b0`), las dos migraciones están aplicadas en pruebas Y en producción, y
+las tres Edge Functions están publicadas en las dos. Las pruebas contra la base
+real: 40/40 de aislamiento y 36/36 de integración.
+
+**Los datos de producción ya se repararon**: las 17 compras que habían quedado
+como «tarjeta» sin tarjeta cuelgan ahora de «Débito Judith - Cuenta Planilla»
+(3, L 468.40) y «Débito Moises - Cuenta Planilla» (14, L 5,179.26), y las de
+Judith quedaron a su nombre. El informe vuelve vacío.
+
+**Falta una sola cosa, y depende del dueño**: la sesión de Cloudflare en su
+computadora venció y no se puede renovar sin él.
+
+```bash
+cd "/Users/moisesmelgar/Documents/Controle Wallet" && npx wrangler login
+```
+
+Con eso hecho, queda:
+
+1. `npm run publicar` — el Worker del sitio y la app.
+2. `npx wrangler deploy --config latido/wrangler.toml` — el latido diario.
+3. Comprobar la propagación comparando el hash local contra el remoto, y
+   etiquetar **v0.29.0**.
+4. Pedirle al dueño que **reimporte el último estado de cuenta de cada cuenta**:
+   es lo único que trae lo retenido y el saldo del banco de su cuenta de
+   planilla, que hoy no entra al disponible porque nunca tuvo uno.
+
+Mientras el Worker no se publique, producción sigue sirviendo la pantalla
+anterior, que es compatible con la base y las funciones nuevas: no manda los
+campos nuevos y los que llegan de más los ignora.
 
 ### Lo que se hizo el 18 de septiembre (la pila #90–#95)
 

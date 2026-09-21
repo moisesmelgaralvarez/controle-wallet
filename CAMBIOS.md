@@ -4,6 +4,87 @@ Qué trajo cada versión, en español y sin jerga. Lo más nuevo va arriba.
 
 ---
 
+## v0.29.0 — El Resumen dice la verdad del dinero
+
+**Lo que se rompió primero, y no era el código**
+
+El 18 de septiembre las dos bases de Supabase amanecieron **pausadas**: el plan
+gratuito las apaga tras siete días sin uso. La app abría y no dejaba entrar. Se
+destraba a mano desde el panel, así que ahora hay un **latido** —un Worker
+aparte, sin dirección pública— que le hace una consulta diaria a cada base para
+que no vuelva a pasar.
+
+**«¿Por qué lo detecta como tarjeta si es una cuenta bancaria?»**
+
+Una compra leída del estado de cuenta de una CUENTA se colgaba de la tarjeta de
+débito de esa cuenta. Como casi nadie registra la de débito, quedaba como
+«tarjeta» sin tarjeta: **no bajaba la cuenta ni subía ninguna deuda**. Dinero
+gastado que ningún saldo reflejaba. Ahora la tarjeta de débito se crea sola, con
+el nombre de la cuenta y sin un solo dígito del plástico.
+
+En Movimientos, los filtros dejaron de ser «tarjeta o efectivo» y pasaron a ser
+**de dónde salió el dinero**: cada tarjeta, cada débito, el efectivo. Y quién lo
+gastó va aparte — antes, con la persona anotada solo por su nombre de pila,
+todas sus compras caían en la primera persona del hogar.
+
+**«En cuenta planilla dice que tengo 25 mil y no es cierto»**
+
+Esa cuenta nunca tuvo un estado de cuenta importado: su saldo era pura
+aritmética. En cuanto una cuenta tiene el saldo que declaró el banco, las que no
+lo tienen **dejan de sumarse** al disponible, al capital y al colchón. No
+desaparecen: la pantalla las nombra, dice lo que calcula y cómo arreglarlo. Y la
+cifra dice de qué fecha es: «según el banco al 14 sep».
+
+**Cómo se salda la tarjeta**
+
+Un panel nuevo pone la deuda contra lo que hay y lo que viene, en orden de
+fecha. Cada ingreso vale el **promedio de las últimas veces que se confirmó**,
+con su rango — las comisiones del 6 cambian todos los meses. Dice con cuál
+ingreso queda saldada, o cuánto faltaría. Nada de eso se suma al disponible: lo
+que todavía no cae es una posibilidad, no dinero.
+
+**Compras por encargo**
+
+Las camisas que se le compran a un hermano y él devuelve: cuentan en la tarjeta,
+porque el banco las cobra, pero **no** como gasto de la casa ni en la media con
+que se sugiere el plan. Se marcan con una casilla, y la marca sobrevive a
+reimportar el mismo mes.
+
+**Tres defectos que movían plata, encontrados probando la pantalla de verdad**
+
+- La importación podía **borrar un pago real**: emparejaba «lo anotado a mano que
+  también viene en el archivo» solo por fecha y monto, así que el sueldo que
+  entra el 6 «era» el pago de la tarjeta del mismo día y monto.
+- Un CSV sin las palabras «Saldo inicial» y «Saldo final» anotaba **L 0.00 como
+  el saldo que declaró el banco**.
+- En el teléfono, la barra de abajo **tapaba el botón de guardar** de todos los
+  formularios.
+
+**Cuando el servidor no contesta, la app lo dice**
+
+Ninguna petición tenía límite de tiempo: con la base pausada, el teléfono se
+quedó en «Trayendo tu hogar del servidor…» para siempre y la computadora decía
+«No se pudo entrar» sin explicar nada. Ahora hay tope, y el aviso distingue
+«sin conexión» de «el servidor no responde» — no es lo mismo, y mandar a revisar
+el wifi a quien sí tiene internet no ayuda.
+
+**Y además**
+
+- En Importar: **«+ Crear rubro nuevo…»** sin salir de la pantalla, rubro de
+  **Préstamos**, y un archivo vacío que lo dice en vez de «cuadrar consigo mismo».
+- **Ajuste de efectivo**: se escribe lo que hay en la cartera y la diferencia
+  queda como un movimiento visible.
+- El pulso del mes mide con la **misma vara** que la ficha de gastos.
+- La política de seguridad del sitio ya no autoriza a hablar con *cualquier*
+  proyecto de Supabase, y las funciones del servidor solo contestan a los
+  dominios propios.
+- El interés de la tarjeta se presenta como **estimación**, con el estado de
+  cuenta como palabra final.
+- El histórico baja solo las columnas que se leen (unos 190 KB menos por carga),
+  en paralelo y con orden fijo.
+
+---
+
 ## v0.25.1 — Tu propio respaldo ya no se cuela por la pantalla de la app vieja
 
 **Qué pasaba**

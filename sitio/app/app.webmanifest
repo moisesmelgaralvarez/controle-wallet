@@ -1,0 +1,18 @@
+{
+  "name": "Controle Wallet",
+  "short_name": "Controle",
+  "description": "El presupuesto del hogar, sobre el ciclo real de tu tarjeta.",
+  "lang": "es-HN",
+  "dir": "ltr",
+  "start_url": "/app/",
+  "scope": "/app/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FBF9F9",
+  "theme_color": "#FBF9F9",
+  "icons": [
+    { "src": "/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

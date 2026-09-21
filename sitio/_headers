@@ -99,3 +99,49 @@
   # compresión no es una transformación en este sentido y no se ve
   # afectada: se negocia por `Content-Encoding`.
   Cache-Control: public, max-age=0, must-revalidate, no-transform
+
+# ============================================================
+# LO ESTÁTICO: SE COMPRIME Y SE GUARDA
+#
+# `no-transform` en `/*` apaga la inyección del beacon de Cloudflare —por
+# eso está, y se queda— pero apaga TAMBIÉN la compresión, y eso no se
+# había medido. Medido ahora, en producción: la portada baja 152 KB de CSS
+# sin comprimir, cuando comprimida son unos 20. `papel.css` sola pesa
+# 111 KB y la usan todas las páginas.
+#
+# El beacon solo se inyecta en documentos HTML. Así que estas reglas
+# devuelven la compresión a lo que NO es una página, sin tocar la defensa
+# donde importa. Las páginas siguen con `no-transform` por `/*`.
+#
+# CÓMO SE COMPRUEBA, y hay que hacerlo después de publicar, porque esto no
+# se puede probar en local:
+#
+#   curl -sI --compressed https://controlewallet.com/papel.css | grep -i 'content-encoding\|cache-control'
+#
+# Tiene que decir `content-encoding: br` (o gzip) y una sola línea de
+# `cache-control` SIN `no-transform`. Si aparece `no-transform` ahí, las
+# dos reglas se están sumando en vez de pisarse: entonces la salida es
+# listar las páginas una por una arriba y quitar `no-transform` de `/*`.
+# ============================================================
+
+# La tipografía no cambia nunca: su contenido ES la fuente. Un año.
+/fuentes/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Las películas y sus pósters se regeneran con el mismo nombre cuando
+# cambia la interfaz, así que una semana y a revalidar.
+/media/*
+  Cache-Control: public, max-age=604800, must-revalidate
+
+# Hojas, guiones e iconos: una hora en el navegador, y revalidación
+# después. Son los archivos que más cambian de los que no son páginas.
+/*.css
+  Cache-Control: public, max-age=3600, must-revalidate
+/*.js
+  Cache-Control: public, max-age=3600, must-revalidate
+/*.svg
+  Cache-Control: public, max-age=3600, must-revalidate
+/*.png
+  Cache-Control: public, max-age=604800, must-revalidate
+/*.webmanifest
+  Cache-Control: public, max-age=3600, must-revalidate

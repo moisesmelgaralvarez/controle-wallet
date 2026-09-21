@@ -1,11 +1,34 @@
 <!DOCTYPE html>
-<html lang="es-HN">
+<!-- EL SITIO ES DE PAPEL, SIEMPRE.
+     `marca.css` voltea sus once tokens con `prefers-color-scheme` porque la
+     APP tiene modo oscuro. Estas páginas no: su composición es tinta sobre
+     papel y sus hojas escriben los colores literales, así que con el sistema
+     en oscuro se ven igual — medido: `/precios` no cambia ni un píxel.
+     Lo que sí cambiaba es lo que pinta el navegador y no la hoja —barra de
+     desplazamiento, autocompletado—, que salía oscuro junto a una página
+     blanca. Declarar el tema lo deja parejo. La app sigue respetando lo que
+     elija cada quien. -->
+<html lang="es-HN" data-tema="claro">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Crear cuenta — Controle Wallet</title>
 <meta name="description" content="Creá tu hogar en Controle Wallet.">
 <meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#FBF9F9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131315" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="Crear cuenta — Controle Wallet">
+<meta property="og:description" content="Creá tu hogar en Controle Wallet.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://controlewallet.com/registro">
+<meta property="og:locale" content="es_HN">
+<meta property="og:image" content="https://controlewallet.com/media/enlace.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Controle Wallet — El dinero ya se gastó. El saldo todavía no lo sabe.">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="/sitio.css">
 <link rel="stylesheet" href="/marca.css">
 <!-- `papel.css` va de último: gana por cascada sin necesitar un !important.

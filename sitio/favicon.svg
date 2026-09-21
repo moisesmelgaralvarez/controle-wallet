@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- La marca: las cuatro barras de `index.html`, sin tocar una coordenada.
+     En claro van sobre el lienzo del sitio; en oscuro, el navegador que
+     entienda `prefers-color-scheme` las pone en verde claro sobre tinta.
+     Quien no lo entienda ve la versión clara, que es legible en los dos. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    .lienzo { fill: #FBF9F9 }
+    .barras { stroke: #064E3B }
+    @media (prefers-color-scheme: dark) {
+      .lienzo { fill: #131315 }
+      .barras { stroke: #6EE7B7 }
+    }
+  </style>
+  <rect class="lienzo" width="32" height="32" rx="7"/>
+  <g class="barras" fill="none" stroke-width="2.6" stroke-linecap="round">
+    <path d="M8.5 23.5V15"/>
+    <path d="M13.8 23.5V8.5"/>
+    <path d="M19.1 23.5v-6"/>
+    <path d="M24.4 23.5v-9"/>
+  </g>
+</svg>
